@@ -47,6 +47,14 @@
           "cameraPermissionText": "MedStock precisa da câmera para ler rótulos.",
           "enableCodeScanner": true
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2563eb",
+          "sounds": []
+        }
       ]
     ],
     "experiments": {

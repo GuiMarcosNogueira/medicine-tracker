@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSelector } from '@legendapp/state/react';
 import { authStore } from '../../src/stores/auth.store';
 import { initInventory, cleanupInventory } from '../../src/stores/inventory.store';
+import { registerPushToken } from '../../src/lib/notifications';
 
 export default function AppLayout() {
   const session = useSelector(authStore.session);
@@ -13,6 +14,7 @@ export default function AppLayout() {
     const userId = session?.user.id;
     if (!userId) return;
     void initInventory(userId);
+    void registerPushToken();
     return () => { cleanupInventory(); };
   }, [session?.user.id]);
 

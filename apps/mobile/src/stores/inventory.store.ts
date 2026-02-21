@@ -1,6 +1,7 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
 import { savePendingItem, getPendingItems, deletePendingItem } from '../lib/local-db';
+import { scheduleExpiryNotifications } from '../lib/notifications';
 import type { InventoryUnit } from '@medstock/shared';
 
 // Inventory item with joined medication data
@@ -134,7 +135,10 @@ export async function refreshInventory(familyId: string): Promise<void> {
     .order('expiry_date');
   inventoryStore.loading.set(false);
   if (data) {
-    inventoryStore.items.set(data as unknown as InventoryRow[]);
+    const rows = data as unknown as InventoryRow[];
+    inventoryStore.items.set(rows);
+    // Re-schedule local notifications whenever inventory is refreshed
+    void scheduleExpiryNotifications(rows).catch(() => undefined);
   }
 }
 
