@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
-import { inventoryStore } from '../../../src/stores/inventory.store';
+import { inventoryStore, addInventoryItem } from '../../../src/stores/inventory.store';
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
@@ -60,7 +60,7 @@ export default function AddInventoryScreen() {
     const d = parseResult.data;
     const { data: userData } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('inventory_items').insert({
+    const { error, queued } = await addInventoryItem({
       family_id:    familyId,
       medication_id: d.medicationId ?? null,
       custom_name:  d.customName ?? null,
@@ -74,8 +74,11 @@ export default function AddInventoryScreen() {
 
     setLoading(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      Alert.alert('Erro', error);
       return;
+    }
+    if (queued) {
+      Alert.alert('Salvo localmente', 'Sem conexão. O item será sincronizado quando você ficar online.');
     }
     router.back();
   }

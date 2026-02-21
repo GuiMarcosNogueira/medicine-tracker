@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
+import { cacheMedicationResults, localSearchMedications } from '../../../src/lib/local-db';
 import type { MedicationSearchResult } from '@medstock/shared';
 
 export default function CatalogSearchScreen() {
@@ -42,10 +43,20 @@ export default function CatalogSearchScreen() {
       query: q,
       result_limit: 20,
     });
-    setLoading(false);
     if (!error && data) {
-      setResults(data as unknown as MedicationSearchResult[]);
+      const hits = data as unknown as MedicationSearchResult[];
+      setResults(hits);
+      // Cache results so they're available offline
+      void cacheMedicationResults(hits).catch(() => undefined);
+    } else {
+      // Supabase unreachable — fall back to local SQLite cache
+      try {
+        setResults(await localSearchMedications(q));
+      } catch {
+        setResults([]);
+      }
     }
+    setLoading(false);
   }
 
   return (
