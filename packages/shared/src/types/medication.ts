@@ -1,37 +1,39 @@
+// Types use snake_case to match Supabase column names directly.
+
 export interface Medication {
   id: string;
   ean: string | null;
-  anvisaCode: string | null;
-  productName: string;
-  genericName: string | null;
-  activeIngredient: string | null;
+  anvisa_code: string | null;
+  product_name: string;
+  generic_name: string | null;
+  active_ingredient: string | null;
   manufacturer: string | null;
   concentration: string | null;
-  pharmaceuticalForm: string | null;
-  routeOfAdmin: string | null;
-  atcCode: string | null;
-  atcDescription: string | null;
-  referencePrice: number | null;
+  pharmaceutical_form: string | null;
+  route_of_admin: string | null;
+  atc_code: string | null;
+  atc_description: string | null;
+  reference_price: number | null;
   presentation: string | null;
-  requiresPrescription: boolean;
-  isControlled: boolean;
-  createdAt: string;
-  updatedAt: string;
+  requires_prescription: boolean;
+  is_controlled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MedicationSearchResult {
   id: string;
   ean: string | null;
-  productName: string;
-  genericName: string | null;
-  activeIngredient: string | null;
+  product_name: string;
+  generic_name: string | null;
+  active_ingredient: string | null;
   concentration: string | null;
-  pharmaceuticalForm: string | null;
-  atcCode: string | null;
-  atcDescription: string | null;
+  pharmaceutical_form: string | null;
+  atc_code: string | null;
+  atc_description: string | null;
   manufacturer: string | null;
-  referencePrice: number | null;
-  requiresPrescription: boolean;
-  isControlled: boolean;
+  reference_price: number | null;
+  requires_prescription: boolean;
+  is_controlled: boolean;
   rank: number;
 }
