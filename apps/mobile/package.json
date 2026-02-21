@@ -12,11 +12,16 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
+    "@legendapp/state": "^2.1.15",
     "@medstock/shared": "workspace:*",
     "@medstock/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.97.0",
     "expo": "~52.0.0",
+    "expo-auth-session": "^7.0.10",
     "expo-router": "~4.0.0",
+    "expo-secure-store": "^15.0.8",
     "expo-status-bar": "~2.0.0",
+    "expo-web-browser": "^15.0.10",
     "react": "18.3.1",
     "react-native": "0.76.3",
     "react-native-safe-area-context": "4.12.0",

@@ -1,7 +1,8 @@
 import { Redirect } from 'expo-router';
+import { useSession } from '../src/hooks/useSession';
 
-// Auth guard: will be replaced with Legend-State session check in Phase 2.
-// For now, always redirect to sign-in.
 export default function IndexGuard() {
-  return <Redirect href="/(auth)/sign-in" />;
+  const { session, loading } = useSession();
+  if (loading) return null;
+  return <Redirect href={session ? '/(app)' : '/(auth)/sign-in'} />;
 }
