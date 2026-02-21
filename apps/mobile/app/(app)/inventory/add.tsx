@@ -88,6 +88,15 @@ export default function AddInventoryScreen() {
         </Pressable>
         <Text style={styles.title}>Adicionar ao estoque</Text>
 
+        <View style={styles.scanRow}>
+          <Pressable style={styles.scanChip} onPress={() => router.push('/(app)/scanner/barcode')}>
+            <Text style={styles.scanChipText}>Código de barras</Text>
+          </Pressable>
+          <Pressable style={styles.scanChip} onPress={() => router.push('/(app)/scanner/ocr')}>
+            <Text style={styles.scanChipText}>Ler rótulo (OCR)</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.label}>
           {fromCatalog ? 'Medicamento (catálogo)' : 'Nome do medicamento *'}
         </Text>
@@ -177,7 +186,10 @@ const styles = StyleSheet.create({
   content:         { padding: 16, paddingBottom: 40 },
   backBtn:         { marginBottom: 12 },
   backText:        { color: '#2563eb', fontSize: 15 },
-  title:           { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 20 },
+  title:           { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 12 },
+  scanRow:         { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  scanChip:        { flex: 1, borderWidth: 1, borderColor: '#2563eb', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  scanChipText:    { color: '#2563eb', fontWeight: '600', fontSize: 13 },
   label:           { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 },
   input:           { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#fff' },
   readOnly:        { backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 16 },
