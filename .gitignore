@@ -1,0 +1,24 @@
+node_modules/
+dist/
+build/
+.expo/
+.metro-cache/
+*.tsbuildinfo
+
+# Supabase
+apps/api/supabase/.temp/
+apps/api/supabase/functions/_shared/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

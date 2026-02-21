@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "lib": ["ES2022"],
+    "paths": {
+      "@medstock/shared": ["../../packages/shared/src/index.ts"],
+      "@medstock/shared/*": ["../../packages/shared/src/*"],
+      "@medstock/ui": ["../../packages/ui/src/index.ts"],
+      "@medstock/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}
