@@ -55,9 +55,14 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>MedStock</Text>
-        <Pressable style={styles.addBtn} onPress={() => router.push('/(app)/inventory/add')}>
-          <Text style={styles.addBtnText}>+ Adicionar</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.scanBtn} onPress={() => router.push('/(app)/scanner/ocr')}>
+            <Text style={styles.scanBtnText}>Escanear</Text>
+          </Pressable>
+          <Pressable style={styles.addBtn} onPress={() => router.push('/(app)/inventory/add')}>
+            <Text style={styles.addBtnText}>+ Adicionar</Text>
+          </Pressable>
+        </View>
       </View>
 
       {sections.length === 0 ? (
@@ -115,6 +120,9 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: '#f8fafc' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
+  headerActions:{ flexDirection: 'row', gap: 8 },
+  scanBtn:      { backgroundColor: '#f1f5f9', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: '#cbd5e1' },
+  scanBtnText:  { color: '#374151', fontWeight: '600', fontSize: 14 },
   title:        { fontSize: 22, fontWeight: 'bold', color: '#1e293b' },
   addBtn:       { backgroundColor: '#2563eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText:   { color: '#fff', fontWeight: '600', fontSize: 14 },

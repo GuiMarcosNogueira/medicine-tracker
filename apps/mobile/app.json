@@ -40,6 +40,13 @@
         {
           "enableFTS": true
         }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "MedStock precisa da câmera para ler rótulos.",
+          "enableCodeScanner": true
+        }
       ]
     ],
     "experiments": {

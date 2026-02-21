@@ -36,6 +36,7 @@ export default function AppLayout() {
         <Tabs.Screen name="inventory/index" options={{ title: 'Estoque' }} />
         <Tabs.Screen name="catalog/index"   options={{ title: 'Catálogo' }} />
         <Tabs.Screen name="settings/index"  options={{ title: 'Config' }} />
+        <Tabs.Screen name="scanner"         options={{ href: null }} />
       </Tabs>
     </SafeAreaProvider>
   );
