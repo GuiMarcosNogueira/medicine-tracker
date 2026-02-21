@@ -16,6 +16,7 @@
     "@medstock/shared": "workspace:*",
     "@medstock/ui": "workspace:*",
     "@supabase/supabase-js": "^2.97.0",
+    "date-fns": "^4.1.0",
     "expo": "~52.0.0",
     "expo-auth-session": "^7.0.10",
     "expo-router": "~4.0.0",
