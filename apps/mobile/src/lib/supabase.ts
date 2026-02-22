@@ -11,10 +11,16 @@ const SUPABASE_ANON_KEY = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
 // On web, SecureStore is unavailable (native-only) — fall back to localStorage.
 const CHUNK_SIZE = 2000;
 
+// Guard against SSR / Node.js environments where localStorage is not defined.
 const webStorageAdapter = {
-  getItem: (key: string): string | null => localStorage.getItem(key),
-  setItem: (key: string, value: string): void => { localStorage.setItem(key, value); },
-  removeItem: (key: string): void => { localStorage.removeItem(key); },
+  getItem: (key: string): string | null =>
+    typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null,
+  setItem: (key: string, value: string): void => {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, value);
+  },
+  removeItem: (key: string): void => {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
+  },
 };
 
 const nativeStorageAdapter = {
