@@ -30,6 +30,10 @@ const WEB_STUBS = {
     projectRoot,
     'src/__web_stubs__/react-native-vision-camera.js',
   ),
+  'react-native-vision-camera-mlkit': path.resolve(
+    projectRoot,
+    'src/__web_stubs__/react-native-vision-camera-mlkit.js',
+  ),
 };
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
