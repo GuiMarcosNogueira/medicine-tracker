@@ -5,6 +5,9 @@ build/
 .metro-cache/
 *.tsbuildinfo
 
+# Test coverage reports
+coverage/
+
 # Supabase
 apps/api/supabase/.temp/
 apps/api/supabase/functions/_shared/
