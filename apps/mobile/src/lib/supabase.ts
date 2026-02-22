@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 const SUPABASE_URL = process.env['EXPO_PUBLIC_SUPABASE_URL'] ?? '';
 const SUPABASE_ANON_KEY = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
@@ -7,9 +8,16 @@ const SUPABASE_ANON_KEY = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
 // SecureStore has a 2048-byte limit per key.
 // Google OAuth session tokens frequently exceed this limit.
 // We split them into 2000-byte chunks stored under indexed keys.
+// On web, SecureStore is unavailable (native-only) — fall back to localStorage.
 const CHUNK_SIZE = 2000;
 
-const ExpoSecureStoreAdapter = {
+const webStorageAdapter = {
+  getItem: (key: string): string | null => localStorage.getItem(key),
+  setItem: (key: string, value: string): void => { localStorage.setItem(key, value); },
+  removeItem: (key: string): void => { localStorage.removeItem(key); },
+};
+
+const nativeStorageAdapter = {
   getItem: async (key: string): Promise<string | null> => {
     const chunksStr = await SecureStore.getItemAsync(`${key}_chunks`);
     if (!chunksStr) return SecureStore.getItemAsync(key); // legacy single-key fallback
@@ -45,6 +53,8 @@ const ExpoSecureStoreAdapter = {
     await SecureStore.deleteItemAsync(key);
   },
 };
+
+const ExpoSecureStoreAdapter = Platform.OS === 'web' ? webStorageAdapter : nativeStorageAdapter;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
