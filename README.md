@@ -109,6 +109,18 @@ EXPO_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
 ```
 
+### Linkar o projeto Supabase
+
+Antes de aplicar as migrations, vincule o CLI ao seu projeto:
+
+```bash
+cd apps/api
+supabase link --project-ref <project-ref>
+cd ../..
+```
+
+> Você precisará da **database password** definida ao criar o projeto no Supabase.
+
 ### Banco de dados
 
 ```bash
