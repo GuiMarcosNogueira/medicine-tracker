@@ -42,6 +42,7 @@ export default function ForgotPasswordScreen() {
           value={email}
           onChangeText={setEmail}
           placeholder="Email"
+          placeholderTextColor="#9CA59C"
           autoCapitalize="none"
           keyboardType="email-address"
         />
@@ -51,7 +52,7 @@ export default function ForgotPasswordScreen() {
           onPress={() => { void handleReset(); }}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Enviar link</Text>}
+          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Enviar link</Text>}
         </Pressable>
 
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
@@ -63,17 +64,14 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  inner: { flex: 1, padding: 24, justifyContent: 'center', maxWidth: 400, alignSelf: 'center', width: '100%' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#64748b', marginBottom: 24 },
-  input: {
-    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10,
-    padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: '#fff',
-  },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F6F8F5' },
+  inner:     { flex: 1, padding: 24, justifyContent: 'center', maxWidth: 420, alignSelf: 'center', width: '100%' },
+  title:     { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 8, letterSpacing: -0.5 },
+  subtitle:  { fontSize: 14, color: '#5A625A', marginBottom: 24, lineHeight: 20 },
+  input:     { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  btn:       { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center' },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  backBtn: { alignItems: 'center', marginTop: 16 },
-  backText: { color: '#64748b', fontSize: 14 },
+  btnText:   { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  backBtn:   { alignItems: 'center', marginTop: 16 },
+  backText:  { color: '#5A625A', fontSize: 14 },
 });

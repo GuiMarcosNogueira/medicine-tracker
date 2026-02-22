@@ -116,7 +116,7 @@ export default function InventoryItemDetailScreen() {
   if (!item) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -250,35 +250,35 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#f8fafc' },
+  container:      { flex: 1, backgroundColor: '#F6F8F5' },
   content:        { padding: 16, paddingBottom: 40 },
   topBar:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  backText:       { color: '#2563eb', fontSize: 15 },
+  backText:       { color: '#1A9E96', fontSize: 15 },
   topActions:     { flexDirection: 'row', gap: 8 },
-  editBtn:        { backgroundColor: '#e0e7ff', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  editBtnText:    { color: '#3730a3', fontWeight: '600', fontSize: 13 },
-  deleteBtn:      { backgroundColor: '#fee2e2', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  deleteBtnText:  { color: '#dc2626', fontWeight: '600', fontSize: 13 },
-  itemName:       { fontSize: 20, fontWeight: 'bold', color: '#1e293b', marginBottom: 4 },
-  itemSub:        { fontSize: 13, color: '#64748b', marginBottom: 12 },
+  editBtn:        { backgroundColor: '#D0F7F5', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  editBtnText:    { color: '#147570', fontWeight: '600', fontSize: 13 },
+  deleteBtn:      { backgroundColor: '#FEE9E4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  deleteBtnText:  { color: '#F0735A', fontWeight: '600', fontSize: 13 },
+  itemName:       { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
+  itemSub:        { fontSize: 13, color: '#5A625A', marginBottom: 12 },
   statusBadge:    { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
   statusText:     { fontSize: 13, fontWeight: '700' },
-  card:           { backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' },
-  detailRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  detailLabel:    { fontSize: 13, color: '#64748b' },
-  detailValue:    { fontSize: 13, color: '#1e293b', fontWeight: '500' },
-  label:          { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 },
-  input:          { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#fff' },
+  card:           { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },
+  detailRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E8ECE5' },
+  detailLabel:    { fontSize: 13, color: '#5A625A' },
+  detailValue:    { fontSize: 13, color: '#1A1D1A', fontWeight: '500' },
+  label:          { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
+  input:          { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
   row:            { flexDirection: 'row', alignItems: 'flex-start' },
   rowField:       { flex: 1 },
-  unitChip:       { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  unitText:       { fontSize: 13, color: '#475569' },
-  unitTextActive: { color: '#fff' },
+  unitChip:       { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+  unitChipActive: { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
+  unitText:       { fontSize: 13, color: '#5A625A' },
+  unitTextActive: { color: '#FFFFFF' },
   editActions:    { flexDirection: 'row', gap: 12, marginTop: 8 },
-  cancelBtn:      { flex: 1, borderRadius: 10, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
-  cancelBtnText:  { color: '#475569', fontWeight: '600' },
-  saveBtn:        { flex: 1, backgroundColor: '#2563eb', borderRadius: 10, padding: 13, alignItems: 'center' },
+  cancelBtn:      { flex: 1, borderRadius: 16, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC' },
+  cancelBtnText:  { color: '#5A625A', fontWeight: '600' },
+  saveBtn:        { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
   saveBtnDisabled:{ opacity: 0.6 },
-  saveBtnText:    { color: '#fff', fontWeight: '600' },
+  saveBtnText:    { color: '#FFFFFF', fontWeight: '700' },
 });

@@ -50,7 +50,7 @@ export default function InventoryListScreen() {
       />
 
       {loading && items.length === 0 && (
-        <ActivityIndicator style={styles.loader} color="#2563eb" />
+        <ActivityIndicator style={styles.loader} color="#1A9E96" />
       )}
 
       <FlatList
@@ -90,20 +90,20 @@ export default function InventoryListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#f8fafc' },
+  container:   { flex: 1, backgroundColor: '#F6F8F5' },
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
-  title:       { fontSize: 22, fontWeight: 'bold', color: '#1e293b' },
-  addBtn:      { backgroundColor: '#2563eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  addBtnText:  { color: '#fff', fontWeight: '600', fontSize: 14 },
-  search:      { margin: 12, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 10, fontSize: 15, backgroundColor: '#fff' },
+  title:       { fontSize: 22, fontWeight: '700', color: '#1A1D1A' },
+  addBtn:      { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
+  addBtnText:  { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  search:      { margin: 12, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
   loader:      { marginTop: 20 },
-  item:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff' },
+  item:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
   dot:         { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   itemContent: { flex: 1 },
-  itemName:    { fontSize: 14, fontWeight: '600', color: '#1e293b' },
-  itemMeta:    { fontSize: 12, color: '#64748b', marginTop: 2 },
-  separator:   { height: 1, backgroundColor: '#f1f5f9' },
+  itemName:    { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
+  itemMeta:    { fontSize: 12, color: '#5A625A', marginTop: 2 },
+  separator:   { height: 1, backgroundColor: '#E8ECE5' },
   empty:       { padding: 32, alignItems: 'center' },
-  emptyText:   { color: '#94a3b8', fontSize: 14 },
+  emptyText:   { color: '#9CA59C', fontSize: 14 },
   listEmpty:   { flex: 1 },
 });

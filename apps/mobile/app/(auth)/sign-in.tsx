@@ -49,19 +49,48 @@ export default function SignInScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
+        <View style={styles.logoWrap}>
+          <View style={styles.logoBg}>
+            <View style={styles.crossV} />
+            <View style={styles.crossH} />
+          </View>
+        </View>
+
         <Text style={styles.title}>MedStock</Text>
         <Text style={styles.subtitle}>Gestão de medicamentos da família</Text>
-        <TextInput style={styles.input} value={email} onChangeText={setEmail}
-          placeholder="Email" autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-        <TextInput style={styles.input} value={password} onChangeText={setPassword}
-          placeholder="Senha" secureTextEntry autoComplete="password" />
-        <Pressable style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
-          onPress={() => { void handleEmailSignIn(); }} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTextLight}>Entrar</Text>}
+
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          placeholderTextColor="rgba(255,255,255,0.35)"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+        />
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Senha"
+          placeholderTextColor="rgba(255,255,255,0.35)"
+          secureTextEntry
+          autoComplete="password"
+        />
+
+        <Pressable
+          style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
+          onPress={() => { void handleEmailSignIn(); }}
+          disabled={loading}
+        >
+          {loading ? <ActivityIndicator color="#0B3D3B" /> : <Text style={styles.btnTextDark}>Entrar</Text>}
         </Pressable>
+
         <Pressable style={[styles.btn, styles.btnOutline]} onPress={() => { void handleGoogleSignIn(); }}>
-          <Text style={styles.btnTextDark}>Entrar com Google</Text>
+          <Text style={styles.btnTextLight}>Entrar com Google</Text>
         </Pressable>
+
         <Link href="/(auth)/forgot-password" style={styles.link}>Esqueci minha senha</Link>
         <View style={styles.row}>
           <Text style={styles.mutedText}>Não tem conta? </Text>
@@ -73,18 +102,27 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  inner: { flex: 1, padding: 24, justifyContent: 'center', maxWidth: 400, alignSelf: 'center', width: '100%' },
-  title: { fontSize: 36, fontWeight: 'bold', color: '#1e293b', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 32 },
-  input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: '#fff' },
-  btn: { borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 10 },
-  btnPrimary: { backgroundColor: '#2563eb' },
-  btnOutline: { borderWidth: 1, borderColor: '#2563eb' },
-  btnDisabled: { opacity: 0.6 },
-  btnTextLight: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  btnTextDark: { color: '#2563eb', fontWeight: '600', fontSize: 16 },
-  link: { color: '#2563eb', textAlign: 'center', marginTop: 4 },
-  row: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
-  mutedText: { color: '#64748b', fontSize: 14 },
+  container:    { flex: 1, backgroundColor: '#0B3D3B' },
+  inner:        { flex: 1, padding: 28, justifyContent: 'center', maxWidth: 420, alignSelf: 'center', width: '100%' },
+
+  logoWrap:     { alignItems: 'center', marginBottom: 24 },
+  logoBg:       { width: 64, height: 64, borderRadius: 16, backgroundColor: '#22C9BF', alignItems: 'center', justifyContent: 'center' },
+  crossV:       { position: 'absolute', width: 10, height: 32, borderRadius: 3, backgroundColor: '#0B3D3B' },
+  crossH:       { position: 'absolute', width: 32, height: 10, borderRadius: 3, backgroundColor: '#0B3D3B' },
+
+  title:        { fontSize: 36, fontWeight: '700', color: '#FFFFFF', textAlign: 'center', marginBottom: 6, letterSpacing: -0.5 },
+  subtitle:     { fontSize: 14, color: '#A0EDE8', textAlign: 'center', marginBottom: 36, fontWeight: '300' },
+
+  input:        { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFFFFF' },
+
+  btn:          { borderRadius: 16, padding: 15, alignItems: 'center', marginBottom: 10 },
+  btnPrimary:   { backgroundColor: '#22C9BF' },
+  btnOutline:   { borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  btnDisabled:  { opacity: 0.6 },
+  btnTextDark:  { color: '#0B3D3B', fontWeight: '700', fontSize: 16 },
+  btnTextLight: { color: 'rgba(255,255,255,0.85)', fontWeight: '600', fontSize: 16 },
+
+  link:         { color: '#5EDDD5', textAlign: 'center', marginTop: 6, fontSize: 14 },
+  row:          { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  mutedText:    { color: 'rgba(255,255,255,0.4)', fontSize: 14 },
 });

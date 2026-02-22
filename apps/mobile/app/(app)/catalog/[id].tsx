@@ -41,7 +41,7 @@ export default function MedicationDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -112,26 +112,26 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#f8fafc' },
+  container:       { flex: 1, backgroundColor: '#F6F8F5' },
   content:         { padding: 16, paddingBottom: 40 },
   backBtn:         { marginBottom: 12 },
-  backText:        { color: '#2563eb', fontSize: 15 },
-  productName:     { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 4 },
-  activeIngredient:{ fontSize: 14, color: '#475569', marginBottom: 20 },
+  backText:        { color: '#1A9E96', fontSize: 15 },
+  productName:     { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
+  activeIngredient:{ fontSize: 14, color: '#5A625A', marginBottom: 20 },
   card: {
-    backgroundColor: '#fff', borderRadius: 12,
-    borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20,
+    backgroundColor: '#FFFFFF', borderRadius: 16,
+    borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 20,
   },
   row: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: 14, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1, borderBottomColor: '#E8ECE5',
   },
-  rowLabel:  { fontSize: 13, color: '#64748b', flex: 1 },
-  rowValue:  { fontSize: 13, color: '#1e293b', fontWeight: '500', flex: 2, textAlign: 'right' },
+  rowLabel:  { fontSize: 13, color: '#5A625A', flex: 1 },
+  rowValue:  { fontSize: 13, color: '#1A1D1A', fontWeight: '500', flex: 2, textAlign: 'right' },
   addBtn: {
-    backgroundColor: '#2563eb', borderRadius: 10,
-    padding: 14, alignItems: 'center',
+    backgroundColor: '#1A9E96', borderRadius: 16,
+    padding: 15, alignItems: 'center',
   },
-  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  addBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });

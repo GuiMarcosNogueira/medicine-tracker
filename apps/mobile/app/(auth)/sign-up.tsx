@@ -42,20 +42,20 @@ export default function SignUpScreen() {
         <Text style={styles.title}>Criar conta</Text>
 
         <TextInput style={styles.input} value={fullName} onChangeText={setFullName}
-          placeholder="Nome completo" autoComplete="name" />
+          placeholder="Nome completo" placeholderTextColor="#9CA59C" autoComplete="name" />
         <TextInput style={styles.input} value={email} onChangeText={setEmail}
-          placeholder="Email" autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+          placeholder="Email" placeholderTextColor="#9CA59C" autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
         <TextInput style={styles.input} value={password} onChangeText={setPassword}
-          placeholder="Senha (mín. 8 caracteres)" secureTextEntry />
+          placeholder="Senha (mín. 8 caracteres)" placeholderTextColor="#9CA59C" secureTextEntry />
         <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword}
-          placeholder="Confirmar senha" secureTextEntry />
+          placeholder="Confirmar senha" placeholderTextColor="#9CA59C" secureTextEntry />
 
         <Pressable
           style={[styles.btn, loading && styles.btnDisabled]}
           onPress={() => { void handleSignUp(); }}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Cadastrar</Text>}
+          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Cadastrar</Text>}
         </Pressable>
 
         <View style={styles.row}>
@@ -68,17 +68,14 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  inner: { padding: 24, maxWidth: 400, alignSelf: 'center', width: '100%', paddingTop: 48 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1e293b', marginBottom: 24 },
-  input: {
-    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10,
-    padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: '#fff',
-  },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 4 },
+  container: { flex: 1, backgroundColor: '#F6F8F5' },
+  inner:     { padding: 24, maxWidth: 420, alignSelf: 'center', width: '100%', paddingTop: 48 },
+  title:     { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 24, letterSpacing: -0.5 },
+  input:     { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  btn:       { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 4 },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  link: { color: '#2563eb' },
-  row: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
-  mutedText: { color: '#64748b', fontSize: 14 },
+  btnText:   { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  link:      { color: '#1A9E96' },
+  row:       { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  mutedText: { color: '#5A625A', fontSize: 14 },
 });

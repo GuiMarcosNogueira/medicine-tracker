@@ -44,7 +44,6 @@ export default function InviteAcceptScreen() {
       return;
     }
 
-    // Get family_id from invite
     const { data: invite } = await supabase
       .from('family_invites')
       .select('family_id, invited_role')
@@ -57,7 +56,6 @@ export default function InviteAcceptScreen() {
       return;
     }
 
-    // Insert family member
     const { error: memberError } = await supabase
       .from('family_members')
       .insert({ family_id: invite.family_id, profile_id: user.id, role: invite.invited_role });
@@ -68,7 +66,6 @@ export default function InviteAcceptScreen() {
       return;
     }
 
-    // Mark invite as accepted
     await supabase
       .from('family_invites')
       .update({ accepted_at: new Date().toISOString() })
@@ -83,7 +80,7 @@ export default function InviteAcceptScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#1A9E96" />
       </SafeAreaView>
     );
   }
@@ -115,7 +112,7 @@ export default function InviteAcceptScreen() {
           onPress={() => { void handleAccept(); }}
           disabled={accepting}
         >
-          {accepting ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Aceitar convite</Text>}
+          {accepting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Aceitar convite</Text>}
         </Pressable>
         <Pressable onPress={() => router.replace('/(auth)/sign-in')} style={styles.cancelBtn}>
           <Text style={styles.cancelText}>Recusar</Text>
@@ -126,14 +123,14 @@ export default function InviteAcceptScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  inner: { padding: 32, alignItems: 'center', maxWidth: 400, width: '100%' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 16 },
-  body: { fontSize: 16, color: '#475569', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  highlight: { fontWeight: 'bold', color: '#2563eb' },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center', width: '100%' },
+  container:   { flex: 1, backgroundColor: '#F6F8F5', alignItems: 'center', justifyContent: 'center' },
+  inner:       { padding: 32, alignItems: 'center', maxWidth: 420, width: '100%' },
+  title:       { fontSize: 24, fontWeight: '700', color: '#1A1D1A', marginBottom: 16, letterSpacing: -0.5 },
+  body:        { fontSize: 16, color: '#5A625A', textAlign: 'center', lineHeight: 26, marginBottom: 32 },
+  highlight:   { fontWeight: '700', color: '#1A9E96' },
+  btn:         { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', width: '100%' },
   btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  cancelBtn: { marginTop: 12 },
-  cancelText: { color: '#64748b', fontSize: 14 },
+  btnText:     { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  cancelBtn:   { marginTop: 16 },
+  cancelText:  { color: '#5A625A', fontSize: 14 },
 });

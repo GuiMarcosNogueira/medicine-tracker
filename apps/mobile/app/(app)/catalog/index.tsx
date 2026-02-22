@@ -74,7 +74,7 @@ export default function CatalogSearchScreen() {
         />
       </View>
 
-      {loading && <ActivityIndicator style={styles.loader} color="#2563eb" />}
+      {loading && <ActivityIndicator style={styles.loader} color="#1A9E96" />}
 
       <FlatList
         data={results}
@@ -115,22 +115,22 @@ export default function CatalogSearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#f8fafc' },
+  container:  { flex: 1, backgroundColor: '#F6F8F5' },
   header:     { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  title:      { fontSize: 26, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
+  title:      { fontSize: 26, fontWeight: '700', color: '#1A1D1A', marginBottom: 8 },
   input: {
-    borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10,
-    padding: 12, fontSize: 16, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16,
+    padding: 12, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A',
   },
   loader:     { marginTop: 16 },
-  item:       { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff' },
-  itemName:   { fontSize: 15, fontWeight: '600', color: '#1e293b' },
-  itemSub:    { fontSize: 13, color: '#475569', marginTop: 2 },
+  item:       { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
+  itemName:   { fontSize: 15, fontWeight: '600', color: '#1A1D1A' },
+  itemSub:    { fontSize: 13, color: '#5A625A', marginTop: 2 },
   itemMeta:   { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  metaManuf:  { fontSize: 12, color: '#94a3b8', flex: 1 },
-  metaPrice:  { fontSize: 12, color: '#2563eb', fontWeight: '600' },
-  separator:  { height: 1, backgroundColor: '#f1f5f9' },
+  metaManuf:  { fontSize: 12, color: '#9CA59C', flex: 1 },
+  metaPrice:  { fontSize: 12, color: '#1A9E96', fontWeight: '600' },
+  separator:  { height: 1, backgroundColor: '#E8ECE5' },
   empty:      { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 48 },
-  emptyText:  { fontSize: 14, color: '#94a3b8' },
+  emptyText:  { fontSize: 14, color: '#9CA59C' },
   listEmpty:  { flex: 1 },
 });

@@ -46,7 +46,7 @@ export default function DashboardScreen() {
   if (loading && items.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -118,28 +118,28 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: '#f8fafc' },
+  container:    { flex: 1, backgroundColor: '#F6F8F5' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
   headerActions:{ flexDirection: 'row', gap: 8 },
-  scanBtn:      { backgroundColor: '#f1f5f9', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: '#cbd5e1' },
-  scanBtnText:  { color: '#374151', fontWeight: '600', fontSize: 14 },
-  title:        { fontSize: 22, fontWeight: 'bold', color: '#1e293b' },
-  addBtn:       { backgroundColor: '#2563eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  addBtnText:   { color: '#fff', fontWeight: '600', fontSize: 14 },
+  scanBtn:      { backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: '#D1D9CC' },
+  scanBtnText:  { color: '#2E332E', fontWeight: '600', fontSize: 14 },
+  title:        { fontSize: 22, fontWeight: '700', color: '#1A1D1A' },
+  addBtn:       { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
+  addBtnText:   { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   list:         { paddingBottom: 20 },
-  sectionHeader:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#f1f5f9', borderLeftWidth: 3, marginTop: 8 },
+  sectionHeader:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#E8ECE5', borderLeftWidth: 3, marginTop: 8 },
   sectionTitle: { fontSize: 13, fontWeight: '700' },
-  sectionCount: { fontSize: 13, color: '#64748b', fontWeight: '600' },
-  item:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff' },
+  sectionCount: { fontSize: 13, color: '#5A625A', fontWeight: '600' },
+  item:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFFFFF' },
   itemLeft:     { flex: 1 },
-  itemName:     { fontSize: 14, fontWeight: '600', color: '#1e293b' },
-  itemMeta:     { fontSize: 12, color: '#64748b', marginTop: 2 },
-  badge:        { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginLeft: 8 },
+  itemName:     { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
+  itemMeta:     { fontSize: 12, color: '#5A625A', marginTop: 2 },
+  badge:        { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 8 },
   badgeText:    { fontSize: 12, fontWeight: '700' },
-  separator:    { height: 1, backgroundColor: '#f1f5f9' },
+  separator:    { height: 1, backgroundColor: '#E8ECE5' },
   empty:        { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyTitle:   { fontSize: 20, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
-  emptyText:    { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
-  emptyBtn:     { backgroundColor: '#2563eb', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12 },
-  emptyBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  emptyTitle:   { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 8 },
+  emptyText:    { fontSize: 14, color: '#5A625A', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
+  emptyBtn:     { backgroundColor: '#1A9E96', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 12 },
+  emptyBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 });

@@ -7,6 +7,14 @@ import { authStore } from '../../src/stores/auth.store';
 import { initInventory, cleanupInventory } from '../../src/stores/inventory.store';
 import { registerPushToken } from '../../src/lib/notifications';
 
+const TAB_OPTIONS = {
+  headerShown: false,
+  tabBarActiveTintColor: '#1A9E96',
+  tabBarInactiveTintColor: '#9CA59C',
+  tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E0E4E0' },
+  tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const },
+};
+
 export default function AppLayout() {
   const session = useSelector(authStore.session);
 
@@ -18,22 +26,9 @@ export default function AppLayout() {
     return () => { cleanupInventory(); };
   }, [session?.user.id]);
 
-  if (Platform.OS === 'web') {
-    return (
-      <SafeAreaProvider>
-        <Tabs screenOptions={{ headerShown: false }} />
-      </SafeAreaProvider>
-    );
-  }
-
   return (
     <SafeAreaProvider>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: '#2563eb',
-        }}
-      >
+      <Tabs screenOptions={TAB_OPTIONS}>
         <Tabs.Screen name="index"           options={{ title: 'Início' }} />
         <Tabs.Screen name="inventory/index" options={{ title: 'Estoque' }} />
         <Tabs.Screen name="catalog/index"   options={{ title: 'Catálogo' }} />

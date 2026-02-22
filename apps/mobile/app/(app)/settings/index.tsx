@@ -51,13 +51,13 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#f8fafc' },
+  container:   { flex: 1, backgroundColor: '#F6F8F5' },
   content:     { flex: 1, padding: 16 },
-  title:       { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 20 },
-  card:        { backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 24 },
-  label:       { fontSize: 12, color: '#64748b', marginBottom: 2 },
-  value:       { fontSize: 15, color: '#1e293b', fontWeight: '500', marginBottom: 12 },
-  divider:     { height: 1, backgroundColor: '#f1f5f9', marginBottom: 12 },
-  signOutBtn:  { borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#ef4444' },
-  signOutText: { color: '#ef4444', fontWeight: '600', fontSize: 15 },
+  title:       { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 20 },
+  card:        { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 24 },
+  label:       { fontSize: 12, color: '#5A625A', marginBottom: 2 },
+  value:       { fontSize: 15, color: '#1A1D1A', fontWeight: '500', marginBottom: 12 },
+  divider:     { height: 1, backgroundColor: '#E8ECE5', marginBottom: 12 },
+  signOutBtn:  { borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#F0735A' },
+  signOutText: { color: '#F0735A', fontWeight: '600', fontSize: 15 },
 });

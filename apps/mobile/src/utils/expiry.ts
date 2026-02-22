@@ -35,11 +35,11 @@ export function formatExpiryDate(expiryDate: string): string {
 }
 
 export const EXPIRY_COLORS: Record<ExpiryStatus, string> = {
-  expired:  '#ef4444',
-  critical: '#f97316',
-  warning:  '#eab308',
-  soon:     '#3b82f6',
-  ok:       '#22c55e',
+  expired:  '#F0735A', // coral-500
+  critical: '#F0735A', // coral-500
+  warning:  '#F5A623', // amber-500
+  soon:     '#F7BE5A', // amber-400
+  ok:       '#22C9BF', // teal-500
 };
 
 export const EXPIRY_LABELS: Record<ExpiryStatus, string> = {
