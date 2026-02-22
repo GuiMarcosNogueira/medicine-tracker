@@ -85,7 +85,7 @@ CREATE TABLE public.family_invites (
   family_id     UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
   invited_email TEXT NOT NULL,
   invited_role  public.family_role NOT NULL DEFAULT 'viewer',
-  token         TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(24), 'hex'),
+  token         TEXT NOT NULL UNIQUE DEFAULT replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''),
   invited_by    UUID NOT NULL REFERENCES public.profiles(id),
   expires_at    TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '7 days'),
   accepted_at   TIMESTAMPTZ,
