@@ -11,6 +11,11 @@ coverage/
 # Supabase
 apps/api/supabase/.temp/
 apps/api/supabase/functions/_shared/
+supabase/.temp/
+
+# Lock files from wrong package managers
+package-lock.json
+yarn.lock
 
 # Environment
 .env

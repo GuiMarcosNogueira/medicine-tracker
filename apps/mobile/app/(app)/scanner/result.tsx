@@ -94,7 +94,7 @@ export default function OcrResultScreen() {
     if (queued) {
       Alert.alert('Salvo localmente', 'Sem conexão. O item será sincronizado quando você ficar online.');
     }
-    router.push('/(app)/');
+    router.push('/(app)');
   }
 
   return (
