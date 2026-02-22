@@ -34,6 +34,10 @@ const WEB_STUBS = {
     projectRoot,
     'src/__web_stubs__/react-native-vision-camera-mlkit.js',
   ),
+  'react-native-worklets-core': path.resolve(
+    projectRoot,
+    'src/__web_stubs__/react-native-worklets-core.js',
+  ),
 };
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
