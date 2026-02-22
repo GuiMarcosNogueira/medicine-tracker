@@ -119,11 +119,11 @@ export SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>
 ### Banco de dados
 
 ```bash
-# Aplicar todas as migrations no projeto Supabase
-pnpm --filter api supabase db push
+# Aplicar todas as migrations no projeto Supabase Cloud
+pnpm --filter api db:push
 
-# (Opcional) Subir Supabase local para desenvolvimento
-pnpm --filter api supabase start
+# (Opcional) Subir Supabase local para desenvolvimento (requer Docker)
+pnpm --filter api start
 ```
 
 ### Importar catálogo CMED/ANVISA
