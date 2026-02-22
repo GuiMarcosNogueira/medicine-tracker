@@ -20,7 +20,7 @@ import * as fs from 'fs';
 // Update when ANVISA renames columns (happens monthly).
 const COLUMN_MAP = {
   product_name:        ['PRODUTO', 'NOME DO PRODUTO', 'NOME_PRODUTO'],
-  active_ingredient:   ['SUBSTANCIA', 'PRINCIPIO ATIVO', 'PRINCÍPIO ATIVO'],
+  active_ingredient:   ['SUBSTÂNCIA', 'SUBSTANCIA', 'PRINCIPIO ATIVO', 'PRINCÍPIO ATIVO'],
   manufacturer:        ['LABORATORIO', 'LABORATÓRIO', 'FABRICANTE'],
   ean:                 ['EAN 1', 'EAN_1', 'EAN1', 'CÓDIGO EAN', 'CODIGO EAN'],
   presentation:        ['APRESENTACAO', 'APRESENTAÇÃO'],
@@ -128,7 +128,41 @@ async function main(): Promise<void> {
     return;
   }
 
+  // The CMED spreadsheet has title rows at the top before the real column headers.
+  // Scan the first 10 rows to find the one that contains recognizable column names.
+  const allRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    defval: null,
+    raw: false,
+  });
+
+  const allCandidates = Object.values(COLUMN_MAP).flat().map(c => c.toUpperCase());
+
+  let headerRowIndex = -1;
+  for (let r = 0; r < Math.min(50, allRows.length); r++) {
+    const row = allRows[r];
+    if (!Array.isArray(row)) continue;
+    const upperCells = row.map(c => String(c ?? '').trim().toUpperCase());
+    if (allCandidates.some(c => upperCells.includes(c))) {
+      headerRowIndex = r;
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1) {
+    console.error('❌  Linha de cabeçalho não encontrada nas primeiras 10 linhas. Verifique COLUMN_MAP.');
+    console.error('    Primeiras linhas:');
+    allRows.slice(0, 5).forEach((r, i) => {
+      console.error(`    Linha ${i + 1}: ${(r as unknown[]).slice(0, 5).join(' | ')}`);
+    });
+    process.exit(1);
+    return;
+  }
+
+  console.log(`ℹ️   Cabeçalhos encontrados na linha ${headerRowIndex + 1}`);
+
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+    range: headerRowIndex,
     defval: null,
     raw: false,
   });
