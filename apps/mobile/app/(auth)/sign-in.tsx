@@ -92,10 +92,10 @@ export default function SignInScreen() {
         </Pressable>
 
         <Link href="/(auth)/forgot-password" style={styles.link}>Esqueci minha senha</Link>
-        <View style={styles.row}>
+        <Text style={styles.row}>
           <Text style={styles.mutedText}>Não tem conta? </Text>
           <Link href="/(auth)/sign-up" style={styles.link}>Cadastrar</Link>
-        </View>
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -123,6 +123,6 @@ const styles = StyleSheet.create({
   btnTextLight: { color: 'rgba(255,255,255,0.85)', fontWeight: '600', fontSize: 16 },
 
   link:         { color: '#5EDDD5', textAlign: 'center', marginTop: 6, fontSize: 14 },
-  row:          { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  row:          { textAlign: 'center', marginTop: 20 },
   mutedText:    { color: 'rgba(255,255,255,0.4)', fontSize: 14 },
 });

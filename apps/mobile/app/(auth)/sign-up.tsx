@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Link } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
@@ -58,10 +58,10 @@ export default function SignUpScreen() {
           {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Cadastrar</Text>}
         </Pressable>
 
-        <View style={styles.row}>
+        <Text style={styles.row}>
           <Text style={styles.mutedText}>Já tem conta? </Text>
           <Link href="/(auth)/sign-in" style={styles.link}>Entrar</Link>
-        </View>
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -76,6 +76,6 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText:   { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
   link:      { color: '#1A9E96' },
-  row:       { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  row:       { textAlign: 'center', marginTop: 20 },
   mutedText: { color: '#5A625A', fontSize: 14 },
 });
