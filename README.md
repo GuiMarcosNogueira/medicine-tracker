@@ -109,13 +109,6 @@ EXPO_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
 ```
 
-Para o script de importação CMED, exporte antes de rodar:
-
-```bash
-export SUPABASE_URL=https://<seu-projeto>.supabase.co
-export SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>
-```
-
 ### Banco de dados
 
 ```bash
@@ -128,10 +121,19 @@ pnpm --filter api start
 
 ### Importar catálogo CMED/ANVISA
 
-Baixe a tabela CMED mais recente em [anvisa.gov.br](https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos) e execute:
+Baixe a tabela CMED mais recente em [anvisa.gov.br](https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos).
+
+Exporte as variáveis de ambiente antes de rodar (o script usa a service role key para ignorar RLS):
 
 ```bash
-pnpm --filter api tsx scripts/import-cmed.ts caminho/para/cmed.xlsx
+export SUPABASE_URL=https://<seu-projeto>.supabase.co
+export SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>
+```
+
+Em seguida execute o script passando o **caminho absoluto** para o arquivo `.xlsx`:
+
+```bash
+pnpm --filter api import:cmed -- /caminho/absoluto/para/cmed.xlsx
 ```
 
 > **Atenção:** os nomes das colunas da tabela CMED mudam a cada publicação mensal da ANVISA. Verifique o `COLUMN_MAP` no script antes de importar.
@@ -190,8 +192,9 @@ pnpm --filter mobile exec vitest run --coverage
 | `pnpm --filter mobile start` | Servidor Expo dev |
 | `pnpm --filter mobile android` | Build dev client Android |
 | `pnpm --filter mobile ios` | Build dev client iOS |
-| `pnpm --filter api supabase db push` | Aplicar migrations |
-| `pnpm --filter api supabase start` | Subir Supabase local |
+| `pnpm --filter api db:push` | Aplicar migrations |
+| `pnpm --filter api start` | Subir Supabase local |
+| `pnpm --filter api import:cmed -- /path/to/cmed.xlsx` | Importar catálogo CMED/ANVISA |
 
 ---
 
