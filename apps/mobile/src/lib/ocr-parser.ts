@@ -28,6 +28,7 @@ function extractExpiry(text: string): string | null {
   const re = /(?:val|venc|exp)\.?\s*:?\s*(\d{2})[\/\-](\d{4}|\d{2})/i;
   const m = text.match(re);
   if (!m) return null;
+  /* v8 ignore next 2 -- groups always defined when regex matches (non-optional capture groups) */
   const month = m[1] ?? '';
   const yearRaw = m[2] ?? '';
   const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;

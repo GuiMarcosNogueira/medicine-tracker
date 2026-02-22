@@ -1,8 +1,19 @@
 import { differenceInCalendarDays } from 'date-fns';
 import type { ExpiryStatus } from '@medstock/shared';
 
+/**
+ * Parse an ISO date string (YYYY-MM-DD) as a local calendar date.
+ * Using `new Date(string)` would interpret midnight UTC, which in UTC-3 (Brasília)
+ * shifts the date one day back — causing wrong expiry status for Brazilian users.
+ */
+function parseLocalDate(iso: string): Date {
+  const parts = iso.split('-');
+  /* v8 ignore next -- fallbacks unreachable for valid YYYY-MM-DD strings (noUncheckedIndexedAccess) */
+  return new Date(Number(parts[0] ?? '0'), Number(parts[1] ?? '1') - 1, Number(parts[2] ?? '1'));
+}
+
 export function getExpiryStatus(expiryDate: string): ExpiryStatus {
-  const days = differenceInCalendarDays(new Date(expiryDate), new Date());
+  const days = differenceInCalendarDays(parseLocalDate(expiryDate), new Date());
   if (days < 0) return 'expired';
   if (days <= 7) return 'critical';
   if (days <= 15) return 'warning';
@@ -11,11 +22,12 @@ export function getExpiryStatus(expiryDate: string): ExpiryStatus {
 }
 
 export function daysUntilExpiry(expiryDate: string): number {
-  return differenceInCalendarDays(new Date(expiryDate), new Date());
+  return differenceInCalendarDays(parseLocalDate(expiryDate), new Date());
 }
 
 export function formatExpiryDate(expiryDate: string): string {
   const parts = expiryDate.split('-');
+  /* v8 ignore next 3 -- fallbacks unreachable for valid YYYY-MM-DD strings */
   const y = parts[0] ?? '';
   const m = parts[1] ?? '';
   const d = parts[2] ?? '';
