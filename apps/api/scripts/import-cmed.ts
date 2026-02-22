@@ -233,7 +233,14 @@ async function main(): Promise<void> {
 
     // Rows with EAN → upsert (idempotent on re-import).
     // Rows without EAN → insert (may duplicate on re-import; acceptable for catalog).
-    const withEan    = records.filter(r => r.ean !== null);
+    // Deduplicate by EAN within the batch: CMED lists the same EAN multiple times
+    // (one row per ICMS rate). Keeping the last occurrence is fine since the
+    // catalog fields (name, manufacturer, etc.) are identical across duplicates.
+    const eanSeen = new Map<string, (typeof records)[0]>();
+    for (const r of records) {
+      if (r.ean !== null) eanSeen.set(r.ean, r);
+    }
+    const withEan    = Array.from(eanSeen.values());
     const withoutEan = records.filter(r => r.ean === null);
 
     let batchErr = false;
