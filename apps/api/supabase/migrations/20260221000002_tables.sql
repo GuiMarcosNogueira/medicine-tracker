@@ -51,7 +51,7 @@ CREATE TRIGGER trg_on_auth_user_created
 -- FAMILIES
 -- ===========================
 CREATE TABLE public.families (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 100),
   owner_id    UUID NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -81,7 +81,7 @@ CREATE INDEX idx_family_members_profile ON public.family_members(profile_id);
 -- FAMILY INVITES
 -- ===========================
 CREATE TABLE public.family_invites (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id     UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
   invited_email TEXT NOT NULL,
   invited_role  public.family_role NOT NULL DEFAULT 'viewer',
@@ -101,7 +101,7 @@ CREATE INDEX idx_family_invites_email ON public.family_invites(invited_email);
 -- Global table readable by all authenticated users.
 -- ===========================
 CREATE TABLE public.medications (
-  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   -- CMED / ANVISA identification
   ean                   TEXT UNIQUE,              -- EAN-13 barcode
   anvisa_code           TEXT,                    -- Registro ANVISA
@@ -141,7 +141,7 @@ CREATE TRIGGER trg_medications_updated_at
 -- Scoped to a family. Supports soft-delete for offline sync.
 -- ===========================
 CREATE TABLE public.inventory_items (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id         UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
   medication_id     UUID REFERENCES public.medications(id) ON DELETE SET NULL,
   -- Denormalized name for items not matched to catalog
@@ -176,7 +176,7 @@ CREATE TRIGGER trg_inventory_updated_at
 -- DEVICE PUSH TOKENS
 -- ===========================
 CREATE TABLE public.device_tokens (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   token       TEXT NOT NULL UNIQUE,
   platform    TEXT NOT NULL CHECK (platform IN ('ios', 'android', 'web')),
@@ -195,7 +195,7 @@ CREATE TRIGGER trg_device_tokens_updated_at
 -- Prevents duplicate alerts for the same item+type on the same day.
 -- ===========================
 CREATE TABLE public.notification_log (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id         UUID NOT NULL REFERENCES public.families(id) ON DELETE CASCADE,
   inventory_item_id UUID REFERENCES public.inventory_items(id) ON DELETE SET NULL,
   type              TEXT NOT NULL CHECK (type IN ('expiry_30', 'expiry_15', 'expiry_7', 'expired')),

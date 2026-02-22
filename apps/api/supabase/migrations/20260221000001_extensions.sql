@@ -2,9 +2,6 @@
 -- Migration 001: Extensions e Text Search Configuration PT
 -- ============================================================
 
--- UUID generation
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Strip diacritics/accents before full-text indexing
 CREATE EXTENSION IF NOT EXISTS "unaccent";
 
