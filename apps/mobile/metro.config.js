@@ -23,4 +23,20 @@ config.cacheStores = [
   new FileStore({ root: path.join(projectRoot, '.metro-cache') }),
 ];
 
+// On web, replace native-only modules with lightweight stubs so SSR and the
+// browser bundle don't crash when the native module initializes.
+const WEB_STUBS = {
+  'react-native-vision-camera': path.resolve(
+    projectRoot,
+    'src/__web_stubs__/react-native-vision-camera.js',
+  ),
+};
+
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform === 'web' && Object.prototype.hasOwnProperty.call(WEB_STUBS, moduleName)) {
+    return { filePath: WEB_STUBS[moduleName], type: 'sourceFile' };
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;
