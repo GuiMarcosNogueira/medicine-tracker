@@ -7,7 +7,7 @@
  * Uso:
  *   SUPABASE_URL=https://xxx.supabase.co \
  *   SUPABASE_SERVICE_ROLE_KEY=eyJ... \
- *   pnpm --filter api import:cmed -- caminho/para/cmed.xlsx
+ *   pnpm --filter api import:cmed /caminho/absoluto/para/cmed.xlsx
  */
 
 import * as XLSX from 'xlsx';

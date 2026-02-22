@@ -133,7 +133,7 @@ export SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>
 Em seguida execute o script passando o **caminho absoluto** para o arquivo `.xlsx`:
 
 ```bash
-pnpm --filter api import:cmed -- /caminho/absoluto/para/cmed.xlsx
+pnpm --filter api import:cmed /caminho/absoluto/para/cmed.xlsx
 ```
 
 > **Atenção:** os nomes das colunas da tabela CMED mudam a cada publicação mensal da ANVISA. Verifique o `COLUMN_MAP` no script antes de importar.
@@ -194,7 +194,7 @@ pnpm --filter mobile exec vitest run --coverage
 | `pnpm --filter mobile ios` | Build dev client iOS |
 | `pnpm --filter api db:push` | Aplicar migrations |
 | `pnpm --filter api start` | Subir Supabase local |
-| `pnpm --filter api import:cmed -- /path/to/cmed.xlsx` | Importar catálogo CMED/ANVISA |
+| `pnpm --filter api import:cmed /path/to/cmed.xlsx` | Importar catálogo CMED/ANVISA |
 
 ---
 
