@@ -28,29 +28,12 @@ export default function CreateFamilyScreen() {
     setErrors({});
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace('/(auth)/sign-in'); return; }
-
-    const { data: family, error: familyError } = await supabase
-      .from('families')
-      .insert({ name: result.data.name, owner_id: user.id })
-      .select()
-      .single();
-
-    if (familyError || !family) {
-      toast.show('error', 'Erro', familyError?.message ?? 'Falha ao criar família');
-      hapticError();
-      setLoading(false);
-      return;
-    }
-
-    const { error: memberError } = await supabase
-      .from('family_members')
-      .insert({ family_id: family.id, profile_id: user.id, role: 'owner' });
+    const { error: familyError } = await supabase
+      .rpc('create_family_with_owner', { p_name: result.data.name });
 
     setLoading(false);
-    if (memberError) {
-      toast.show('error', 'Erro', memberError.message);
+    if (familyError) {
+      toast.show('error', 'Erro', familyError.message);
       hapticError();
       return;
     }
