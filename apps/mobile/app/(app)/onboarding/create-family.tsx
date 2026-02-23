@@ -6,6 +6,7 @@ import { supabase } from '../../../src/lib/supabase';
 import { familySchema } from '@medstock/shared';
 import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
+import { initInventory } from '../../../src/stores/inventory.store';
 
 export default function CreateFamilyScreen() {
   const toast = useToast();
@@ -39,6 +40,12 @@ export default function CreateFamilyScreen() {
     }
 
     hapticSuccess();
+    // Re-initialize inventory store so familyId is populated before navigating.
+    // The (app)/_layout.tsx already ran initInventory when this screen mounted
+    // (before the family existed), so familyId was null. Calling it again here
+    // ensures the store is ready immediately when the user lands on (app).
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await initInventory(user.id);
     router.replace('/(app)');
   }
 
