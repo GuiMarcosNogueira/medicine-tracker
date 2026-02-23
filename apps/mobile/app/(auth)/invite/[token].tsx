@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
+import { AnimatedPressable, useToast } from '@medstock/ui';
+import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 
 export default function InviteAcceptScreen() {
+  const toast = useToast();
   const { token } = useLocalSearchParams<{ token: string }>();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
   const [inviteInfo, setInviteInfo] = useState<{ familyName: string; role: string } | null>(null);
   const [accepting, setAccepting] = useState(false);
 
@@ -25,10 +28,7 @@ export default function InviteAcceptScreen() {
       .single();
 
     setLoading(false);
-    if (error || !data) {
-      Alert.alert('Convite inválido', 'Este convite não existe ou já expirou.');
-      return;
-    }
+    if (error || !data) return; // inviteInfo stays null → shows invalid UI
     const familiesData = data.families as unknown as { name: string } | null;
     setInviteInfo({
       familyName: familiesData?.name ?? 'Família',
@@ -51,7 +51,8 @@ export default function InviteAcceptScreen() {
       .single();
 
     if (!invite) {
-      Alert.alert('Erro', 'Convite não encontrado.');
+      toast.show('error', 'Erro', 'Convite não encontrado.');
+      hapticError();
       setAccepting(false);
       return;
     }
@@ -61,7 +62,8 @@ export default function InviteAcceptScreen() {
       .insert({ family_id: invite.family_id, profile_id: user.id, role: invite.invited_role });
 
     if (memberError) {
-      Alert.alert('Erro', memberError.message);
+      toast.show('error', 'Erro', memberError.message);
+      hapticError();
       setAccepting(false);
       return;
     }
@@ -72,9 +74,9 @@ export default function InviteAcceptScreen() {
       .eq('token', token);
 
     setAccepting(false);
-    Alert.alert('Sucesso', 'Você entrou na família!', [
-      { text: 'OK', onPress: () => router.replace('/(app)') },
-    ]);
+    hapticSuccess();
+    toast.show('success', 'Bem-vindo!', 'Você entrou na família.');
+    router.replace('/(app)');
   }
 
   if (loading) {
@@ -90,9 +92,10 @@ export default function InviteAcceptScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.inner}>
           <Text style={styles.title}>Convite inválido</Text>
-          <Pressable style={styles.btn} onPress={() => router.replace('/(auth)/sign-in')}>
+          <Text style={styles.body}>Este convite não existe ou já expirou.</Text>
+          <AnimatedPressable style={styles.btn} onPress={() => { router.replace('/(auth)/sign-in'); }}>
             <Text style={styles.btnText}>Ir para o início</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </SafeAreaView>
     );
@@ -107,16 +110,19 @@ export default function InviteAcceptScreen() {
           <Text style={styles.highlight}>{inviteInfo.familyName}</Text>
           {'\n'}como <Text style={styles.highlight}>{inviteInfo.role}</Text>.
         </Text>
-        <Pressable
-          style={[styles.btn, accepting && styles.btnDisabled]}
+        <AnimatedPressable
+          style={[styles.btn, accepting ? styles.btnDisabled : null]}
           onPress={() => { void handleAccept(); }}
           disabled={accepting}
         >
-          {accepting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.btnText}>Aceitar convite</Text>}
-        </Pressable>
-        <Pressable onPress={() => router.replace('/(auth)/sign-in')} style={styles.cancelBtn}>
+          {accepting
+            ? <ActivityIndicator color="#FFFFFF" />
+            : <Text style={styles.btnText}>Aceitar convite</Text>
+          }
+        </AnimatedPressable>
+        <AnimatedPressable onPress={() => { router.replace('/(auth)/sign-in'); }} style={styles.cancelBtn}>
           <Text style={styles.cancelText}>Recusar</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </SafeAreaView>
   );

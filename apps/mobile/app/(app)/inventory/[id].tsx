@@ -3,10 +3,8 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,10 +22,13 @@ import {
   EXPIRY_COLORS,
   EXPIRY_LABELS,
 } from '../../../src/utils/expiry';
+import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
+import { hapticSuccess, hapticError } from '../../../src/lib/haptics';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
 export default function InventoryItemDetailScreen() {
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
@@ -40,6 +41,7 @@ export default function InventoryItemDetailScreen() {
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleteVisible, setDeleteVisible] = useState(false);
 
   function startEdit() {
     if (!item) return;
@@ -65,7 +67,8 @@ export default function InventoryItemDetailScreen() {
     });
 
     if (!parseResult.success) {
-      Alert.alert('Dados inválidos', parseResult.error.errors[0]?.message ?? 'Verifique os campos');
+      toast.show('error', 'Dados inválidos', parseResult.error.errors[0]?.message ?? 'Verifique os campos');
+      hapticError();
       return;
     }
 
@@ -84,33 +87,27 @@ export default function InventoryItemDetailScreen() {
 
     setLoading(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      toast.show('error', 'Erro', error.message);
+      hapticError();
       return;
     }
+    hapticSuccess();
+    toast.show('success', 'Salvo!', 'Alterações salvas com sucesso.');
     setEditing(false);
   }
 
-  function handleDelete() {
+  async function confirmDelete() {
     if (!item) return;
-    Alert.alert(
-      'Remover item',
-      `Deseja remover "${getItemDisplayName(item)}" do estoque?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Remover',
-          style: 'destructive',
-          onPress: async () => {
-            const err = await softDeleteItem(item.id);
-            if (err) {
-              Alert.alert('Erro', err);
-            } else {
-              router.back();
-            }
-          },
-        },
-      ],
-    );
+    setDeleteVisible(false);
+    const err = await softDeleteItem(item.id);
+    if (err) {
+      toast.show('error', 'Erro', err);
+      hapticError();
+    } else {
+      hapticSuccess();
+      toast.show('success', 'Removido', 'Item removido do estoque.');
+      router.back();
+    }
   }
 
   if (!item) {
@@ -128,17 +125,17 @@ export default function InventoryItemDetailScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.topBar}>
-          <Pressable onPress={() => router.back()}>
+          <AnimatedPressable onPress={() => { router.back(); }}>
             <Text style={styles.backText}>← Voltar</Text>
-          </Pressable>
+          </AnimatedPressable>
           {!editing && (
             <View style={styles.topActions}>
-              <Pressable onPress={startEdit} style={styles.editBtn}>
+              <AnimatedPressable onPress={startEdit} style={styles.editBtn}>
                 <Text style={styles.editBtnText}>Editar</Text>
-              </Pressable>
-              <Pressable onPress={handleDelete} style={styles.deleteBtn}>
+              </AnimatedPressable>
+              <AnimatedPressable onPress={() => { setDeleteVisible(true); }} style={styles.deleteBtn}>
                 <Text style={styles.deleteBtnText}>Remover</Text>
-              </Pressable>
+              </AnimatedPressable>
             </View>
           )}
         </View>
@@ -180,13 +177,13 @@ export default function InventoryItemDetailScreen() {
                 <Text style={styles.label}>Unidade</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {UNITS.map(u => (
-                    <Pressable
+                    <AnimatedPressable
                       key={u}
                       style={[styles.unitChip, unit === u && styles.unitChipActive]}
-                      onPress={() => setUnit(u)}
+                      onPress={() => { setUnit(u); }}
                     >
                       <Text style={[styles.unitText, unit === u && styles.unitTextActive]}>{u}</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                   ))}
                 </ScrollView>
               </View>
@@ -208,10 +205,10 @@ export default function InventoryItemDetailScreen() {
             />
 
             <View style={styles.editActions}>
-              <Pressable style={styles.cancelBtn} onPress={() => setEditing(false)}>
+              <AnimatedPressable style={styles.cancelBtn} onPress={() => { setEditing(false); }}>
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </Pressable>
-              <Pressable
+              </AnimatedPressable>
+              <AnimatedPressable
                 style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
                 onPress={() => { void handleSave(); }}
                 disabled={loading}
@@ -220,7 +217,7 @@ export default function InventoryItemDetailScreen() {
                   ? <ActivityIndicator color="#fff" size="small" />
                   : <Text style={styles.saveBtnText}>Salvar</Text>
                 }
-              </Pressable>
+              </AnimatedPressable>
             </View>
           </View>
         ) : (
@@ -235,6 +232,17 @@ export default function InventoryItemDetailScreen() {
           </View>
         )}
       </ScrollView>
+
+      <ConfirmDialog
+        visible={deleteVisible}
+        title="Remover item"
+        message={`Deseja remover "${getItemDisplayName(item)}" do estoque?`}
+        confirmLabel="Remover"
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={() => { void confirmDelete(); }}
+        onCancel={() => { setDeleteVisible(false); }}
+      />
     </SafeAreaView>
   );
 }

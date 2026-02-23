@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
   SectionList,
-  Pressable,
   StyleSheet,
-  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
@@ -20,6 +20,7 @@ import {
   EXPIRY_LABELS,
 } from '../../src/utils/expiry';
 import type { ExpiryStatus } from '@medstock/shared';
+import { AnimatedPressable, DashboardSkeleton } from '@medstock/ui';
 
 type Section = { key: ExpiryStatus; title: string; data: InventoryRow[] };
 
@@ -29,6 +30,7 @@ export default function DashboardScreen() {
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
   const loading = useSelector(inventoryStore.loading);
+  const [refreshing, setRefreshing] = useState(false);
 
   const sections = useMemo<Section[]>(() => {
     const groups: Record<ExpiryStatus, InventoryRow[]> = {
@@ -43,10 +45,18 @@ export default function DashboardScreen() {
       .filter(s => s.data.length > 0);
   }, [items]);
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); }, 1000);
+  }, []);
+
   if (loading && items.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
+        <View style={styles.header}>
+          <Text style={styles.title}>MedStock</Text>
+        </View>
+        <DashboardSkeleton />
       </SafeAreaView>
     );
   }
@@ -56,12 +66,12 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>MedStock</Text>
         <View style={styles.headerActions}>
-          <Pressable style={styles.scanBtn} onPress={() => router.push('/(app)/scanner/ocr')}>
+          <AnimatedPressable style={styles.scanBtn} onPress={() => { router.push('/(app)/scanner/ocr'); }}>
             <Text style={styles.scanBtnText}>Escanear</Text>
-          </Pressable>
-          <Pressable style={styles.addBtn} onPress={() => router.push('/(app)/inventory/add')}>
+          </AnimatedPressable>
+          <AnimatedPressable style={styles.addBtn} onPress={() => { router.push('/(app)/inventory/add'); }}>
             <Text style={styles.addBtnText}>+ Adicionar</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
 
@@ -71,14 +81,17 @@ export default function DashboardScreen() {
           <Text style={styles.emptyText}>
             Adicione medicamentos para monitorar o vencimento.
           </Text>
-          <Pressable style={styles.emptyBtn} onPress={() => router.push('/(app)/inventory/add')}>
+          <AnimatedPressable style={styles.emptyBtn} onPress={() => { router.push('/(app)/inventory/add'); }}>
             <Text style={styles.emptyBtnText}>Adicionar medicamento</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       ) : (
         <SectionList
           sections={sections}
           keyExtractor={item => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1A9E96" />
+          }
           renderSectionHeader={({ section }) => (
             <View style={[styles.sectionHeader, { borderLeftColor: EXPIRY_COLORS[section.key] }]}>
               <Text style={[styles.sectionTitle, { color: EXPIRY_COLORS[section.key] }]}>
@@ -87,26 +100,28 @@ export default function DashboardScreen() {
               <Text style={styles.sectionCount}>{section.data.length}</Text>
             </View>
           )}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const days = daysUntilExpiry(item.expiry_date);
             const status = getExpiryStatus(item.expiry_date);
             return (
-              <Pressable
-                style={styles.item}
-                onPress={() => router.push(`/(app)/inventory/${item.id}`)}
-              >
-                <View style={styles.itemLeft}>
-                  <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
-                  <Text style={styles.itemMeta}>
-                    {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
-                  </Text>
-                </View>
-                <View style={[styles.badge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
-                  <Text style={[styles.badgeText, { color: EXPIRY_COLORS[status] }]}>
-                    {days < 0 ? 'Vencido' : `${days}d`}
-                  </Text>
-                </View>
-              </Pressable>
+              <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).springify()}>
+                <AnimatedPressable
+                  style={styles.item}
+                  onPress={() => { router.push(`/(app)/inventory/${item.id}`); }}
+                >
+                  <View style={styles.itemLeft}>
+                    <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
+                    <Text style={styles.itemMeta}>
+                      {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
+                    </Text>
+                  </View>
+                  <View style={[styles.badge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
+                    <Text style={[styles.badgeText, { color: EXPIRY_COLORS[status] }]}>
+                      {days < 0 ? 'Vencido' : `${days}d`}
+                    </Text>
+                  </View>
+                </AnimatedPressable>
+              </Animated.View>
             );
           }}
           ItemSeparatorComponent={() => <View style={styles.separator} />}

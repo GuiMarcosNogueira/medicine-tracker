@@ -1,29 +1,49 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import { router, Link } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { signInSchema } from '@medstock/shared';
+import { AnimatedPressable, useToast } from '@medstock/ui';
+import { hapticError, hapticSuccess } from '../../src/lib/haptics';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen() {
-  const [email, setEmail] = useState('');
+  const toast = useToast();
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [errors, setErrors]     = useState<Record<string, string>>({});
+
+  function clearError(field: string) {
+    if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+  }
 
   async function handleEmailSignIn() {
     const result = signInSchema.safeParse({ email, password });
     if (!result.success) {
-      Alert.alert('Dados inválidos', result.error.errors[0]?.message ?? 'Verifique os campos');
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path[0];
+        if (typeof path === 'string') fieldErrors[path] = issue.message;
+      }
+      setErrors(fieldErrors);
+      hapticError();
       return;
     }
+    setErrors({});
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) { Alert.alert('Erro ao entrar', error.message); return; }
+    if (error) {
+      toast.show('error', 'Erro ao entrar', error.message);
+      hapticError();
+      return;
+    }
+    hapticSuccess();
     router.replace('/(app)');
   }
 
@@ -33,14 +53,18 @@ export default function SignInScreen() {
       provider: 'google',
       options: { redirectTo: redirectUrl, skipBrowserRedirect: true },
     });
-    if (error || !data.url) { Alert.alert('Erro', error?.message ?? 'Falha ao iniciar OAuth'); return; }
+    if (error || !data.url) {
+      toast.show('error', 'Erro', error?.message ?? 'Falha ao iniciar OAuth');
+      return;
+    }
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
     if (result.type === 'success') {
       const url = new URL(result.url);
-      const access_token = url.searchParams.get('access_token');
+      const access_token  = url.searchParams.get('access_token');
       const refresh_token = url.searchParams.get('refresh_token');
       if (access_token && refresh_token) {
         await supabase.auth.setSession({ access_token, refresh_token });
+        hapticSuccess();
         router.replace('/(app)');
       }
     }
@@ -60,36 +84,45 @@ export default function SignInScreen() {
         <Text style={styles.subtitle}>Gestão de medicamentos da família</Text>
 
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors['email'] ? styles.inputError : null]}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={v => { setEmail(v); clearError('email'); }}
           placeholder="Email"
           placeholderTextColor="rgba(255,255,255,0.35)"
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
         />
+        {Boolean(errors['email']) && <Text style={styles.fieldError}>{errors['email']}</Text>}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors['password'] ? styles.inputError : null]}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={v => { setPassword(v); clearError('password'); }}
           placeholder="Senha"
           placeholderTextColor="rgba(255,255,255,0.35)"
           secureTextEntry
           autoComplete="password"
         />
+        {Boolean(errors['password']) && <Text style={styles.fieldError}>{errors['password']}</Text>}
 
-        <Pressable
-          style={[styles.btn, styles.btnPrimary, loading && styles.btnDisabled]}
+        <AnimatedPressable
+          style={[styles.btn, styles.btnPrimary, loading ? styles.btnDisabled : null]}
           onPress={() => { void handleEmailSignIn(); }}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#0B3D3B" /> : <Text style={styles.btnTextDark}>Entrar</Text>}
-        </Pressable>
+          {loading
+            ? <ActivityIndicator color="#0B3D3B" />
+            : <Text style={styles.btnTextDark}>Entrar</Text>
+          }
+        </AnimatedPressable>
 
-        <Pressable style={[styles.btn, styles.btnOutline]} onPress={() => { void handleGoogleSignIn(); }}>
+        <AnimatedPressable
+          style={[styles.btn, styles.btnOutline]}
+          onPress={() => { void handleGoogleSignIn(); }}
+        >
           <Text style={styles.btnTextLight}>Entrar com Google</Text>
-        </Pressable>
+        </AnimatedPressable>
 
         <Link href="/(auth)/forgot-password" style={styles.link}>Esqueci minha senha</Link>
         <Text style={styles.row}>
@@ -113,7 +146,9 @@ const styles = StyleSheet.create({
   title:        { fontSize: 36, fontWeight: '700', color: '#FFFFFF', textAlign: 'center', marginBottom: 6, letterSpacing: -0.5 },
   subtitle:     { fontSize: 14, color: '#A0EDE8', textAlign: 'center', marginBottom: 36, fontWeight: '300' },
 
-  input:        { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 14, marginBottom: 12, fontSize: 16, backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFFFFF' },
+  input:        { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFFFFF' },
+  inputError:   { borderColor: '#F0735A' },
+  fieldError:   { color: '#F4937F', fontSize: 12, marginBottom: 8, marginLeft: 4 },
 
   btn:          { borderRadius: 16, padding: 15, alignItems: 'center', marginBottom: 10 },
   btnPrimary:   { backgroundColor: '#22C9BF' },

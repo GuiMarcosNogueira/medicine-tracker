@@ -4,15 +4,16 @@ import {
   Text,
   TextInput,
   FlatList,
-  Pressable,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import { cacheMedicationResults, localSearchMedications } from '../../../src/lib/local-db';
 import type { MedicationSearchResult } from '@medstock/shared';
+import { AnimatedPressable } from '@medstock/ui';
 
 export default function CatalogSearchScreen() {
   const [query, setQuery] = useState('');
@@ -46,10 +47,8 @@ export default function CatalogSearchScreen() {
     if (!error && data) {
       const hits = data as unknown as MedicationSearchResult[];
       setResults(hits);
-      // Cache results so they're available offline
       void cacheMedicationResults(hits).catch(() => undefined);
     } else {
-      // Supabase unreachable — fall back to local SQLite cache
       try {
         setResults(await localSearchMedications(q));
       } catch {
@@ -68,6 +67,7 @@ export default function CatalogSearchScreen() {
           value={query}
           onChangeText={setQuery}
           placeholder="Buscar medicamento, princípio ativo..."
+          placeholderTextColor="#9CA59C"
           autoCapitalize="none"
           clearButtonMode="while-editing"
           returnKeyType="search"
@@ -79,26 +79,28 @@ export default function CatalogSearchScreen() {
       <FlatList
         data={results}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.item}
-            onPress={() => router.push(`/(app)/catalog/${item.id}`)}
-          >
-            <Text style={styles.itemName}>{item.product_name}</Text>
-            {Boolean(item.active_ingredient) && (
-              <Text style={styles.itemSub}>{item.active_ingredient}</Text>
-            )}
-            <View style={styles.itemMeta}>
-              {Boolean(item.manufacturer) && (
-                <Text style={styles.metaManuf}>{item.manufacturer}</Text>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
+            <AnimatedPressable
+              style={styles.item}
+              onPress={() => { router.push(`/(app)/catalog/${item.id}`); }}
+            >
+              <Text style={styles.itemName}>{item.product_name}</Text>
+              {Boolean(item.active_ingredient) && (
+                <Text style={styles.itemSub}>{item.active_ingredient}</Text>
               )}
-              {item.reference_price !== null && (
-                <Text style={styles.metaPrice}>
-                  R$ {item.reference_price.toFixed(2).replace('.', ',')}
-                </Text>
-              )}
-            </View>
-          </Pressable>
+              <View style={styles.itemMeta}>
+                {Boolean(item.manufacturer) && (
+                  <Text style={styles.metaManuf}>{item.manufacturer}</Text>
+                )}
+                {item.reference_price !== null && (
+                  <Text style={styles.metaPrice}>
+                    R$ {item.reference_price.toFixed(2).replace('.', ',')}
+                  </Text>
+                )}
+              </View>
+            </AnimatedPressable>
+          </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={

@@ -1,32 +1,25 @@
-import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
 import { authStore } from '../../../src/stores/auth.store';
 import { supabase } from '../../../src/lib/supabase';
 import { cleanupInventory } from '../../../src/stores/inventory.store';
+import { AnimatedPressable, ConfirmDialog } from '@medstock/ui';
 
 export default function SettingsScreen() {
   const session = useSelector(authStore.session);
   const email = session?.user.email ?? '';
   const fullName =
     (session?.user.user_metadata as { full_name?: string } | undefined)?.full_name ?? '';
+  const [signOutVisible, setSignOutVisible] = useState(false);
 
-  function handleSignOut() {
-    Alert.alert('Sair', 'Deseja encerrar sua sessão?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            cleanupInventory();
-            await supabase.auth.signOut();
-            router.replace('/(auth)/sign-in');
-          })();
-        },
-      },
-    ]);
+  async function handleSignOut() {
+    setSignOutVisible(false);
+    cleanupInventory();
+    await supabase.auth.signOut();
+    router.replace('/(auth)/sign-in');
   }
 
   return (
@@ -42,10 +35,21 @@ export default function SettingsScreen() {
           <Text style={styles.value}>{email}</Text>
         </View>
 
-        <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
+        <AnimatedPressable style={styles.signOutBtn} onPress={() => { setSignOutVisible(true); }}>
           <Text style={styles.signOutText}>Sair da conta</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
+
+      <ConfirmDialog
+        visible={signOutVisible}
+        title="Sair da conta"
+        message="Deseja encerrar sua sessão?"
+        confirmLabel="Sair"
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={() => { void handleSignOut(); }}
+        onCancel={() => { setSignOutVisible(false); }}
+      />
     </SafeAreaView>
   );
 }

@@ -3,10 +3,8 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,10 +14,13 @@ import { inventoryStore, addInventoryItem } from '../../../src/stores/inventory.
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
+import { AnimatedPressable, useToast } from '@medstock/ui';
+import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
 export default function AddInventoryScreen() {
+  const toast = useToast();
   const params = useLocalSearchParams<{ medicationId?: string; productName?: string }>();
   const familyId = useSelector(inventoryStore.familyId);
 
@@ -30,14 +31,19 @@ export default function AddInventoryScreen() {
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const medicationId = params.medicationId ?? null;
-  // If from catalog, productName is the catalog name (read-only); otherwise user enters customName
   const fromCatalog = Boolean(medicationId);
+
+  function clearError(field: string) {
+    if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+  }
 
   async function handleSave() {
     if (!familyId) {
-      Alert.alert('Erro', 'Você não está em nenhuma família. Crie ou entre em uma família primeiro.');
+      toast.show('error', 'Erro', 'Você não está em nenhuma família. Crie ou entre em uma família primeiro.');
+      hapticError();
       return;
     }
 
@@ -52,10 +58,17 @@ export default function AddInventoryScreen() {
     });
 
     if (!parseResult.success) {
-      Alert.alert('Dados inválidos', parseResult.error.errors[0]?.message ?? 'Verifique os campos');
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parseResult.error.issues) {
+        const path = issue.path[0];
+        if (typeof path === 'string') fieldErrors[path] = issue.message;
+      }
+      setErrors(fieldErrors);
+      hapticError();
       return;
     }
 
+    setErrors({});
     setLoading(true);
     const d = parseResult.data;
     const { data: userData } = await supabase.auth.getUser();
@@ -74,11 +87,15 @@ export default function AddInventoryScreen() {
 
     setLoading(false);
     if (error) {
-      Alert.alert('Erro', error);
+      toast.show('error', 'Erro', error);
+      hapticError();
       return;
     }
     if (queued) {
-      Alert.alert('Salvo localmente', 'Sem conexão. O item será sincronizado quando você ficar online.');
+      toast.show('warning', 'Salvo offline', 'Será sincronizado quando conectar.');
+    } else {
+      hapticSuccess();
+      toast.show('success', 'Salvo!', 'Item adicionado ao estoque.');
     }
     router.back();
   }
@@ -86,18 +103,18 @@ export default function AddInventoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
           <Text style={styles.backText}>← Voltar</Text>
-        </Pressable>
+        </AnimatedPressable>
         <Text style={styles.title}>Adicionar ao estoque</Text>
 
         <View style={styles.scanRow}>
-          <Pressable style={styles.scanChip} onPress={() => router.push('/(app)/scanner/barcode')}>
+          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/scanner/barcode'); }}>
             <Text style={styles.scanChipText}>Código de barras</Text>
-          </Pressable>
-          <Pressable style={styles.scanChip} onPress={() => router.push('/(app)/scanner/ocr')}>
+          </AnimatedPressable>
+          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/scanner/ocr'); }}>
             <Text style={styles.scanChipText}>Ler rótulo (OCR)</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         <Text style={styles.label}>
@@ -108,45 +125,52 @@ export default function AddInventoryScreen() {
             <Text style={styles.readOnlyText}>{params.productName}</Text>
           </View>
         ) : (
-          <TextInput
-            style={styles.input}
-            value={customName}
-            onChangeText={setCustomName}
-            placeholder="Ex: Paracetamol 500mg"
-          />
+          <>
+            <TextInput
+              style={[styles.input, errors['customName'] ? styles.inputError : null]}
+              value={customName}
+              onChangeText={v => { setCustomName(v); clearError('customName'); }}
+              placeholder="Ex: Paracetamol 500mg"
+              placeholderTextColor="#9CA59C"
+            />
+            {Boolean(errors['customName']) && <Text style={styles.fieldError}>{errors['customName']}</Text>}
+          </>
         )}
 
         <Text style={styles.label}>Data de vencimento * (AAAA-MM-DD)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors['expiryDate'] ? styles.inputError : null]}
           value={expiryDate}
-          onChangeText={setExpiryDate}
+          onChangeText={v => { setExpiryDate(v); clearError('expiryDate'); }}
           placeholder="2026-12-31"
+          placeholderTextColor="#9CA59C"
           keyboardType="numbers-and-punctuation"
           maxLength={10}
         />
+        {Boolean(errors['expiryDate']) && <Text style={styles.fieldError}>{errors['expiryDate']}</Text>}
 
         <View style={styles.row}>
           <View style={styles.rowField}>
             <Text style={styles.label}>Quantidade *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors['quantity'] ? styles.inputError : null]}
               value={quantity}
-              onChangeText={setQuantity}
+              onChangeText={v => { setQuantity(v); clearError('quantity'); }}
               keyboardType="decimal-pad"
             />
+            {Boolean(errors['quantity']) && <Text style={styles.fieldError}>{errors['quantity']}</Text>}
           </View>
           <View style={[styles.rowField, { marginLeft: 12 }]}>
             <Text style={styles.label}>Unidade</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {UNITS.map(u => (
-                <Pressable
+                <AnimatedPressable
                   key={u}
                   style={[styles.unitChip, unit === u && styles.unitChipActive]}
-                  onPress={() => setUnit(u)}
+                  onPress={() => { setUnit(u); }}
                 >
                   <Text style={[styles.unitText, unit === u && styles.unitTextActive]}>{u}</Text>
-                </Pressable>
+                </AnimatedPressable>
               ))}
             </ScrollView>
           </View>
@@ -154,22 +178,24 @@ export default function AddInventoryScreen() {
 
         <Text style={styles.label}>Lote (opcional)</Text>
         <TextInput
-          style={styles.input}
+          style={styles.inputSpaced}
           value={lotNumber}
           onChangeText={setLotNumber}
           placeholder="Ex: ABC123"
+          placeholderTextColor="#9CA59C"
           autoCapitalize="characters"
         />
 
         <Text style={styles.label}>Local de armazenamento (opcional)</Text>
         <TextInput
-          style={styles.input}
+          style={styles.inputSpaced}
           value={location}
           onChangeText={setLocation}
           placeholder="Ex: Armário do banheiro"
+          placeholderTextColor="#9CA59C"
         />
 
-        <Pressable
+        <AnimatedPressable
           style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
           onPress={() => { void handleSave(); }}
           disabled={loading}
@@ -178,7 +204,7 @@ export default function AddInventoryScreen() {
             ? <ActivityIndicator color="#fff" />
             : <Text style={styles.saveBtnText}>Salvar</Text>
           }
-        </Pressable>
+        </AnimatedPressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -187,14 +213,17 @@ export default function AddInventoryScreen() {
 const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: '#F6F8F5' },
   content:         { padding: 16, paddingBottom: 40 },
-  backBtn:         { marginBottom: 12 },
+  backBtn:         { marginBottom: 12, alignSelf: 'flex-start' },
   backText:        { color: '#1A9E96', fontSize: 15 },
   title:           { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
   scanRow:         { flexDirection: 'row', gap: 8, marginBottom: 20 },
   scanChip:        { flex: 1, borderWidth: 1, borderColor: '#1A9E96', borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
   scanChipText:    { color: '#1A9E96', fontWeight: '600', fontSize: 13 },
   label:           { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
-  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputSpaced:     { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputError:      { borderColor: '#F0735A' },
+  fieldError:      { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
   readOnly:        { backgroundColor: '#E8ECE5', borderRadius: 16, padding: 12, marginBottom: 16 },
   readOnlyText:    { fontSize: 15, color: '#5A625A' },
   row:             { flexDirection: 'row', alignItems: 'flex-start' },

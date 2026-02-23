@@ -3,10 +3,8 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,10 +14,13 @@ import { inventoryStore, addInventoryItem } from '../../../src/stores/inventory.
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
+import { AnimatedPressable, useToast } from '@medstock/ui';
+import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
 export default function OcrResultScreen() {
+  const toast = useToast();
   const params = useLocalSearchParams<{
     expiryDate?: string;
     lotNumber?: string;
@@ -36,6 +37,7 @@ export default function OcrResultScreen() {
   const [lotNumber, setLotNumber] = useState(params.lotNumber ?? '');
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const ean = params.ean;
@@ -55,9 +57,14 @@ export default function OcrResultScreen() {
       });
   }, [params.ean]);
 
+  function clearError(field: string) {
+    if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+  }
+
   async function handleSave() {
     if (!familyId) {
-      Alert.alert('Erro', 'Você não está em nenhuma família.');
+      toast.show('error', 'Erro', 'Você não está em nenhuma família.');
+      hapticError();
       return;
     }
     const parseResult = inventoryItemSchema.safeParse({
@@ -69,9 +76,16 @@ export default function OcrResultScreen() {
       ...(lotNumber.trim() ? { lotNumber: lotNumber.trim() } : {}),
     });
     if (!parseResult.success) {
-      Alert.alert('Dados inválidos', parseResult.error.errors[0]?.message ?? 'Verifique os campos');
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parseResult.error.issues) {
+        const path = issue.path[0];
+        if (typeof path === 'string') fieldErrors[path] = issue.message;
+      }
+      setErrors(fieldErrors);
+      hapticError();
       return;
     }
+    setErrors({});
     setSaving(true);
     const d = parseResult.data;
     const { data: userData } = await supabase.auth.getUser();
@@ -88,11 +102,15 @@ export default function OcrResultScreen() {
     });
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error);
+      toast.show('error', 'Erro', error);
+      hapticError();
       return;
     }
     if (queued) {
-      Alert.alert('Salvo localmente', 'Sem conexão. O item será sincronizado quando você ficar online.');
+      toast.show('warning', 'Salvo offline', 'Será sincronizado quando conectar.');
+    } else {
+      hapticSuccess();
+      toast.show('success', 'Adicionado!', 'Item salvo no estoque.');
     }
     router.push('/(app)');
   }
@@ -100,13 +118,13 @@ export default function OcrResultScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
           <Text style={styles.backText}>← Escanear novamente</Text>
-        </Pressable>
+        </AnimatedPressable>
         <Text style={styles.title}>Revisar dados do rótulo</Text>
 
         {loadingCatalog ? (
-          <ActivityIndicator color="#2563eb" style={{ marginBottom: 16 }} />
+          <ActivityIndicator color="#1A9E96" style={{ marginBottom: 16 }} />
         ) : medicationId ? (
           <>
             <Text style={styles.label}>Medicamento (catálogo)</Text>
@@ -118,45 +136,50 @@ export default function OcrResultScreen() {
           <>
             <Text style={styles.label}>Nome do medicamento *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors['customName'] ? styles.inputError : null]}
               value={customName}
-              onChangeText={setCustomName}
+              onChangeText={v => { setCustomName(v); clearError('customName'); }}
               placeholder="Ex: Paracetamol 500mg"
+              placeholderTextColor="#9CA59C"
             />
+            {Boolean(errors['customName']) && <Text style={styles.fieldError}>{errors['customName']}</Text>}
           </>
         )}
 
         <Text style={styles.label}>Data de vencimento * (AAAA-MM-DD)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors['expiryDate'] ? styles.inputError : null]}
           value={expiryDate}
-          onChangeText={setExpiryDate}
+          onChangeText={v => { setExpiryDate(v); clearError('expiryDate'); }}
           placeholder="2026-12-31"
+          placeholderTextColor="#9CA59C"
           keyboardType="numbers-and-punctuation"
           maxLength={10}
         />
+        {Boolean(errors['expiryDate']) && <Text style={styles.fieldError}>{errors['expiryDate']}</Text>}
 
         <View style={styles.row}>
           <View style={styles.rowField}>
             <Text style={styles.label}>Quantidade *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, errors['quantity'] ? styles.inputError : null]}
               value={quantity}
-              onChangeText={setQuantity}
+              onChangeText={v => { setQuantity(v); clearError('quantity'); }}
               keyboardType="decimal-pad"
             />
+            {Boolean(errors['quantity']) && <Text style={styles.fieldError}>{errors['quantity']}</Text>}
           </View>
           <View style={[styles.rowField, { marginLeft: 12 }]}>
             <Text style={styles.label}>Unidade</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {UNITS.map(u => (
-                <Pressable
+                <AnimatedPressable
                   key={u}
                   style={[styles.unitChip, unit === u && styles.unitChipActive]}
-                  onPress={() => setUnit(u)}
+                  onPress={() => { setUnit(u); }}
                 >
                   <Text style={[styles.unitText, unit === u && styles.unitTextActive]}>{u}</Text>
-                </Pressable>
+                </AnimatedPressable>
               ))}
             </ScrollView>
           </View>
@@ -164,10 +187,11 @@ export default function OcrResultScreen() {
 
         <Text style={styles.label}>Lote (opcional)</Text>
         <TextInput
-          style={styles.input}
+          style={styles.inputSpaced}
           value={lotNumber}
           onChangeText={setLotNumber}
           placeholder="Ex: ABC123"
+          placeholderTextColor="#9CA59C"
           autoCapitalize="characters"
         />
 
@@ -178,7 +202,7 @@ export default function OcrResultScreen() {
           </View>
         ) : null}
 
-        <Pressable
+        <AnimatedPressable
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={() => { void handleSave(); }}
           disabled={saving}
@@ -187,32 +211,35 @@ export default function OcrResultScreen() {
             ? <ActivityIndicator color="#fff" />
             : <Text style={styles.saveBtnText}>Salvar no estoque</Text>
           }
-        </Pressable>
+        </AnimatedPressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#f8fafc' },
+  container:       { flex: 1, backgroundColor: '#F6F8F5' },
   content:         { padding: 16, paddingBottom: 40 },
-  backBtn:         { marginBottom: 12 },
-  backText:        { color: '#2563eb', fontSize: 15 },
-  title:           { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 20 },
-  label:           { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6 },
-  input:           { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#fff' },
-  readOnly:        { backgroundColor: '#f1f5f9', borderRadius: 10, padding: 12, marginBottom: 16 },
-  readOnlyText:    { fontSize: 15, color: '#475569' },
+  backBtn:         { marginBottom: 12, alignSelf: 'flex-start' },
+  backText:        { color: '#1A9E96', fontSize: 15 },
+  title:           { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 20 },
+  label:           { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
+  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputSpaced:     { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputError:      { borderColor: '#F0735A' },
+  fieldError:      { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
+  readOnly:        { backgroundColor: '#E8ECE5', borderRadius: 16, padding: 12, marginBottom: 16 },
+  readOnlyText:    { fontSize: 15, color: '#5A625A' },
   row:             { flexDirection: 'row', alignItems: 'flex-start' },
   rowField:        { flex: 1 },
-  unitChip:        { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive:  { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  unitText:        { fontSize: 13, color: '#475569' },
-  unitTextActive:  { color: '#fff' },
-  ocrInfo:         { flexDirection: 'row', marginBottom: 16, padding: 12, backgroundColor: '#eff6ff', borderRadius: 10 },
-  ocrInfoLabel:    { fontSize: 13, color: '#1e40af', fontWeight: '600' },
-  ocrInfoValue:    { fontSize: 13, color: '#1e40af' },
-  saveBtn:         { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 },
+  unitChip:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+  unitChipActive:  { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
+  unitText:        { fontSize: 13, color: '#5A625A' },
+  unitTextActive:  { color: '#FFFFFF' },
+  ocrInfo:         { flexDirection: 'row', marginBottom: 16, padding: 12, backgroundColor: '#D0F7F5', borderRadius: 16 },
+  ocrInfoLabel:    { fontSize: 13, color: '#147570', fontWeight: '600' },
+  ocrInfoValue:    { fontSize: 13, color: '#147570' },
+  saveBtn:         { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText:     { color: '#fff', fontWeight: '600', fontSize: 16 },
+  saveBtnText:     { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });

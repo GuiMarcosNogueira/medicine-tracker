@@ -3,17 +3,17 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import type { Medication } from '@medstock/shared';
+import { AnimatedPressable, useToast } from '@medstock/ui';
 
 export default function MedicationDetailScreen() {
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [med, setMed] = useState<Medication | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function MedicationDetailScreen() {
       .single();
     setLoading(false);
     if (error || !data) {
-      Alert.alert('Erro', 'Medicamento não encontrado.');
+      toast.show('error', 'Erro', 'Medicamento não encontrado.');
       router.back();
       return;
     }
@@ -57,9 +57,9 @@ export default function MedicationDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
           <Text style={styles.backText}>← Voltar</Text>
-        </Pressable>
+        </AnimatedPressable>
 
         <Text style={styles.productName}>{med.product_name}</Text>
         {Boolean(med.active_ingredient) && (
@@ -85,7 +85,7 @@ export default function MedicationDetailScreen() {
           <Row label="Tarja" value={tarjaLabel} />
         </View>
 
-        <Pressable
+        <AnimatedPressable
           style={styles.addBtn}
           onPress={() =>
             router.push({
@@ -95,7 +95,7 @@ export default function MedicationDetailScreen() {
           }
         >
           <Text style={styles.addBtnText}>Adicionar ao estoque</Text>
-        </Pressable>
+        </AnimatedPressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -112,12 +112,12 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#F6F8F5' },
-  content:         { padding: 16, paddingBottom: 40 },
-  backBtn:         { marginBottom: 12 },
-  backText:        { color: '#1A9E96', fontSize: 15 },
-  productName:     { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
-  activeIngredient:{ fontSize: 14, color: '#5A625A', marginBottom: 20 },
+  container:        { flex: 1, backgroundColor: '#F6F8F5' },
+  content:          { padding: 16, paddingBottom: 40 },
+  backBtn:          { marginBottom: 12, alignSelf: 'flex-start' },
+  backText:         { color: '#1A9E96', fontSize: 15 },
+  productName:      { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
+  activeIngredient: { fontSize: 14, color: '#5A625A', marginBottom: 20 },
   card: {
     backgroundColor: '#FFFFFF', borderRadius: 16,
     borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 20,
