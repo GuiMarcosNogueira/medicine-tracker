@@ -3,6 +3,10 @@
 -- Adds pharma_form_friendly, quantity_count, quantity_volume
 -- to the result set (populated after re-import with parser).
 -- ============================================================
+
+-- DROP obrigatório: CREATE OR REPLACE não pode alterar RETURNS TABLE.
+DROP FUNCTION IF EXISTS public.search_medications(TEXT, INT);
+
 CREATE OR REPLACE FUNCTION public.search_medications(
   query        TEXT,
   result_limit INT DEFAULT 20
