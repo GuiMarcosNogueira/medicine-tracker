@@ -89,9 +89,9 @@ export default function CatalogSearchScreen() {
               {Boolean(item.active_ingredient) && (
                 <Text style={styles.itemSub}>{item.active_ingredient}</Text>
               )}
-              {Boolean(item.pharma_form_friendly ?? item.pharmaceutical_form ?? item.concentration) && (
+              {Boolean(item.pharma_form_friendly ?? item.pharmaceutical_form ?? item.presentation_dosage ?? item.concentration) && (
                 <Text style={styles.itemForm}>
-                  {[item.pharma_form_friendly ?? item.pharmaceutical_form, item.concentration]
+                  {[item.pharma_form_friendly ?? item.pharmaceutical_form, item.presentation_dosage ?? item.concentration]
                     .filter(Boolean).join(' · ')}
                 </Text>
               )}

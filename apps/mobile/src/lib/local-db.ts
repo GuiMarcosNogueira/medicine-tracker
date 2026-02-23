@@ -117,6 +117,7 @@ function rowToResult(row: MedRow): MedicationSearchResult {
     active_ingredient: row.active_ingredient,
     concentration: row.concentration,
     pharmaceutical_form: row.pharmaceutical_form,
+    presentation_dosage: null,
     pharma_form_friendly: null,
     quantity_count: null,
     quantity_volume: null,

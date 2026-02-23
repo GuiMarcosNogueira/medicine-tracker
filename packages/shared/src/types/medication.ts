@@ -33,6 +33,7 @@ export interface MedicationSearchResult {
   active_ingredient: string | null;
   concentration: string | null;
   pharmaceutical_form: string | null;
+  presentation_dosage: string | null;
   pharma_form_friendly: string | null;
   quantity_count: number | null;
   quantity_volume: string | null;
