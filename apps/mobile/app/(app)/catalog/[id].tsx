@@ -67,15 +67,18 @@ export default function MedicationDetailScreen() {
         )}
 
         <View style={styles.card}>
-          <Row label="Fabricante"            value={med.manufacturer} />
-          <Row label="Concentração"          value={med.concentration} />
-          <Row label="Apresentação"          value={med.presentation} />
-          <Row label="Forma farmacêutica"    value={med.pharmaceutical_form} />
-          <Row label="Via de administração"  value={med.route_of_admin} />
-          <Row label="Classe terapêutica"    value={med.atc_description} />
-          <Row label="Código ATC"            value={med.atc_code} />
-          <Row label="EAN"                   value={med.ean} />
-          <Row label="Registro ANVISA"       value={med.anvisa_code} />
+          <Row label="Fabricante"           value={med.manufacturer} />
+          <Row label="Dosagem"              value={med.presentation_dosage ?? med.concentration} />
+          <Row label="Forma"                value={med.pharma_form_friendly ?? med.pharmaceutical_form} />
+          {med.quantity_count !== null && (
+            <Row label="Quantidade"         value={`${med.quantity_count} unidades`} />
+          )}
+          <Row label="Volume"               value={med.quantity_volume} />
+          <Row label="Via de administração" value={med.route_of_admin} />
+          <Row label="Classe terapêutica"   value={med.atc_description} />
+          <Row label="Código ATC"           value={med.atc_code} />
+          <Row label="EAN"                  value={med.ean} />
+          <Row label="Registro ANVISA"      value={med.anvisa_code} />
           {med.reference_price !== null && (
             <Row
               label="Preço ref. CMED"

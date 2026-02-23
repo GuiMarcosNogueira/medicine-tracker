@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
 import { createClient } from '@supabase/supabase-js';
 import * as path from 'path';
 import * as fs from 'fs';
+import { parsePresentation } from './parse-presentation.js';
 
 // ── Column candidates ─────────────────────────────────────────────────────────
 // Each entry lists candidate column names from the CMED spreadsheet (case-insensitive).
@@ -110,6 +111,16 @@ async function main(): Promise<void> {
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  if (process.argv.includes('--truncate')) {
+    console.log('🗑️  Limpando tabela medications...');
+    const { error } = await supabase.from('medications').delete().gte('created_at', '2000-01-01');
+    if (error) {
+      console.error('❌  Falhou ao limpar tabela:', error.message);
+      process.exit(1);
+    }
+    console.log('✅  Tabela limpa.');
+  }
 
   console.log(`📂  Lendo: ${resolved}`);
   const workbook = XLSX.readFile(resolved, { cellText: true, cellDates: false });
@@ -209,15 +220,21 @@ async function main(): Promise<void> {
         const product_name = getCellStr(row, cols.product_name);
         if (!product_name) return null;
 
-        const tarjaRaw = cols.tarja ? row[cols.tarja] : null;
-        const eanRaw   = getCellStr(row, cols.ean)?.replace(/\D/g, '') ?? null;
+        const tarjaRaw      = cols.tarja ? row[cols.tarja] : null;
+        const eanRaw        = getCellStr(row, cols.ean)?.replace(/\D/g, '') ?? null;
+        const presentationRaw = getCellStr(row, cols.presentation);
+        const parsed        = parsePresentation(presentationRaw);
 
         return {
           product_name,
           active_ingredient:     getCellStr(row, cols.active_ingredient),
           manufacturer:          getCellStr(row, cols.manufacturer),
           ean:                   eanRaw && eanRaw.length >= 8 ? eanRaw : null,
-          presentation:          getCellStr(row, cols.presentation),
+          presentation:          presentationRaw,
+          presentation_dosage:   parsed.dosage,
+          pharma_form_friendly:  parsed.formFriendly,
+          quantity_count:        parsed.count,
+          quantity_volume:       parsed.volume,
           atc_description:       getCellStr(row, cols.atc_description),
           reference_price:       parsePrice(cols.reference_price ? row[cols.reference_price] : null),
           anvisa_code:           getCellStr(row, cols.anvisa_code),

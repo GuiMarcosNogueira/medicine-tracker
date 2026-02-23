@@ -15,6 +15,10 @@ export interface Medication {
   atc_description: string | null;
   reference_price: number | null;
   presentation: string | null;
+  presentation_dosage: string | null;
+  pharma_form_friendly: string | null;
+  quantity_count: number | null;
+  quantity_volume: string | null;
   requires_prescription: boolean;
   is_controlled: boolean;
   created_at: string;
@@ -29,6 +33,9 @@ export interface MedicationSearchResult {
   active_ingredient: string | null;
   concentration: string | null;
   pharmaceutical_form: string | null;
+  pharma_form_friendly: string | null;
+  quantity_count: number | null;
+  quantity_volume: string | null;
   atc_code: string | null;
   atc_description: string | null;
   manufacturer: string | null;
