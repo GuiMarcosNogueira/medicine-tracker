@@ -9,7 +9,7 @@ import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 export default function InviteAcceptScreen() {
   const toast = useToast();
   const { token } = useLocalSearchParams<{ token: string }>();
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]     = useState(true);
   const [inviteInfo, setInviteInfo] = useState<{ familyName: string; role: string } | null>(null);
   const [accepting, setAccepting] = useState(false);
 
@@ -28,7 +28,7 @@ export default function InviteAcceptScreen() {
       .single();
 
     setLoading(false);
-    if (error || !data) return; // inviteInfo stays null → shows invalid UI
+    if (error || !data) return;
     const familiesData = data.families as unknown as { name: string } | null;
     setInviteInfo({
       familyName: familiesData?.name ?? 'Família',
@@ -82,7 +82,7 @@ export default function InviteAcceptScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#1A9E96" />
+        <ActivityIndicator size="large" color="#22C9BF" />
       </SafeAreaView>
     );
   }
@@ -116,7 +116,7 @@ export default function InviteAcceptScreen() {
           disabled={accepting}
         >
           {accepting
-            ? <ActivityIndicator color="#FFFFFF" />
+            ? <ActivityIndicator color="#0B3D3B" />
             : <Text style={styles.btnText}>Aceitar convite</Text>
           }
         </AnimatedPressable>
@@ -129,14 +129,14 @@ export default function InviteAcceptScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#F6F8F5', alignItems: 'center', justifyContent: 'center' },
+  container:   { flex: 1, backgroundColor: '#0B3D3B', alignItems: 'center', justifyContent: 'center' },
   inner:       { padding: 32, alignItems: 'center', maxWidth: 420, width: '100%' },
-  title:       { fontSize: 24, fontWeight: '700', color: '#1A1D1A', marginBottom: 16, letterSpacing: -0.5 },
-  body:        { fontSize: 16, color: '#5A625A', textAlign: 'center', lineHeight: 26, marginBottom: 32 },
-  highlight:   { fontWeight: '700', color: '#1A9E96' },
-  btn:         { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', width: '100%' },
+  title:       { fontSize: 28, fontWeight: '700', color: '#FFFFFF', marginBottom: 16, letterSpacing: -0.5 },
+  body:        { fontSize: 16, color: 'rgba(255,255,255,0.65)', textAlign: 'center', lineHeight: 26, marginBottom: 32 },
+  highlight:   { fontWeight: '700', color: '#22C9BF' },
+  btn:         { backgroundColor: '#22C9BF', borderRadius: 16, padding: 15, alignItems: 'center', width: '100%' },
   btnDisabled: { opacity: 0.6 },
-  btnText:     { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  btnText:     { color: '#0B3D3B', fontWeight: '700', fontSize: 16 },
   cancelBtn:   { marginTop: 16 },
-  cancelText:  { color: '#5A625A', fontSize: 14 },
+  cancelText:  { color: 'rgba(255,255,255,0.4)', fontSize: 14 },
 });

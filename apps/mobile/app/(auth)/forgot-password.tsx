@@ -9,9 +9,9 @@ import { hapticError, hapticSuccess } from '../../src/lib/haptics';
 
 export default function ForgotPasswordScreen() {
   const toast = useToast();
-  const [email, setEmail]   = useState('');
+  const [email, setEmail]     = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors]   = useState<Record<string, string>>({});
 
   async function handleReset() {
     const result = forgotPasswordSchema.safeParse({ email });
@@ -52,7 +52,7 @@ export default function ForgotPasswordScreen() {
           value={email}
           onChangeText={v => { setEmail(v); if (errors['email']) setErrors({}); }}
           placeholder="Email"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           autoCapitalize="none"
           keyboardType="email-address"
         />
@@ -64,7 +64,7 @@ export default function ForgotPasswordScreen() {
           disabled={loading}
         >
           {loading
-            ? <ActivityIndicator color="#FFFFFF" />
+            ? <ActivityIndicator color="#0B3D3B" />
             : <Text style={styles.btnText}>Enviar link</Text>
           }
         </AnimatedPressable>
@@ -78,16 +78,16 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#F6F8F5' },
-  inner:      { flex: 1, padding: 24, justifyContent: 'center', maxWidth: 420, alignSelf: 'center', width: '100%' },
-  title:      { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle:   { fontSize: 14, color: '#5A625A', marginBottom: 24, lineHeight: 20 },
-  input:      { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError: { borderColor: '#F0735A' },
-  fieldError: { color: '#F0735A', fontSize: 12, marginBottom: 8, marginLeft: 4 },
-  btn:        { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 4 },
+  container:  { flex: 1, backgroundColor: '#0B3D3B' },
+  inner:      { flex: 1, padding: 28, justifyContent: 'center', maxWidth: 420, alignSelf: 'center', width: '100%' },
+  title:      { fontSize: 32, fontWeight: '700', color: '#FFFFFF', marginBottom: 6, letterSpacing: -0.5 },
+  subtitle:   { fontSize: 14, color: '#A0EDE8', marginBottom: 32, fontWeight: '300' },
+  input:      { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFFFFF' },
+  inputError: { borderColor: '#F4937F' },
+  fieldError: { color: '#F4937F', fontSize: 12, marginBottom: 8, marginLeft: 4 },
+  btn:        { backgroundColor: '#22C9BF', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 4, marginBottom: 4 },
   btnDisabled:{ opacity: 0.6 },
-  btnText:    { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  btnText:    { color: '#0B3D3B', fontWeight: '700', fontSize: 16 },
   backBtn:    { alignItems: 'center', marginTop: 16 },
-  backText:   { color: '#5A625A', fontSize: 14 },
+  backText:   { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
 });

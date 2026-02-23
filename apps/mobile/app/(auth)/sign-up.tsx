@@ -9,12 +9,12 @@ import { hapticError, hapticSuccess } from '../../src/lib/haptics';
 
 export default function SignUpScreen() {
   const toast = useToast();
-  const [fullName, setFullName]             = useState('');
-  const [email, setEmail]                   = useState('');
-  const [password, setPassword]             = useState('');
+  const [fullName, setFullName]               = useState('');
+  const [email, setEmail]                     = useState('');
+  const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading]               = useState(false);
-  const [errors, setErrors]                 = useState<Record<string, string>>({});
+  const [loading, setLoading]                 = useState(false);
+  const [errors, setErrors]                   = useState<Record<string, string>>({});
 
   function clearError(field: string) {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
@@ -54,13 +54,14 @@ export default function SignUpScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Criar conta</Text>
+        <Text style={styles.subtitle}>Junte-se ao MedStock e gerencie seus medicamentos.</Text>
 
         <TextInput
           style={[styles.input, errors['fullName'] ? styles.inputError : null]}
           value={fullName}
           onChangeText={v => { setFullName(v); clearError('fullName'); }}
           placeholder="Nome completo"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           autoComplete="name"
         />
         {Boolean(errors['fullName']) && <Text style={styles.fieldError}>{errors['fullName']}</Text>}
@@ -70,7 +71,7 @@ export default function SignUpScreen() {
           value={email}
           onChangeText={v => { setEmail(v); clearError('email'); }}
           placeholder="Email"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
@@ -82,7 +83,7 @@ export default function SignUpScreen() {
           value={password}
           onChangeText={v => { setPassword(v); clearError('password'); }}
           placeholder="Senha (mín. 8 caracteres)"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           secureTextEntry
         />
         {Boolean(errors['password']) && <Text style={styles.fieldError}>{errors['password']}</Text>}
@@ -92,7 +93,7 @@ export default function SignUpScreen() {
           value={confirmPassword}
           onChangeText={v => { setConfirmPassword(v); clearError('confirmPassword'); }}
           placeholder="Confirmar senha"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           secureTextEntry
         />
         {Boolean(errors['confirmPassword']) && <Text style={styles.fieldError}>{errors['confirmPassword']}</Text>}
@@ -103,7 +104,7 @@ export default function SignUpScreen() {
           disabled={loading}
         >
           {loading
-            ? <ActivityIndicator color="#FFFFFF" />
+            ? <ActivityIndicator color="#0B3D3B" />
             : <Text style={styles.btnText}>Cadastrar</Text>
           }
         </AnimatedPressable>
@@ -118,16 +119,17 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: '#F6F8F5' },
-  inner:        { padding: 24, maxWidth: 420, alignSelf: 'center', width: '100%', paddingTop: 48 },
-  title:        { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 24, letterSpacing: -0.5 },
-  input:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError:   { borderColor: '#F0735A' },
-  fieldError:   { color: '#F0735A', fontSize: 12, marginBottom: 8, marginLeft: 4 },
-  btn:          { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
-  btnDisabled:  { opacity: 0.6 },
-  btnText:      { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-  link:         { color: '#1A9E96' },
-  row:          { textAlign: 'center', marginTop: 20 },
-  mutedText:    { color: '#5A625A', fontSize: 14 },
+  container:   { flex: 1, backgroundColor: '#0B3D3B' },
+  inner:       { padding: 28, maxWidth: 420, alignSelf: 'center', width: '100%', paddingTop: 52 },
+  title:       { fontSize: 32, fontWeight: '700', color: '#FFFFFF', marginBottom: 6, letterSpacing: -0.5 },
+  subtitle:    { fontSize: 14, color: '#A0EDE8', marginBottom: 32, fontWeight: '300' },
+  input:       { borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFFFFF' },
+  inputError:  { borderColor: '#F4937F' },
+  fieldError:  { color: '#F4937F', fontSize: 12, marginBottom: 8, marginLeft: 4 },
+  btn:         { backgroundColor: '#22C9BF', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8, marginBottom: 10 },
+  btnDisabled: { opacity: 0.6 },
+  btnText:     { color: '#0B3D3B', fontWeight: '700', fontSize: 16 },
+  link:        { color: '#5EDDD5' },
+  row:         { textAlign: 'center', marginTop: 8 },
+  mutedText:   { color: 'rgba(255,255,255,0.4)', fontSize: 14 },
 });
