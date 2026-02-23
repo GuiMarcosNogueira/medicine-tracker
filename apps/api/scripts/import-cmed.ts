@@ -87,7 +87,10 @@ function isTarjaPreta(raw: unknown): boolean {
 async function main(): Promise<void> {
   const supabaseUrl = process.env['SUPABASE_URL'];
   const serviceKey  = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-  const filePath    = process.argv[2];
+  // Filter out the bare "--" separator that pnpm injects when using
+  // `pnpm --filter pkg script -- args` syntax.
+  const args     = process.argv.slice(2).filter(a => a !== '--');
+  const filePath = args.find(a => !a.startsWith('-'));
 
   if (!supabaseUrl || !serviceKey) {
     console.error('❌  Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY');
@@ -112,7 +115,7 @@ async function main(): Promise<void> {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  if (process.argv.includes('--truncate')) {
+  if (args.includes('--truncate')) {
     console.log('🗑️  Limpando tabela medications...');
     const { error } = await supabase.from('medications').delete().gte('created_at', '2000-01-01');
     if (error) {
