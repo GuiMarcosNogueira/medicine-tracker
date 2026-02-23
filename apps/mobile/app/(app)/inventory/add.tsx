@@ -21,13 +21,38 @@ const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g
 
 export default function AddInventoryScreen() {
   const toast = useToast();
-  const params = useLocalSearchParams<{ medicationId?: string; productName?: string }>();
+  const params = useLocalSearchParams<{
+    medicationId?: string;
+    productName?: string;
+    quantityCount?: string;
+    quantityVolume?: string;
+    pharmaFormFriendly?: string;
+  }>();
   const familyId = useSelector(inventoryStore.familyId);
 
   const [customName, setCustomName] = useState(params.productName ?? '');
   const [expiryDate, setExpiryDate] = useState('');
-  const [quantity, setQuantity] = useState('1');
-  const [unit, setUnit] = useState<InventoryUnit>('un');
+  const [quantity, setQuantity] = useState(() => {
+    if (params.quantityVolume) {
+      // Extract numeric part from e.g. "150 ML", "30 G"
+      return params.quantityVolume.match(/^(\d+(?:[.,]\d+)?)/)?.[1] ?? '1';
+    }
+    return params.quantityCount ?? '1';
+  });
+  const [unit, setUnit] = useState<InventoryUnit>(() => {
+    if (params.quantityVolume) {
+      const u = params.quantityVolume.replace(/^\d+(?:[.,]\d+)?\s*/, '').toLowerCase();
+      if (u === 'ml' || u === 'l') return 'ml';
+      if (u === 'g') return 'g';
+      return 'ml';
+    }
+    if (params.quantityCount) {
+      const form = (params.pharmaFormFriendly ?? '').toLowerCase();
+      if (form.includes('comprimido')) return 'comprimidos';
+      if (form.includes('cápsula') || form.includes('capsula')) return 'cápsulas';
+    }
+    return 'un';
+  });
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);

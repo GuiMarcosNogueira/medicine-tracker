@@ -93,7 +93,13 @@ export default function MedicationDetailScreen() {
           onPress={() =>
             router.push({
               pathname: '/(app)/inventory/add',
-              params: { medicationId: med.id, productName: med.product_name },
+              params: {
+                medicationId: med.id,
+                productName: med.product_name,
+                ...(med.quantity_count != null ? { quantityCount: String(med.quantity_count) } : {}),
+                ...(med.quantity_volume != null ? { quantityVolume: med.quantity_volume } : {}),
+                ...(med.pharma_form_friendly != null ? { pharmaFormFriendly: med.pharma_form_friendly } : {}),
+              },
             })
           }
         >
