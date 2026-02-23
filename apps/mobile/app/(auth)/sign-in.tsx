@@ -60,8 +60,10 @@ export default function SignInScreen() {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
     if (result.type === 'success') {
       const url = new URL(result.url);
-      const access_token  = url.searchParams.get('access_token');
-      const refresh_token = url.searchParams.get('refresh_token');
+      // Supabase returns tokens in the hash fragment (#access_token=...) on web
+      const hashParams = new URLSearchParams(url.hash.slice(1));
+      const access_token  = url.searchParams.get('access_token') ?? hashParams.get('access_token');
+      const refresh_token = url.searchParams.get('refresh_token') ?? hashParams.get('refresh_token');
       if (access_token && refresh_token) {
         await supabase.auth.setSession({ access_token, refresh_token });
         hapticSuccess();
