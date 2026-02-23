@@ -56,30 +56,36 @@ const FORM_MAP: [abbr: string, label: string][] = [
 export function parsePresentation(raw: string | null): ParsedPresentation {
   if (!raw) return { dosage: null, formFriendly: null, count: null, volume: null };
 
-  // Step 1: strip accessory after " + " (e.g., "+ CP MED", "+ SER DOS")
-  const main = raw.split(' + ')[0]?.trim() ?? raw;
-
-  // Step 2: extract quantity from the last " X NN" or " X NN ML" occurrence.
+  // Step 1: extract quantity from the LAST " X NN [UNIT]" occurrence.
+  //
+  // Using the last occurrence as the split point achieves two goals at once:
+  //   a) Accessories (" + CP MED", " +COP", " +SER") always appear AFTER the
+  //      quantity, so they are automatically discarded as part of `afterX`.
+  //   b) Combination dosages ("40 MG + 12,5 MG COM …") contain a "+" BEFORE
+  //      the quantity and are preserved intact in `withoutQty`.
+  //
+  // This replaces the earlier approach of splitting on " +" first, which broke
+  // combination-product strings like "40 MG + 12,5 MG COM CT BL AL X 30".
   let count: number | null = null;
   let volume: string | null = null;
-  let withoutQty = main;
+  let withoutQty = raw;
 
-  const upper = main.toUpperCase();
-  const xIdx = upper.lastIndexOf(' X ');
-  if (xIdx !== -1) {
-    const afterX = main.slice(xIdx + 3).trim();
-    // Matches: "30", "150 ML", "120 ML", "1,5 G", etc.
-    const m = afterX.match(/^(\d+(?:[.,]\d+)?)\s*(ML|G|L|MCG)?$/i);
-    if (m) {
-      const num = parseFloat((m[1] ?? '0').replace(',', '.'));
-      const unit = m[2]?.toUpperCase() ?? null;
-      if (unit) {
-        volume = `${Number.isInteger(num) ? Math.round(num) : num} ${unit}`;
-      } else {
-        count = Math.round(num);
-      }
-      withoutQty = main.slice(0, xIdx).trim();
+  // Scan for all " X NN [UNIT]" occurrences and keep the last one.
+  const xRe = / X (\d+(?:[.,]\d+)?)\s*(ML|G|L|MCG)?\b/gi;
+  let lastMatch: RegExpExecArray | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = xRe.exec(raw)) !== null) lastMatch = m;
+
+  if (lastMatch) {
+    const num = parseFloat((lastMatch[1] ?? '0').replace(',', '.'));
+    const unit = lastMatch[2]?.toUpperCase() ?? null;
+    if (unit) {
+      volume = `${Number.isInteger(num) ? Math.round(num) : num} ${unit}`;
+    } else {
+      count = Math.round(num);
     }
+    // Everything before the " X …" token (excludes accessories that follow it).
+    withoutQty = raw.slice(0, lastMatch.index).trim();
   }
 
   // Step 3: find the pharmaceutical form in the remaining string.
@@ -100,6 +106,16 @@ export function parsePresentation(raw: string | null): ParsedPresentation {
     // Everything before the form abbreviation is the dosage.
     dosage = withoutQty.slice(0, idx).trim() || null;
     break;
+  }
+
+  // Fallback: no form found, but try to extract a leading dosage token.
+  // Covers cases like "100 MG CT BL AL PLAS X 30" where the form abbreviation
+  // is absent or not yet in FORM_MAP.
+  if (!formFriendly && !dosage) {
+    const dm = withoutQty.match(
+      /^(\d+(?:[.,]\d+)?(?:\/\d+(?:[.,]\d+)?\s*(?:ML|G))?\s*(?:MG(?:\/(?:ML|G|\d+(?:[.,]\d+)?\s*ML))?|MCG|UI|G(?!EL)\b|ML))\b/i,
+    );
+    if (dm?.[1]) dosage = dm[1].trim();
   }
 
   return { dosage, formFriendly, count, volume };
