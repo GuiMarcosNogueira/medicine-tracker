@@ -27,6 +27,10 @@ export default function AddInventoryScreen() {
     quantityCount?: string;
     quantityVolume?: string;
     pharmaFormFriendly?: string;
+    pharmaceuticalForm?: string;
+    activeIngredient?: string;
+    manufacturer?: string;
+    presentationDosage?: string;
   }>();
   const familyId = useSelector(inventoryStore.familyId);
 
@@ -99,15 +103,21 @@ export default function AddInventoryScreen() {
     const { data: userData } = await supabase.auth.getUser();
 
     const { error, queued } = await addInventoryItem({
-      family_id:    familyId,
-      medication_id: d.medicationId ?? null,
-      custom_name:  d.customName ?? null,
-      expiry_date:  d.expiryDate,
-      quantity:     d.quantity,
-      unit:         d.unit,
-      lot_number:   d.lotNumber ?? null,
-      location:     d.location ?? null,
-      added_by:     userData.user?.id ?? null,
+      family_id:           familyId,
+      medication_id:       d.medicationId ?? null,
+      custom_name:         d.customName ?? null,
+      product_name:        params.productName ?? null,
+      manufacturer:        params.manufacturer ?? null,
+      active_ingredient:   params.activeIngredient ?? null,
+      presentation_dosage: params.presentationDosage ?? null,
+      pharma_form_friendly: params.pharmaFormFriendly ?? null,
+      pharmaceutical_form: params.pharmaceuticalForm ?? null,
+      expiry_date:         d.expiryDate,
+      quantity:            d.quantity,
+      unit:                d.unit,
+      lot_number:          d.lotNumber ?? null,
+      location:            d.location ?? null,
+      added_by:            userData.user?.id ?? null,
     });
 
     setLoading(false);

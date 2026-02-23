@@ -38,13 +38,11 @@ function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
     </Pressable>
   );
 
-  const med = item.medications;
   const descParts = [
-    med?.manufacturer,
-    med?.pharma_form_friendly ?? med?.pharmaceutical_form,
-    med?.presentation_dosage,
-    med?.quantity_volume ?? (med?.quantity_count != null ? `${med.quantity_count} unid.` : null),
-    med?.active_ingredient,
+    item.manufacturer,
+    item.pharma_form_friendly ?? item.pharmaceutical_form,
+    item.presentation_dosage,
+    item.active_ingredient,
   ].filter(Boolean);
 
   return (
@@ -82,7 +80,7 @@ export default function InventoryListScreen() {
     const q = normalize(search);
     return items.filter(item => {
       const name = normalize(getItemDisplayName(item));
-      const sub  = normalize(item.medications?.active_ingredient ?? '');
+      const sub  = normalize(item.active_ingredient ?? '');
       return name.includes(q) || sub.includes(q);
     });
   }, [items, search]);

@@ -99,6 +99,10 @@ export default function MedicationDetailScreen() {
                 ...(med.quantity_count != null ? { quantityCount: String(med.quantity_count) } : {}),
                 ...(med.quantity_volume != null ? { quantityVolume: med.quantity_volume } : {}),
                 ...(med.pharma_form_friendly != null ? { pharmaFormFriendly: med.pharma_form_friendly } : {}),
+                ...(med.pharmaceutical_form != null ? { pharmaceuticalForm: med.pharmaceutical_form } : {}),
+                ...(med.active_ingredient != null ? { activeIngredient: med.active_ingredient } : {}),
+                ...(med.manufacturer != null ? { manufacturer: med.manufacturer } : {}),
+                ...(med.presentation_dosage != null ? { presentationDosage: med.presentation_dosage } : {}),
               },
             })
           }

@@ -4,12 +4,21 @@ import { savePendingItem, getPendingItems, deletePendingItem } from '../lib/loca
 import { scheduleExpiryNotifications } from '../lib/notifications';
 import type { InventoryUnit } from '@medstock/shared';
 
-// Inventory item with joined medication data
+// Inventory item — all display fields are denormalised snapshots
+// (populated at insert time from the catalog or entered manually).
 export interface InventoryRow {
   id: string;
   family_id: string;
   medication_id: string | null;
   custom_name: string | null;
+  // Snapshot fields (set at add-time; null for old/offline items)
+  product_name: string | null;
+  manufacturer: string | null;
+  active_ingredient: string | null;
+  presentation_dosage: string | null;
+  pharma_form_friendly: string | null;
+  pharmaceutical_form: string | null;
+  // Stock fields
   lot_number: string | null;
   expiry_date: string;
   quantity: number;
@@ -21,17 +30,6 @@ export interface InventoryRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
-  // Joined from medications table
-  medications: {
-    product_name: string;
-    active_ingredient: string | null;
-    manufacturer: string | null;
-    presentation_dosage: string | null;
-    pharma_form_friendly: string | null;
-    pharmaceutical_form: string | null;
-    quantity_count: number | null;
-    quantity_volume: string | null;
-  } | null;
 }
 
 export const inventoryStore = observable<{
@@ -42,8 +40,8 @@ export const inventoryStore = observable<{
 
 let channel: ReturnType<typeof supabase.channel> | null = null;
 
-export function getItemDisplayName(item: Pick<InventoryRow, 'medications' | 'custom_name'>): string {
-  return item.medications?.product_name ?? item.custom_name ?? 'Sem nome';
+export function getItemDisplayName(item: Pick<InventoryRow, 'product_name' | 'custom_name'>): string {
+  return item.product_name ?? item.custom_name ?? 'Sem nome';
 }
 
 export async function initInventory(userId: string): Promise<void> {
@@ -73,6 +71,12 @@ export async function addInventoryItem(payload: {
   family_id: string;
   medication_id: string | null;
   custom_name: string | null;
+  product_name: string | null;
+  manufacturer: string | null;
+  active_ingredient: string | null;
+  presentation_dosage: string | null;
+  pharma_form_friendly: string | null;
+  pharmaceutical_form: string | null;
   expiry_date: string;
   quantity: number;
   unit: InventoryUnit;
@@ -134,7 +138,7 @@ export async function refreshInventory(familyId: string): Promise<void> {
   inventoryStore.loading.set(true);
   const { data } = await supabase
     .from('inventory_items')
-    .select('*, medications(product_name, active_ingredient, manufacturer, presentation_dosage, pharma_form_friendly, pharmaceutical_form, quantity_count, quantity_volume)')
+    .select('*')
     .eq('family_id', familyId)
     .is('deleted_at', null)
     .order('expiry_date');

@@ -141,8 +141,8 @@ export default function InventoryItemDetailScreen() {
         </View>
 
         <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
-        {Boolean(item.medications?.active_ingredient) && (
-          <Text style={styles.itemSub}>{item.medications?.active_ingredient}</Text>
+        {Boolean(item.active_ingredient) && (
+          <Text style={styles.itemSub}>{item.active_ingredient}</Text>
         )}
 
         <View style={[styles.statusBadge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
@@ -222,13 +222,14 @@ export default function InventoryItemDetailScreen() {
           </View>
         ) : (
           <View style={styles.card}>
-            <Row label="Vencimento"  value={formatExpiryDate(item.expiry_date)} />
-            <Row label="Quantidade"  value={`${item.quantity} ${item.unit}`} />
-            <Row label="Lote"        value={item.lot_number} />
-            <Row label="Local"       value={item.location} />
-            {Boolean(item.medications?.pharmaceutical_form) && (
-              <Row label="Forma"     value={item.medications?.pharmaceutical_form} />
-            )}
+            <Row label="Vencimento"      value={formatExpiryDate(item.expiry_date)} />
+            <Row label="Quantidade"      value={`${item.quantity} ${item.unit}`} />
+            <Row label="Fabricante"      value={item.manufacturer} />
+            <Row label="Dosagem"         value={item.presentation_dosage} />
+            <Row label="Forma"           value={item.pharma_form_friendly ?? item.pharmaceutical_form} />
+            <Row label="Princípio ativo" value={item.active_ingredient} />
+            <Row label="Lote"            value={item.lot_number} />
+            <Row label="Local"           value={item.location} />
           </View>
         )}
       </ScrollView>

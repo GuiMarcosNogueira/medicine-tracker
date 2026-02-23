@@ -78,7 +78,7 @@ export async function scheduleExpiryNotifications(items: InventoryRow[]): Promis
 
   for (const item of items) {
     const expiryMs = new Date(item.expiry_date).getTime();
-    const name = item.medications?.product_name ?? item.custom_name ?? 'Medicamento';
+    const name = item.product_name ?? item.custom_name ?? 'Medicamento';
 
     for (const days of THRESHOLDS_DAYS) {
       const triggerMs = expiryMs - days * 24 * 60 * 60 * 1000;

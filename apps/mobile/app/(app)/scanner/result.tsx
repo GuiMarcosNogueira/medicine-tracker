@@ -90,15 +90,21 @@ export default function OcrResultScreen() {
     const d = parseResult.data;
     const { data: userData } = await supabase.auth.getUser();
     const { error, queued } = await addInventoryItem({
-      family_id:     familyId,
-      medication_id: d.medicationId ?? null,
-      custom_name:   d.customName ?? null,
-      expiry_date:   d.expiryDate,
-      quantity:      d.quantity,
-      unit:          d.unit,
-      lot_number:    d.lotNumber ?? null,
-      location:      null,
-      added_by:      userData.user?.id ?? null,
+      family_id:           familyId,
+      medication_id:       d.medicationId ?? null,
+      custom_name:         d.customName ?? null,
+      product_name:        null,
+      manufacturer:        null,
+      active_ingredient:   null,
+      presentation_dosage: null,
+      pharma_form_friendly: null,
+      pharmaceutical_form: null,
+      expiry_date:         d.expiryDate,
+      quantity:            d.quantity,
+      unit:                d.unit,
+      lot_number:          d.lotNumber ?? null,
+      location:            null,
+      added_by:            userData.user?.id ?? null,
     });
     setSaving(false);
     if (error) {
