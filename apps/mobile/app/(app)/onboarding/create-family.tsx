@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
@@ -61,11 +61,24 @@ export default function CreateFamilyScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.inner}>
-        <Text style={styles.title}>Criar família</Text>
+      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>💊</Text>
+        </View>
+
+        <Text style={styles.title}>Bem-vindo ao MedStock!</Text>
         <Text style={styles.subtitle}>
-          Dê um nome para o grupo familiar que irá compartilhar o estoque.
+          Para começar, crie seu grupo familiar.
         </Text>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>Como funciona</Text>
+          <Text style={styles.infoItem}>{'•  '}O grupo familiar compartilha um estoque de medicamentos.</Text>
+          <Text style={styles.infoItem}>{'•  '}Você pode convidar outros membros depois.</Text>
+          <Text style={styles.infoItem}>{'•  '}Alertas de vencimento são enviados para todos.</Text>
+        </View>
+
+        <Text style={styles.label}>Nome do grupo</Text>
         <TextInput
           style={[styles.input, errors['name'] ? styles.inputError : null]}
           value={name}
@@ -81,22 +94,31 @@ export default function CreateFamilyScreen() {
           onPress={() => { void handleCreate(); }}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Criar família</Text>}
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.btnText}>Criar grupo e começar</Text>
+          }
         </AnimatedPressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#F6F8F5' },
-  inner:      { flex: 1, padding: 24, justifyContent: 'center', maxWidth: 420, alignSelf: 'center', width: '100%' },
-  title:      { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 8, letterSpacing: -0.5 },
-  subtitle:   { fontSize: 14, color: '#5A625A', marginBottom: 24, lineHeight: 20 },
-  input:      { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError: { borderColor: '#F0735A' },
-  fieldError: { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
-  btn:        { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center' },
-  btnDisabled:{ opacity: 0.6 },
-  btnText:    { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  container:     { flex: 1, backgroundColor: '#F6F8F5' },
+  inner:         { padding: 28, maxWidth: 480, alignSelf: 'center', width: '100%', paddingTop: 40 },
+  iconContainer: { alignItems: 'center', marginBottom: 20 },
+  icon:          { fontSize: 56 },
+  title:         { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 8, letterSpacing: -0.5, textAlign: 'center' },
+  subtitle:      { fontSize: 15, color: '#5A625A', marginBottom: 24, lineHeight: 22, textAlign: 'center' },
+  infoCard:      { backgroundColor: '#EAF6F5', borderRadius: 16, padding: 18, marginBottom: 28, gap: 8 },
+  infoTitle:     { fontSize: 13, fontWeight: '700', color: '#1A9E96', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  infoItem:      { fontSize: 14, color: '#2D3B2D', lineHeight: 20 },
+  label:         { fontSize: 13, fontWeight: '600', color: '#4A534A', marginBottom: 6, marginLeft: 2 },
+  input:         { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputError:    { borderColor: '#F0735A' },
+  fieldError:    { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
+  btn:           { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
+  btnDisabled:   { opacity: 0.6 },
+  btnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });
