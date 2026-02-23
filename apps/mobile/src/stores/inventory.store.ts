@@ -25,7 +25,12 @@ export interface InventoryRow {
   medications: {
     product_name: string;
     active_ingredient: string | null;
+    manufacturer: string | null;
+    presentation_dosage: string | null;
+    pharma_form_friendly: string | null;
     pharmaceutical_form: string | null;
+    quantity_count: number | null;
+    quantity_volume: string | null;
   } | null;
 }
 
@@ -129,7 +134,7 @@ export async function refreshInventory(familyId: string): Promise<void> {
   inventoryStore.loading.set(true);
   const { data } = await supabase
     .from('inventory_items')
-    .select('*, medications(product_name, active_ingredient, pharmaceutical_form)')
+    .select('*, medications(product_name, active_ingredient, manufacturer, presentation_dosage, pharma_form_friendly, pharmaceutical_form, quantity_count, quantity_volume)')
     .eq('family_id', familyId)
     .is('deleted_at', null)
     .order('expiry_date');

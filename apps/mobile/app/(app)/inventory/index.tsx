@@ -38,6 +38,15 @@ function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
     </Pressable>
   );
 
+  const med = item.medications;
+  const descParts = [
+    med?.manufacturer,
+    med?.pharma_form_friendly ?? med?.pharmaceutical_form,
+    med?.presentation_dosage,
+    med?.quantity_volume ?? (med?.quantity_count != null ? `${med.quantity_count} unid.` : null),
+    med?.active_ingredient,
+  ].filter(Boolean);
+
   return (
     <Swipeable ref={swipeRef} renderRightActions={renderRightActions} overshootRight={false}>
       <Pressable
@@ -47,6 +56,9 @@ function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
         <View style={[styles.dot, { backgroundColor: EXPIRY_COLORS[status] }]} />
         <View style={styles.itemContent}>
           <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
+          {descParts.length > 0 && (
+            <Text style={styles.itemDesc} numberOfLines={1}>{descParts.join(' · ')}</Text>
+          )}
           <Text style={styles.itemMeta}>
             {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
           </Text>
@@ -150,6 +162,7 @@ const styles = StyleSheet.create({
   dot:              { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   itemContent:      { flex: 1 },
   itemName:         { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
+  itemDesc:         { fontSize: 11, color: '#1A9E96', marginTop: 2 },
   itemMeta:         { fontSize: 12, color: '#5A625A', marginTop: 2 },
   deleteAction:     { width: 80, backgroundColor: '#F0735A', alignItems: 'center', justifyContent: 'center' },
   deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
