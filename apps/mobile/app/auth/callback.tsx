@@ -24,7 +24,7 @@ export default function AuthCallbackScreen() {
 
     if (access_token && refresh_token) {
       void supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
-        router.replace(error ? '/(auth)/sign-in' : '/(app)');
+        router.replace(error ? '/(auth)/sign-in' : '/');
       });
     } else {
       router.replace('/(auth)/sign-in');

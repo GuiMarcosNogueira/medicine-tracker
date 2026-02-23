@@ -44,7 +44,7 @@ export default function SignInScreen() {
       return;
     }
     hapticSuccess();
-    router.replace('/(app)');
+    router.replace('/');
   }
 
   async function handleGoogleSignIn() {
@@ -67,7 +67,7 @@ export default function SignInScreen() {
       if (access_token && refresh_token) {
         await supabase.auth.setSession({ access_token, refresh_token });
         hapticSuccess();
-        router.replace('/(app)');
+        router.replace('/');
       }
     }
   }
