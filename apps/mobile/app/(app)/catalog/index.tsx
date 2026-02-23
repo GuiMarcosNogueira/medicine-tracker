@@ -91,8 +91,11 @@ export default function CatalogSearchScreen() {
               )}
               {Boolean(item.pharma_form_friendly ?? item.pharmaceutical_form ?? item.presentation_dosage ?? item.concentration) && (
                 <Text style={styles.itemForm}>
-                  {[item.pharma_form_friendly ?? item.pharmaceutical_form, item.presentation_dosage ?? item.concentration]
-                    .filter(Boolean).join(' · ')}
+                  {[
+                    item.pharma_form_friendly ?? item.pharmaceutical_form,
+                    item.presentation_dosage ?? item.concentration,
+                    item.quantity_volume ?? (item.quantity_count != null ? `${item.quantity_count} unid.` : null),
+                  ].filter(Boolean).join(' · ')}
                 </Text>
               )}
               {Boolean(item.atc_description) && (
