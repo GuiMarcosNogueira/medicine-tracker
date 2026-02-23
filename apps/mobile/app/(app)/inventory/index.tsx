@@ -14,7 +14,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
-import { inventoryStore, getItemDisplayName, softDeleteItem } from '../../../src/stores/inventory.store';
+import { inventoryStore, getItemDisplayName, softDeleteItem, refreshInventory } from '../../../src/stores/inventory.store';
 import { getExpiryStatus, formatExpiryDate, EXPIRY_COLORS } from '../../../src/utils/expiry';
 import { AnimatedPressable, InventoryListSkeleton, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
@@ -57,6 +57,7 @@ export default function InventoryListScreen() {
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
   const loading = useSelector(inventoryStore.loading);
+  const familyId = useSelector(inventoryStore.familyId);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -71,9 +72,10 @@ export default function InventoryListScreen() {
   }, [items, search]);
 
   const handleRefresh = useCallback(() => {
+    if (!familyId) return;
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); }, 1000);
-  }, []);
+    void refreshInventory(familyId).finally(() => { setRefreshing(false); });
+  }, [familyId]);
 
   async function handleDelete(id: string) {
     hapticMedium();

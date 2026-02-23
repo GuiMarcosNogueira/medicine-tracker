@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
-import { inventoryStore, addInventoryItem } from '../../../src/stores/inventory.store';
+import { inventoryStore, addInventoryItem, refreshInventory } from '../../../src/stores/inventory.store';
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
@@ -96,6 +96,8 @@ export default function AddInventoryScreen() {
     } else {
       hapticSuccess();
       toast.show('success', 'Salvo!', 'Item adicionado ao estoque.');
+      // Refresh the store immediately so the list is up-to-date on back()
+      void refreshInventory(familyId);
     }
     router.back();
   }
