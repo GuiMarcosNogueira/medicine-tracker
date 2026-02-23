@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSelector } from '@legendapp/state/react';
@@ -34,7 +33,6 @@ export default function AppLayout() {
         <Tabs.Screen name="catalog"    options={{ title: 'Catálogo' }} />
         <Tabs.Screen name="settings"   options={{ title: 'Config' }} />
         <Tabs.Screen name="scanner"    options={{ href: null }} />
-        <Tabs.Screen name="onboarding" options={{ href: null }} />
       </Tabs>
     </SafeAreaProvider>
   );

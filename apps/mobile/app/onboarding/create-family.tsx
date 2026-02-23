@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { supabase } from '../../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase';
 import { familySchema } from '@medstock/shared';
 import { AnimatedPressable, useToast } from '@medstock/ui';
-import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
-import { initInventory } from '../../../src/stores/inventory.store';
+import { hapticError, hapticSuccess } from '../../src/lib/haptics';
+import { initInventory } from '../../src/stores/inventory.store';
 
 export default function CreateFamilyScreen() {
   const toast = useToast();

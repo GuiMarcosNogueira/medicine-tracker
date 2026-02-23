@@ -34,6 +34,6 @@ export default function IndexGuard() {
   }
 
   if (!session) return <Redirect href="/(auth)/sign-in" />;
-  if (!hasFamily) return <Redirect href="/(app)/onboarding/create-family" />;
+  if (!hasFamily) return <Redirect href="/onboarding/create-family" />;
   return <Redirect href="/(app)" />;
 }
