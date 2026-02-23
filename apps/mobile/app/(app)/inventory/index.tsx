@@ -19,6 +19,10 @@ import { getExpiryStatus, formatExpiryDate, EXPIRY_COLORS } from '../../../src/u
 import { AnimatedPressable, InventoryListSkeleton, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
 
+function normalize(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: string) => void }) {
   const swipeRef = useRef<Swipeable>(null);
   const status = getExpiryStatus(item.expiry_date);
@@ -63,10 +67,10 @@ export default function InventoryListScreen() {
 
   const filtered = useMemo(() => {
     if (!search.trim()) return items;
-    const q = search.toLowerCase();
+    const q = normalize(search);
     return items.filter(item => {
-      const name = getItemDisplayName(item).toLowerCase();
-      const sub = (item.medications?.active_ingredient ?? '').toLowerCase();
+      const name = normalize(getItemDisplayName(item));
+      const sub  = normalize(item.medications?.active_ingredient ?? '');
       return name.includes(q) || sub.includes(q);
     });
   }, [items, search]);
