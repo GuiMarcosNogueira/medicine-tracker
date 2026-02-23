@@ -89,9 +89,18 @@ export default function CatalogSearchScreen() {
               {Boolean(item.active_ingredient) && (
                 <Text style={styles.itemSub}>{item.active_ingredient}</Text>
               )}
+              {Boolean(item.pharma_form_friendly ?? item.pharmaceutical_form ?? item.concentration) && (
+                <Text style={styles.itemForm}>
+                  {[item.pharma_form_friendly ?? item.pharmaceutical_form, item.concentration]
+                    .filter(Boolean).join(' · ')}
+                </Text>
+              )}
+              {Boolean(item.atc_description) && (
+                <Text style={styles.itemAtc} numberOfLines={1}>{item.atc_description}</Text>
+              )}
               <View style={styles.itemMeta}>
                 {Boolean(item.manufacturer) && (
-                  <Text style={styles.metaManuf}>{item.manufacturer}</Text>
+                  <Text style={styles.metaManuf} numberOfLines={1}>{item.manufacturer}</Text>
                 )}
                 {item.reference_price !== null && (
                   <Text style={styles.metaPrice}>
@@ -128,6 +137,8 @@ const styles = StyleSheet.create({
   item:       { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
   itemName:   { fontSize: 15, fontWeight: '600', color: '#1A1D1A' },
   itemSub:    { fontSize: 13, color: '#5A625A', marginTop: 2 },
+  itemForm:   { fontSize: 12, color: '#1A9E96', fontWeight: '500', marginTop: 3 },
+  itemAtc:    { fontSize: 11, color: '#9CA59C', marginTop: 2 },
   itemMeta:   { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   metaManuf:  { fontSize: 12, color: '#9CA59C', flex: 1 },
   metaPrice:  { fontSize: 12, color: '#1A9E96', fontWeight: '600' },
