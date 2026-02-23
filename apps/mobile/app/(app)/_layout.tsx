@@ -29,17 +29,12 @@ export default function AppLayout() {
   return (
     <SafeAreaProvider>
       <Tabs screenOptions={TAB_OPTIONS}>
-        <Tabs.Screen name="index"           options={{ title: 'Início' }} />
-        <Tabs.Screen name="inventory/index" options={{ title: 'Estoque' }} />
-        <Tabs.Screen name="catalog/index"   options={{ title: 'Catálogo' }} />
-        <Tabs.Screen name="settings/index"  options={{ title: 'Config' }} />
-        <Tabs.Screen name="scanner"          options={{ href: null }} />
-        <Tabs.Screen name="inventory/add"   options={{ href: null }} />
-        <Tabs.Screen name="inventory/[id]"  options={{ href: null }} />
-        <Tabs.Screen name="catalog/[id]"    options={{ href: null }} />
-        <Tabs.Screen name="settings/family" options={{ href: null }} />
-        <Tabs.Screen name="settings/invite" options={{ href: null }} />
-        <Tabs.Screen name="onboarding/create-family" options={{ href: null }} />
+        <Tabs.Screen name="index"      options={{ title: 'Início' }} />
+        <Tabs.Screen name="inventory"  options={{ title: 'Estoque' }} />
+        <Tabs.Screen name="catalog"    options={{ title: 'Catálogo' }} />
+        <Tabs.Screen name="settings"   options={{ title: 'Config' }} />
+        <Tabs.Screen name="scanner"    options={{ href: null }} />
+        <Tabs.Screen name="onboarding" options={{ href: null }} />
       </Tabs>
     </SafeAreaProvider>
   );
