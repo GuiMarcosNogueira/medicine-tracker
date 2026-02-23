@@ -10,7 +10,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
-import { inventoryStore, getItemDisplayName } from '../../src/stores/inventory.store';
+import { inventoryStore, getItemDisplayName, refreshInventory } from '../../src/stores/inventory.store';
 import type { InventoryRow } from '../../src/stores/inventory.store';
 import {
   getExpiryStatus,
@@ -30,6 +30,7 @@ export default function DashboardScreen() {
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
   const loading = useSelector(inventoryStore.loading);
+  const familyId = useSelector(inventoryStore.familyId);
   const [refreshing, setRefreshing] = useState(false);
 
   const sections = useMemo<Section[]>(() => {
@@ -46,9 +47,10 @@ export default function DashboardScreen() {
   }, [items]);
 
   const handleRefresh = useCallback(() => {
+    if (!familyId) return;
     setRefreshing(true);
-    setTimeout(() => { setRefreshing(false); }, 1000);
-  }, []);
+    void refreshInventory(familyId).finally(() => { setRefreshing(false); });
+  }, [familyId]);
 
   if (loading && items.length === 0) {
     return (
