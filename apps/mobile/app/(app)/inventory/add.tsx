@@ -105,7 +105,10 @@ export default function AddInventoryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
+        <AnimatedPressable
+          onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/inventory'); }}
+          style={styles.backBtn}
+        >
           <Text style={styles.backText}>← Voltar</Text>
         </AnimatedPressable>
         <Text style={styles.title}>Adicionar ao estoque</Text>
