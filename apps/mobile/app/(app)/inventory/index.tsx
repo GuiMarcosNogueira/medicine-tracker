@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   RefreshControl,
@@ -23,20 +24,9 @@ function normalize(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: string) => void }) {
+function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: string) => void }) {
   const swipeRef = useRef<Swipeable>(null);
   const status = getExpiryStatus(item.expiry_date);
-
-  function handleDeleteTap() {
-    swipeRef.current?.close();
-    onDelete(item.id);
-  }
-
-  const renderRightActions = () => (
-    <Pressable style={styles.deleteAction} onPress={handleDeleteTap}>
-      <Text style={styles.deleteActionText}>Remover</Text>
-    </Pressable>
-  );
 
   const descParts = [
     item.manufacturer,
@@ -45,23 +35,52 @@ function SwipeableItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
     item.active_ingredient,
   ].filter(Boolean);
 
+  const row = (
+    <Pressable
+      style={styles.item}
+      onPress={() => { router.push(`/(app)/inventory/${item.id}`); }}
+    >
+      <View style={[styles.dot, { backgroundColor: EXPIRY_COLORS[status] }]} />
+      <View style={styles.itemContent}>
+        <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
+        {descParts.length > 0 && (
+          <Text style={styles.itemDesc} numberOfLines={1}>{descParts.join(' · ')}</Text>
+        )}
+        <Text style={styles.itemMeta}>
+          {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
+        </Text>
+      </View>
+    </Pressable>
+  );
+
+  // On web, Swipeable gesture handlers are registered at the root and intercept
+  // pointer events globally — breaking buttons on other tabs/screens.
+  // Use a plain visible delete button instead.
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.webRow}>
+        {row}
+        <Pressable style={styles.webDeleteBtn} onPress={() => { onDelete(item.id); }}>
+          <Text style={styles.webDeleteText}>✕</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
-    <Swipeable ref={swipeRef} renderRightActions={renderRightActions} overshootRight={false}>
-      <Pressable
-        style={styles.item}
-        onPress={() => { router.push(`/(app)/inventory/${item.id}`); }}
-      >
-        <View style={[styles.dot, { backgroundColor: EXPIRY_COLORS[status] }]} />
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
-          {descParts.length > 0 && (
-            <Text style={styles.itemDesc} numberOfLines={1}>{descParts.join(' · ')}</Text>
-          )}
-          <Text style={styles.itemMeta}>
-            {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
-          </Text>
-        </View>
-      </Pressable>
+    <Swipeable
+      ref={swipeRef}
+      renderRightActions={() => (
+        <Pressable
+          style={styles.deleteAction}
+          onPress={() => { swipeRef.current?.close(); onDelete(item.id); }}
+        >
+          <Text style={styles.deleteActionText}>Remover</Text>
+        </Pressable>
+      )}
+      overshootRight={false}
+    >
+      {row}
     </Swipeable>
   );
 }
@@ -130,7 +149,7 @@ export default function InventoryListScreen() {
         }
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
-            <SwipeableItem item={item} onDelete={id => { void handleDelete(id); }} />
+            <InventoryItem item={item} onDelete={id => { void handleDelete(id); }} />
           </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -164,6 +183,9 @@ const styles = StyleSheet.create({
   itemMeta:         { fontSize: 12, color: '#5A625A', marginTop: 2 },
   deleteAction:     { width: 80, backgroundColor: '#F0735A', alignItems: 'center', justifyContent: 'center' },
   deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+  webRow:           { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF' },
+  webDeleteBtn:     { paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'center' },
+  webDeleteText:    { color: '#F0735A', fontWeight: '700', fontSize: 16 },
   separator:        { height: 1, backgroundColor: '#E8ECE5' },
   empty:            { padding: 32, alignItems: 'center' },
   emptyText:        { color: '#9CA59C', fontSize: 14 },
