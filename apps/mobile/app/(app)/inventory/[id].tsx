@@ -125,7 +125,7 @@ export default function InventoryItemDetailScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.topBar}>
-          <AnimatedPressable onPress={() => { router.back(); }}>
+          <AnimatedPressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/inventory'); }}>
             <Text style={styles.backText}>← Voltar</Text>
           </AnimatedPressable>
           {!editing && (

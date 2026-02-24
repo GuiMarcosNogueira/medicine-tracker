@@ -57,7 +57,10 @@ export default function MedicationDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
+        <AnimatedPressable
+          onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/catalog'); }}
+          style={styles.backBtn}
+        >
           <Text style={styles.backText}>← Voltar</Text>
         </AnimatedPressable>
 
