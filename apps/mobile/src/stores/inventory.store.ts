@@ -178,9 +178,6 @@ export function cleanupInventory(): void {
 }
 
 export async function softDeleteItem(id: string): Promise<string | null> {
-  const { error } = await supabase
-    .from('inventory_items')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id);
+  const { error } = await supabase.rpc('soft_delete_inventory_item', { p_item_id: id });
   return error?.message ?? null;
 }
