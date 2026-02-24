@@ -179,5 +179,8 @@ export function cleanupInventory(): void {
 
 export async function softDeleteItem(id: string): Promise<string | null> {
   const { error } = await supabase.rpc('soft_delete_inventory_item', { p_item_id: id });
+  if (!error) {
+    inventoryStore.items.set(inventoryStore.items.get().filter(item => item.id !== id));
+  }
   return error?.message ?? null;
 }
