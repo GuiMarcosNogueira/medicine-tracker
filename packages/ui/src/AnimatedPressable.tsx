@@ -30,22 +30,22 @@ export function AnimatedPressable({
   }));
 
   return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        onPress={onPress}
-        onLongPress={onLongPress}
-        onPressIn={() => {
-          if (!disabled) scale.value = withSpring(0.94, { damping: 15, stiffness: 300 });
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, { damping: 15, stiffness: 300 });
-        }}
-        disabled={disabled}
-        hitSlop={hitSlop}
-        style={style}
-      >
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      onPressIn={() => {
+        if (!disabled) scale.value = withSpring(0.94, { damping: 15, stiffness: 300 });
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+      }}
+      disabled={disabled}
+      hitSlop={hitSlop}
+      style={style}
+    >
+      <Animated.View style={animatedStyle}>
         {children}
-      </Pressable>
-    </Animated.View>
+      </Animated.View>
+    </Pressable>
   );
 }
