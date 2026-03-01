@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,16 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
-import { inventoryStore, getItemDisplayName, softDeleteItem } from '../../../src/stores/inventory.store';
+import {
+  inventoryStore,
+  getItemDisplayName,
+  softDeleteItem,
+  logConsumption,
+} from '../../../src/stores/inventory.store';
 import type { InventoryRow } from '../../../src/stores/inventory.store';
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
@@ -23,9 +29,25 @@ import {
   EXPIRY_LABELS,
 } from '../../../src/utils/expiry';
 import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
-import { hapticSuccess, hapticError } from '../../../src/lib/haptics';
+import { hapticSuccess, hapticError, hapticMedium } from '../../../src/lib/haptics';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
+
+type ConsumptionRow = {
+  id: string;
+  consumed_qty: number;
+  person_name: string | null;
+  consumed_at: string;
+};
+
+function formatConsumedAt(iso: string): string {
+  const d = new Date(iso);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm} ${hh}:${min}`;
+}
 
 export default function InventoryItemDetailScreen() {
   const toast = useToast();
@@ -34,6 +56,7 @@ export default function InventoryItemDetailScreen() {
   const items = rawItems as InventoryRow[];
   const item = items.find(i => i.id === id) ?? null;
 
+  // Edit mode state
   const [editing, setEditing] = useState(false);
   const [expiryDate, setExpiryDate] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -42,6 +65,29 @@ export default function InventoryItemDetailScreen() {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleteVisible, setDeleteVisible] = useState(false);
+
+  // Consume mode state
+  const [consuming, setConsuming] = useState(false);
+  const [consumeQty, setConsumeQty] = useState('1');
+  const [consumePerson, setConsumePerson] = useState('');
+  const [consumeLoading, setConsumeLoading] = useState(false);
+
+  // Consumption history
+  const [consumptions, setConsumptions] = useState<ConsumptionRow[]>([]);
+  const [historyKey, setHistoryKey] = useState(0); // bump to reload
+
+  const loadHistory = useCallback(() => {
+    if (!id) return;
+    void supabase
+      .from('inventory_consumptions')
+      .select('id, consumed_qty, person_name, consumed_at')
+      .eq('item_id', id)
+      .order('consumed_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => { if (data) setConsumptions(data as ConsumptionRow[]); });
+  }, [id]);
+
+  useEffect(() => { loadHistory(); }, [loadHistory, historyKey]);
 
   function startEdit() {
     if (!item) return;
@@ -55,15 +101,14 @@ export default function InventoryItemDetailScreen() {
 
   async function handleSave() {
     if (!item) return;
-
     const parseResult = inventoryItemSchema.safeParse({
       ...(item.medication_id ? { medicationId: item.medication_id } : {}),
-      ...(item.custom_name ? { customName: item.custom_name } : {}),
+      ...(item.custom_name   ? { customName:   item.custom_name   } : {}),
       expiryDate: expiryDate.trim(),
-      quantity: Number(quantity),
+      quantity:   Number(quantity),
       unit,
       ...(lotNumber.trim() ? { lotNumber: lotNumber.trim() } : {}),
-      ...(location.trim() ? { location: location.trim() } : {}),
+      ...(location.trim()  ? { location:  location.trim()  } : {}),
     });
 
     if (!parseResult.success) {
@@ -110,6 +155,39 @@ export default function InventoryItemDetailScreen() {
     }
   }
 
+  async function handleConsume() {
+    if (!item) return;
+    const qty = parseFloat(consumeQty.replace(',', '.'));
+    if (isNaN(qty) || qty <= 0) {
+      toast.show('error', 'Quantidade inválida', 'Informe um valor maior que zero.');
+      hapticError();
+      return;
+    }
+
+    setConsumeLoading(true);
+    hapticMedium();
+    const err = await logConsumption(
+      item.id,
+      qty,
+      consumePerson.trim() || null,
+      null,
+    );
+    setConsumeLoading(false);
+
+    if (err) {
+      toast.show('error', 'Erro', err);
+      hapticError();
+      return;
+    }
+
+    hapticSuccess();
+    toast.show('success', 'Registrado!', 'Uso registrado e estoque atualizado.');
+    setConsuming(false);
+    setConsumeQty('1');
+    setConsumePerson('');
+    setHistoryKey(k => k + 1); // recarrega histórico
+  }
+
   if (!item) {
     return (
       <SafeAreaView style={styles.container}>
@@ -124,12 +202,23 @@ export default function InventoryItemDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+
+        {/* ── Top bar ──────────────────────────────────────────────────────── */}
         <View style={styles.topBar}>
-          <AnimatedPressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/inventory'); }}>
+          <AnimatedPressable onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace('/(app)/inventory');
+          }}>
             <Text style={styles.backText}>← Voltar</Text>
           </AnimatedPressable>
-          {!editing && (
+          {!editing && !consuming && (
             <View style={styles.topActions}>
+              <AnimatedPressable
+                onPress={() => { setConsuming(true); }}
+                style={styles.consumeBtn}
+              >
+                <Text style={styles.consumeBtnText}>Registrar uso</Text>
+              </AnimatedPressable>
               <AnimatedPressable onPress={startEdit} style={styles.editBtn}>
                 <Text style={styles.editBtnText}>Editar</Text>
               </AnimatedPressable>
@@ -140,18 +229,69 @@ export default function InventoryItemDetailScreen() {
           )}
         </View>
 
+        {/* ── Item header ──────────────────────────────────────────────────── */}
         <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
         {Boolean(item.active_ingredient) && (
           <Text style={styles.itemSub}>{item.active_ingredient}</Text>
         )}
-
         <View style={[styles.statusBadge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
           <Text style={[styles.statusText, { color: EXPIRY_COLORS[status] }]}>
-            {EXPIRY_LABELS[status]}
-            {days >= 0 ? ` (${days} dias)` : ''}
+            {EXPIRY_LABELS[status]}{days >= 0 ? ` (${days} dias)` : ''}
           </Text>
         </View>
 
+        {/* ── Consume form (inline) ────────────────────────────────────────── */}
+        {consuming && (
+          <Animated.View entering={FadeInDown.springify()} style={styles.consumeForm}>
+            <Text style={styles.consumeFormTitle}>Registrar uso</Text>
+            <View style={styles.consumeRow}>
+              <View style={styles.consumeQtyField}>
+                <Text style={styles.label}>Quantidade</Text>
+                <View style={styles.consumeQtyRow}>
+                  <TextInput
+                    style={styles.consumeQtyInput}
+                    value={consumeQty}
+                    onChangeText={setConsumeQty}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                    autoFocus
+                  />
+                  <Text style={styles.consumeUnit}>{item.unit}</Text>
+                </View>
+              </View>
+              <View style={[styles.consumeQtyField, { marginLeft: 12 }]}>
+                <Text style={styles.label}>Para quem</Text>
+                <TextInput
+                  style={styles.input}
+                  value={consumePerson}
+                  onChangeText={setConsumePerson}
+                  placeholder="Opcional"
+                  placeholderTextColor="#9CA59C"
+                />
+              </View>
+            </View>
+            <View style={styles.editActions}>
+              <AnimatedPressable
+                style={styles.cancelBtn}
+                onPress={() => { setConsuming(false); setConsumeQty('1'); setConsumePerson(''); }}
+              >
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                style={[styles.saveBtn, consumeLoading && styles.saveBtnDisabled]}
+                onPress={() => { void handleConsume(); }}
+                disabled={consumeLoading}
+              >
+                {consumeLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.saveBtnText}>Confirmar</Text>
+                }
+              </AnimatedPressable>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Detail card (view) or edit form ─────────────────────────────── */}
         {editing ? (
           <View>
             <Text style={styles.label}>Data de vencimento (AAAA-MM-DD)</Text>
@@ -190,19 +330,10 @@ export default function InventoryItemDetailScreen() {
             </View>
 
             <Text style={styles.label}>Lote</Text>
-            <TextInput
-              style={styles.input}
-              value={lotNumber}
-              onChangeText={setLotNumber}
-              autoCapitalize="characters"
-            />
+            <TextInput style={styles.input} value={lotNumber} onChangeText={setLotNumber} autoCapitalize="characters" />
 
             <Text style={styles.label}>Local</Text>
-            <TextInput
-              style={styles.input}
-              value={location}
-              onChangeText={setLocation}
-            />
+            <TextInput style={styles.input} value={location} onChangeText={setLocation} />
 
             <View style={styles.editActions}>
               <AnimatedPressable style={styles.cancelBtn} onPress={() => { setEditing(false); }}>
@@ -232,6 +363,33 @@ export default function InventoryItemDetailScreen() {
             <Row label="Local"           value={item.location} />
           </View>
         )}
+
+        {/* ── Histórico de uso ─────────────────────────────────────────────── */}
+        {consumptions.length > 0 && (
+          <View style={styles.historySection}>
+            <Text style={styles.historyTitle}>HISTÓRICO DE USO</Text>
+            <View style={styles.card}>
+              {consumptions.map((c, index) => (
+                <View key={c.id}>
+                  {index > 0 && <View style={styles.histSeparator} />}
+                  <View style={styles.histRow}>
+                    <View style={styles.histDot} />
+                    <Text style={styles.histDate}>{formatConsumedAt(c.consumed_at)}</Text>
+                    <Text style={styles.histQty}>
+                      {c.consumed_qty % 1 === 0
+                        ? String(c.consumed_qty)
+                        : c.consumed_qty.toFixed(2).replace('.', ',')} {item.unit}
+                    </Text>
+                    {Boolean(c.person_name) && (
+                      <Text style={styles.histPerson}> · {c.person_name}</Text>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
       </ScrollView>
 
       <ConfirmDialog
@@ -259,35 +417,64 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: '#F6F8F5' },
-  content:        { padding: 16, paddingBottom: 40 },
-  topBar:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  backText:       { color: '#1A9E96', fontSize: 15 },
-  topActions:     { flexDirection: 'row', gap: 8 },
-  editBtn:        { backgroundColor: '#D0F7F5', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  editBtnText:    { color: '#147570', fontWeight: '600', fontSize: 13 },
-  deleteBtn:      { backgroundColor: '#FEE9E4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
-  deleteBtnText:  { color: '#F0735A', fontWeight: '600', fontSize: 13 },
-  itemName:       { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
-  itemSub:        { fontSize: 13, color: '#5A625A', marginBottom: 12 },
-  statusBadge:    { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
-  statusText:     { fontSize: 13, fontWeight: '700' },
-  card:           { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },
-  detailRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E8ECE5' },
-  detailLabel:    { fontSize: 13, color: '#5A625A' },
-  detailValue:    { fontSize: 13, color: '#1A1D1A', fontWeight: '500' },
-  label:          { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
-  input:          { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  row:            { flexDirection: 'row', alignItems: 'flex-start' },
-  rowField:       { flex: 1 },
-  unitChip:       { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive: { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
-  unitText:       { fontSize: 13, color: '#5A625A' },
-  unitTextActive: { color: '#FFFFFF' },
-  editActions:    { flexDirection: 'row', gap: 12, marginTop: 8 },
-  cancelBtn:      { flex: 1, borderRadius: 16, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC' },
-  cancelBtnText:  { color: '#5A625A', fontWeight: '600' },
-  saveBtn:        { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
-  saveBtnDisabled:{ opacity: 0.6 },
-  saveBtnText:    { color: '#FFFFFF', fontWeight: '700' },
+  container:       { flex: 1, backgroundColor: '#F6F8F5' },
+  content:         { padding: 16, paddingBottom: 40 },
+
+  // Top bar
+  topBar:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  backText:        { color: '#1A9E96', fontSize: 15 },
+  topActions:      { flexDirection: 'row', gap: 6 },
+  consumeBtn:      { backgroundColor: '#FEE9E4', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
+  consumeBtnText:  { color: '#F0735A', fontWeight: '600', fontSize: 12 },
+  editBtn:         { backgroundColor: '#D0F7F5', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
+  editBtnText:     { color: '#147570', fontWeight: '600', fontSize: 12 },
+  deleteBtn:       { backgroundColor: '#F6F8F5', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#D1D9CC' },
+  deleteBtnText:   { color: '#9CA59C', fontWeight: '600', fontSize: 12 },
+
+  // Item header
+  itemName:        { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
+  itemSub:         { fontSize: 13, color: '#5A625A', marginBottom: 12 },
+  statusBadge:     { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
+  statusText:      { fontSize: 13, fontWeight: '700' },
+
+  // Consume form
+  consumeForm:     { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E8ECE5', padding: 16, marginBottom: 20 },
+  consumeFormTitle:{ fontSize: 15, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
+  consumeRow:      { flexDirection: 'row' },
+  consumeQtyField: { flex: 1 },
+  consumeQtyRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  consumeQtyInput: { flex: 1, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  consumeUnit:     { fontSize: 14, color: '#5A625A', fontWeight: '500', marginBottom: 16 },
+
+  // Detail card
+  card:            { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },
+  detailRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E8ECE5' },
+  detailLabel:     { fontSize: 13, color: '#5A625A' },
+  detailValue:     { fontSize: 13, color: '#1A1D1A', fontWeight: '500' },
+
+  // Edit form
+  label:           { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
+  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  row:             { flexDirection: 'row', alignItems: 'flex-start' },
+  rowField:        { flex: 1 },
+  unitChip:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+  unitChipActive:  { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
+  unitText:        { fontSize: 13, color: '#5A625A' },
+  unitTextActive:  { color: '#FFFFFF' },
+  editActions:     { flexDirection: 'row', gap: 12, marginTop: 4 },
+  cancelBtn:       { flex: 1, borderRadius: 16, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC' },
+  cancelBtnText:   { color: '#5A625A', fontWeight: '600' },
+  saveBtn:         { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
+  saveBtnDisabled: { opacity: 0.6 },
+  saveBtnText:     { color: '#FFFFFF', fontWeight: '700' },
+
+  // History
+  historySection:  { marginTop: 24 },
+  historyTitle:    { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 8 },
+  histSeparator:   { height: 1, backgroundColor: '#E8ECE5', marginHorizontal: 14 },
+  histRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11 },
+  histDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1A9E96', marginRight: 10 },
+  histDate:        { fontSize: 12, color: '#5A625A', marginRight: 8, width: 68 },
+  histQty:         { fontSize: 13, fontWeight: '600', color: '#1A1D1A' },
+  histPerson:      { fontSize: 12, color: '#5A625A', flex: 1 },
 });
