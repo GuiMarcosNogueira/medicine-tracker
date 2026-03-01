@@ -155,6 +155,9 @@ export default function AddInventoryScreen() {
           <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/scanner/ocr'); }}>
             <Text style={styles.scanChipText}>Ler rótulo (OCR)</Text>
           </AnimatedPressable>
+          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/catalog'); }}>
+            <Text style={styles.scanChipText}>Buscar catálogo</Text>
+          </AnimatedPressable>
         </View>
 
         <Text style={styles.label}>
