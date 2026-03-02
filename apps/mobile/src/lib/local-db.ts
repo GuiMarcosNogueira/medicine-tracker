@@ -43,30 +43,49 @@ export async function initLocalDb(): Promise<SQLiteDatabase> {
 
   // FTS5 is only available on native (WASM SQLite for web lacks FTS5)
   if (Platform.OS !== 'web') {
+    const versionRow = await _db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    const dbVersion = versionRow?.user_version ?? 0;
+
+    if (dbVersion < 2) {
+      // v2: expand FTS5 with concentration + pharmaceutical_form
+      await _db.execAsync(`
+        DROP TRIGGER IF EXISTS meds_ai;
+        DROP TRIGGER IF EXISTS meds_ad;
+        DROP TRIGGER IF EXISTS meds_au;
+        DROP TABLE IF EXISTS medications_fts;
+      `);
+    }
+
     await _db.execAsync(`
       CREATE VIRTUAL TABLE IF NOT EXISTS medications_fts USING fts5(
-        product_name, generic_name, active_ingredient, manufacturer,
+        product_name, generic_name, active_ingredient, concentration,
+        pharmaceutical_form, manufacturer,
         content='medications_cache', content_rowid='rowid',
         tokenize='unicode61 remove_diacritics 2'
       );
 
       CREATE TRIGGER IF NOT EXISTS meds_ai AFTER INSERT ON medications_cache BEGIN
-        INSERT INTO medications_fts(rowid, product_name, generic_name, active_ingredient, manufacturer)
-        VALUES (new.rowid, new.product_name, new.generic_name, new.active_ingredient, new.manufacturer);
+        INSERT INTO medications_fts(rowid, product_name, generic_name, active_ingredient, concentration, pharmaceutical_form, manufacturer)
+        VALUES (new.rowid, new.product_name, new.generic_name, new.active_ingredient, new.concentration, new.pharmaceutical_form, new.manufacturer);
       END;
 
       CREATE TRIGGER IF NOT EXISTS meds_ad AFTER DELETE ON medications_cache BEGIN
-        INSERT INTO medications_fts(medications_fts, rowid, product_name, generic_name, active_ingredient, manufacturer)
-        VALUES ('delete', old.rowid, old.product_name, old.generic_name, old.active_ingredient, old.manufacturer);
+        INSERT INTO medications_fts(medications_fts, rowid, product_name, generic_name, active_ingredient, concentration, pharmaceutical_form, manufacturer)
+        VALUES ('delete', old.rowid, old.product_name, old.generic_name, old.active_ingredient, old.concentration, old.pharmaceutical_form, old.manufacturer);
       END;
 
       CREATE TRIGGER IF NOT EXISTS meds_au AFTER UPDATE ON medications_cache BEGIN
-        INSERT INTO medications_fts(medications_fts, rowid, product_name, generic_name, active_ingredient, manufacturer)
-        VALUES ('delete', old.rowid, old.product_name, old.generic_name, old.active_ingredient, old.manufacturer);
-        INSERT INTO medications_fts(rowid, product_name, generic_name, active_ingredient, manufacturer)
-        VALUES (new.rowid, new.product_name, new.generic_name, new.active_ingredient, new.manufacturer);
+        INSERT INTO medications_fts(medications_fts, rowid, product_name, generic_name, active_ingredient, concentration, pharmaceutical_form, manufacturer)
+        VALUES ('delete', old.rowid, old.product_name, old.generic_name, old.active_ingredient, old.concentration, old.pharmaceutical_form, old.manufacturer);
+        INSERT INTO medications_fts(rowid, product_name, generic_name, active_ingredient, concentration, pharmaceutical_form, manufacturer)
+        VALUES (new.rowid, new.product_name, new.generic_name, new.active_ingredient, new.concentration, new.pharmaceutical_form, new.manufacturer);
       END;
     `);
+
+    if (dbVersion < 2) {
+      await _db.execAsync(`INSERT INTO medications_fts(medications_fts) VALUES ('rebuild');`);
+      await _db.runAsync('PRAGMA user_version = 2');
+    }
   }
 
   return _db;
@@ -157,8 +176,9 @@ export async function localSearchMedications(query: string): Promise<MedicationS
   const rows = await db.getAllAsync<MedRow>(
     `SELECT * FROM medications_cache
      WHERE product_name LIKE ? OR active_ingredient LIKE ? OR generic_name LIKE ?
+        OR concentration LIKE ? OR pharmaceutical_form LIKE ?
      LIMIT 20`,
-    [like, like, like],
+    [like, like, like, like, like],
   );
   return rows.map(rowToResult);
 }
