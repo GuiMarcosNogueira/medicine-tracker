@@ -204,6 +204,9 @@ export default function TodayScreen() {
                         <Text style={styles.alertItemMeta}>
                           {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
                         </Text>
+                        {Boolean(item.notes) && (
+                          <Text style={styles.alertItemNotes} numberOfLines={1}>{item.notes}</Text>
+                        )}
                       </View>
                       <View style={[styles.badge, { backgroundColor: color + '20' }]}>
                         <Text style={[styles.badgeText, { color }]}>
@@ -260,6 +263,7 @@ const styles = StyleSheet.create({
   alertItemContent:      { flex: 1 },
   alertItemName:         { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
   alertItemMeta:         { fontSize: 12, color: '#5A625A', marginTop: 2 },
+  alertItemNotes:        { fontSize: 11, color: '#9CA59C', marginTop: 2, fontStyle: 'italic' },
   badge:                 { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 8 },
   badgeText:             { fontSize: 12, fontWeight: '700' },
 

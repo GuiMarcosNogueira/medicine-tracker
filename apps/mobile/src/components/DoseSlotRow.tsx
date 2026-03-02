@@ -27,6 +27,9 @@ export function DoseSlotRow({ slot }: { slot: DoseSlot }) {
             {treatment.presentation_dosage ? ` · ${treatment.presentation_dosage}` : ''}
             {' · '}{treatment.person_name}
           </Text>
+          {Boolean(treatment.notes) && (
+            <Text style={styles.slotNotes} numberOfLines={1}>{treatment.notes}</Text>
+          )}
         </View>
       </View>
 
@@ -70,6 +73,7 @@ const styles = StyleSheet.create({
   slotInfo:             { flex: 1 },
   slotName:             { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
   slotDose:             { fontSize: 12, color: '#5A625A', marginTop: 1 },
+  slotNotes:            { fontSize: 11, color: '#9CA59C', marginTop: 2, fontStyle: 'italic' },
   slotActions:          { flexDirection: 'row', gap: 6 },
   actionBtn:            { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
   takenBtn:             { backgroundColor: '#1A9E96' },
