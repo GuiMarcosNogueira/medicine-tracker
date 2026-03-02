@@ -190,21 +190,27 @@ export async function logConsumption(
   qty: number,
   personName: string | null,
   notes: string | null,
-): Promise<string | null> {
+): Promise<{ error: string | null; autoRemoved: boolean }> {
   const { error } = await supabase.rpc('log_consumption', {
     p_item_id:     itemId,
     p_qty:         qty,
     p_person_name: personName,
     p_notes:       notes,
   });
-  if (error) return error.message;
+  if (error) return { error: error.message, autoRemoved: false };
 
   // Atualiza quantidade otimisticamente no store
-  const items = inventoryStore.items.get();
-  const idx   = items.findIndex(i => i.id === itemId);
+  const items  = inventoryStore.items.get();
+  const idx    = items.findIndex(i => i.id === itemId);
   if (idx >= 0) {
     const current = items[idx]?.quantity ?? 0;
-    inventoryStore.items[idx]?.quantity.set(Math.max(0, current - qty));
+    const newQty  = Math.max(0, current - qty);
+    inventoryStore.items[idx]?.quantity.set(newQty);
+
+    if (newQty === 0) {
+      void softDeleteItem(itemId);
+      return { error: null, autoRemoved: true };
+    }
   }
-  return null;
+  return { error: null, autoRemoved: false };
 }

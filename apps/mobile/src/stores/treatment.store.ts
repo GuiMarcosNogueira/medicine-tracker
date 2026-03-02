@@ -1,7 +1,7 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
 import { scheduleTreatmentNotifications } from '../lib/notifications';
-import { inventoryStore } from './inventory.store';
+import { inventoryStore, softDeleteItem } from './inventory.store';
 import type { Treatment, TreatmentDose } from '@medstock/shared';
 
 export type TreatmentRow = Treatment;
@@ -120,17 +120,22 @@ export async function logDose(
     };
     treatmentStore.todayDoses.set([...treatmentStore.todayDoses.get(), newDose]);
 
-    // Optimistically update inventory quantity
+    // Optimistically update inventory quantity; auto-remove if esgotado
     if (status === 'taken') {
       const treatment = treatmentStore.treatments.get().find(t => t.id === treatmentId);
       if (treatment?.inventory_item_id) {
-        const items = inventoryStore.items.get();
-        const updated = items.map(item =>
-          item.id === treatment.inventory_item_id
-            ? { ...item, quantity: Math.max(0, item.quantity - treatment.dose_quantity) }
-            : item,
+        const invItemId = treatment.inventory_item_id;
+        const items     = inventoryStore.items.get();
+        const current   = items.find(i => i.id === invItemId)?.quantity ?? 0;
+        const newQty    = Math.max(0, current - treatment.dose_quantity);
+        const updated   = items.map(item =>
+          item.id === invItemId ? { ...item, quantity: newQty } : item,
         );
         inventoryStore.items.set(updated);
+
+        if (newQty === 0) {
+          void softDeleteItem(invItemId);
+        }
       }
     }
   }

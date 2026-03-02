@@ -137,6 +137,15 @@ export default function InventoryItemDetailScreen() {
       return;
     }
     hapticSuccess();
+
+    // Se o usuário salvou com quantidade zero, remover item automaticamente
+    if (d.quantity === 0) {
+      void softDeleteItem(item.id);
+      toast.show('success', 'Esgotado', `${getItemDisplayName(item)} removido — estoque zerado.`);
+      router.back();
+      return;
+    }
+
     toast.show('success', 'Salvo!', 'Alterações salvas com sucesso.');
     setEditing(false);
   }
@@ -166,7 +175,7 @@ export default function InventoryItemDetailScreen() {
 
     setConsumeLoading(true);
     hapticMedium();
-    const err = await logConsumption(
+    const result = await logConsumption(
       item.id,
       qty,
       consumePerson.trim() || null,
@@ -174,13 +183,20 @@ export default function InventoryItemDetailScreen() {
     );
     setConsumeLoading(false);
 
-    if (err) {
-      toast.show('error', 'Erro', err);
+    if (result.error) {
+      toast.show('error', 'Erro', result.error);
       hapticError();
       return;
     }
 
     hapticSuccess();
+
+    if (result.autoRemoved) {
+      toast.show('success', 'Esgotado', `${getItemDisplayName(item)} removido — estoque zerado.`);
+      router.back();
+      return;
+    }
+
     toast.show('success', 'Registrado!', 'Uso registrado e estoque atualizado.');
     setConsuming(false);
     setConsumeQty('1');
