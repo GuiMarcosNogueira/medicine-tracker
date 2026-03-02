@@ -124,11 +124,15 @@ export async function logDose(
     if (status === 'taken') {
       const treatment = treatmentStore.treatments.get().find(t => t.id === treatmentId);
       if (treatment?.inventory_item_id) {
-        const invItemId = treatment.inventory_item_id;
-        const items     = inventoryStore.items.get();
-        const current   = items.find(i => i.id === invItemId)?.quantity ?? 0;
-        const newQty    = Math.max(0, current - treatment.dose_quantity);
-        const updated   = items.map(item =>
+        const invItemId  = treatment.inventory_item_id;
+        // 1 gota = 0,05 mL (20 gotas = 1 mL — padrão farmacêutico BR)
+        const deductQty  = treatment.dose_unit === 'gotas'
+          ? treatment.dose_quantity * 0.05
+          : treatment.dose_quantity;
+        const items      = inventoryStore.items.get();
+        const current    = items.find(i => i.id === invItemId)?.quantity ?? 0;
+        const newQty     = Math.max(0, current - deductQty);
+        const updated    = items.map(item =>
           item.id === invItemId ? { ...item, quantity: newQty } : item,
         );
         inventoryStore.items.set(updated);

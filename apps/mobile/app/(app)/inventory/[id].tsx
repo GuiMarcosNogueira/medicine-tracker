@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   ScrollView,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -69,6 +70,7 @@ export default function InventoryItemDetailScreen() {
   // Consume mode state
   const [consuming, setConsuming] = useState(false);
   const [consumeQty, setConsumeQty] = useState('1');
+  const [consumeUnit, setConsumeUnit] = useState<'item' | 'gotas'>('item');
   const [consumePerson, setConsumePerson] = useState('');
   const [consumeLoading, setConsumeLoading] = useState(false);
 
@@ -164,14 +166,20 @@ export default function InventoryItemDetailScreen() {
     }
   }
 
+  // 1 gota = 0,05 mL (20 gotas = 1 mL — padrão farmacêutico BR)
+  const DROPS_TO_ML = 0.05;
+
   async function handleConsume() {
     if (!item) return;
-    const qty = parseFloat(consumeQty.replace(',', '.'));
-    if (isNaN(qty) || qty <= 0) {
+    const rawQty = parseFloat(consumeQty.replace(',', '.'));
+    if (isNaN(rawQty) || rawQty <= 0) {
       toast.show('error', 'Quantidade inválida', 'Informe um valor maior que zero.');
       hapticError();
       return;
     }
+
+    // Convert drops → mL for inventory deduction when item is stored in ml
+    const qty = consumeUnit === 'gotas' ? rawQty * DROPS_TO_ML : rawQty;
 
     setConsumeLoading(true);
     hapticMedium();
@@ -200,6 +208,7 @@ export default function InventoryItemDetailScreen() {
     toast.show('success', 'Registrado!', 'Uso registrado e estoque atualizado.');
     setConsuming(false);
     setConsumeQty('1');
+    setConsumeUnit('item');
     setConsumePerson('');
     setHistoryKey(k => k + 1); // recarrega histórico
   }
@@ -272,8 +281,33 @@ export default function InventoryItemDetailScreen() {
                     selectTextOnFocus
                     autoFocus
                   />
-                  <Text style={styles.consumeUnit}>{item.unit}</Text>
+                  {item.unit === 'ml' ? (
+                    <View style={styles.unitToggle}>
+                      <Pressable
+                        style={[styles.unitToggleBtn, consumeUnit === 'item' && styles.unitToggleBtnActive]}
+                        onPress={() => { setConsumeUnit('item'); }}
+                      >
+                        <Text style={[styles.unitToggleTxt, consumeUnit === 'item' && styles.unitToggleTxtActive]}>mL</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.unitToggleBtn, consumeUnit === 'gotas' && styles.unitToggleBtnActive]}
+                        onPress={() => { setConsumeUnit('gotas'); }}
+                      >
+                        <Text style={[styles.unitToggleTxt, consumeUnit === 'gotas' && styles.unitToggleTxtActive]}>gotas</Text>
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Text style={styles.consumeUnitLabel}>{item.unit}</Text>
+                  )}
                 </View>
+                {consumeUnit === 'gotas' && (
+                  <Text style={styles.consumeHint}>
+                    {(() => {
+                      const n = parseFloat(consumeQty.replace(',', '.'));
+                      return isNaN(n) ? '20 gotas = 1 mL' : `≈ ${(n * 0.05).toFixed(2).replace('.', ',')} mL`;
+                    })()}
+                  </Text>
+                )}
               </View>
               <View style={[styles.consumeQtyField, { marginLeft: 12 }]}>
                 <Text style={styles.label}>Para quem</Text>
@@ -289,7 +323,7 @@ export default function InventoryItemDetailScreen() {
             <View style={styles.editActions}>
               <AnimatedPressable
                 style={styles.cancelBtn}
-                onPress={() => { setConsuming(false); setConsumeQty('1'); setConsumePerson(''); }}
+                onPress={() => { setConsuming(false); setConsumeQty('1'); setConsumeUnit('item'); setConsumePerson(''); }}
               >
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </AnimatedPressable>
@@ -460,7 +494,13 @@ const styles = StyleSheet.create({
   consumeQtyField: { flex: 1 },
   consumeQtyRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   consumeQtyInput: { flex: 1, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  consumeUnit:     { fontSize: 14, color: '#5A625A', fontWeight: '500', marginBottom: 16 },
+  consumeUnitLabel:{ fontSize: 14, color: '#5A625A', fontWeight: '500', marginBottom: 16 },
+  unitToggle:      { flexDirection: 'row', marginBottom: 16, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 10, overflow: 'hidden' },
+  unitToggleBtn:   { paddingHorizontal: 10, paddingVertical: 6 },
+  unitToggleBtnActive: { backgroundColor: '#1A9E96' },
+  unitToggleTxt:   { fontSize: 12, color: '#5A625A', fontWeight: '600' },
+  unitToggleTxtActive: { color: '#FFFFFF' },
+  consumeHint:     { fontSize: 11, color: '#9CA59C', marginTop: -12, marginBottom: 8 },
 
   // Detail card
   card:            { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },

@@ -26,7 +26,7 @@ const FREQ_PRESETS = [
   { label: '6x/dia', hours: 4 },
 ] as const;
 
-const DOSE_UNITS = ['comprimido', 'cápsula', 'mL', 'mg', 'g'] as const;
+const DOSE_UNITS = ['comprimido', 'cápsula', 'mL', 'gotas', 'mg', 'g'] as const;
 type DoseUnit = typeof DOSE_UNITS[number];
 
 // ─── Field chip selector ──────────────────────────────────────────────────────
@@ -172,11 +172,13 @@ export default function AddTreatmentScreen() {
       pharmaFormFriendly: item.pharma_form_friendly,
     });
     // Auto-set dose unit from pharma form
-    if (item.pharma_form_friendly?.toLowerCase().includes('cápsula') ||
-        item.pharma_form_friendly?.toLowerCase().includes('capsula')) {
+    const form = item.pharma_form_friendly?.toLowerCase() ?? '';
+    if (form.includes('cápsula') || form.includes('capsula')) {
       setDoseUnit('cápsula');
-    } else if (item.pharma_form_friendly?.toLowerCase().includes('comprimido')) {
+    } else if (form.includes('comprimido')) {
       setDoseUnit('comprimido');
+    } else if (form.includes('gota') || form.includes('solução oral') || form.includes('solucao oral')) {
+      setDoseUnit('gotas');
     } else if (item.unit === 'ml') {
       setDoseUnit('mL');
     }
