@@ -184,11 +184,13 @@ function MedicationSearch({
 function MedFormModal({
   visible,
   initial,
+  defaultPersonName,
   onCancel,
   onConfirm,
 }: {
   visible: boolean;
   initial: MedDraft | null;
+  defaultPersonName: string;
   onCancel: () => void;
   onConfirm: (data: MedFormData) => void;
 }) {
@@ -239,7 +241,7 @@ function MedFormModal({
       setMedicationName('');
       setInventoryItemId(null);
       setSnapshot({ activeIngredient: null, presentationDosage: null, pharmaFormFriendly: null });
-      setPersonName('');
+      setPersonName(defaultPersonName);
       setDoseQuantity('1');
       setDoseUnit('comprimido');
       setFrequencyHours(8);
@@ -508,10 +510,11 @@ export default function PrescriptionScreen() {
   const toast = useToast();
   const familyId = useSelector(treatmentStore.familyId) as string | null;
 
-  const [drafts, setDrafts]             = useState<MedDraft[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingDraft, setEditingDraft] = useState<MedDraft | null>(null);
-  const [saving, setSaving]             = useState(false);
+  const [defaultPerson, setDefaultPerson] = useState('');
+  const [drafts, setDrafts]               = useState<MedDraft[]>([]);
+  const [modalVisible, setModalVisible]   = useState(false);
+  const [editingDraft, setEditingDraft]   = useState<MedDraft | null>(null);
+  const [saving, setSaving]               = useState(false);
 
   function openNew() {
     setEditingDraft(null);
@@ -611,6 +614,16 @@ export default function PrescriptionScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
+        <Text style={styles.label}>Para quem é esta receita?</Text>
+        <TextInput
+          style={[styles.input, { marginBottom: 20 }]}
+          value={defaultPerson}
+          onChangeText={setDefaultPerson}
+          placeholder="Nome da pessoa (pré-preenche cada medicamento)"
+          placeholderTextColor="#9CA59C"
+          autoCapitalize="words"
+        />
+
         {drafts.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Nenhum medicamento</Text>
@@ -649,6 +662,7 @@ export default function PrescriptionScreen() {
       <MedFormModal
         visible={modalVisible}
         initial={editingDraft}
+        defaultPersonName={defaultPerson}
         onCancel={onModalCancel}
         onConfirm={onModalConfirm}
       />
