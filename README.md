@@ -1,82 +1,90 @@
-# MedStock 💊
+# MedStock
 
-Gerenciador de estoque doméstico de medicamentos para famílias brasileiras.
-Controle validades, quantidades e compartilhe o estoque com sua família — em Android, iOS e Web, com um único código-fonte.
+Aplicativo de gestão de estoque doméstico de medicamentos para famílias brasileiras.
+Funciona em **Android**, **iOS** e **Web** com código compartilhado via Expo SDK 52.
 
 ---
 
 ## Funcionalidades
 
-| # | Feature | Descrição |
-|---|---------|-----------|
-| 1 | **Autenticação** | Login com e-mail/senha ou Google OAuth; convite de membros por link |
-| 2 | **Gestão familiar** | Perfil de família com papéis (owner / editor / viewer) e convites por token |
-| 3 | **Catálogo CMED** | ~50 mil medicamentos da tabela ANVISA com busca full-text em português (FTS5) |
-| 4 | **Estoque** | CRUD de itens com validade, lote, quantidade, unidade e localização |
-| 5 | **Dashboard de validade** | Seções por status: Vencido · ≤7 dias · ≤15 dias · ≤30 dias · OK |
-| 6 | **Scanner OCR** | Leitura de rótulos via câmera (VisionCamera + ML Kit) extraindo validade, lote, dose e EAN |
-| 7 | **Scanner de código de barras** | Leitura de EAN-13/8 com preenchimento automático do catálogo |
-| 8 | **Sincronização offline** | Cache SQLite local com FTS5; itens adicionados offline sincronizam ao reconectar |
-| 9 | **Notificações push** | Alertas de vencimento (30 / 15 / 7 / 0 dias) via Expo Push + Edge Function Supabase |
+| Módulo | Descrição |
+|--------|-----------|
+| **Estoque** | Cadastro de medicamentos com validade, lote, localização e unidade. Alertas de vencimento. Swipe-to-delete no mobile. |
+| **Receita / Tratamentos** | Cadastro de múltiplos medicamentos em um único fluxo (estilo receita médica). Doses agendadas automaticamente por frequência. |
+| **Doses de Hoje** | Dashboard com todas as doses do dia, status (pendente/tomada/pulada) e progresso X/Y. |
+| **Registro de Uso Avulso** | Registrar consumo de medicamentos fora de tratamento com histórico por item de estoque. |
+| **Catálogo CMED** | Busca em ~50 mil medicamentos (nome, princípio ativo, dosagem, quantidade). Cache offline com FTS5. |
+| **Scanner** | Leitura de código de barras EAN-13/8 e OCR de rótulo (validade, lote, dose) via VisionCamera. |
+| **Família** | Estoque e tratamentos compartilhados entre membros. Convites por link. Papéis: owner / editor / viewer. |
+| **Notificações** | Push de alertas de vencimento próximo (cron diário às 8h via Edge Function). |
+| **Offline-first** | Fila de operações pendentes sincronizada ao reconectar via Legend-State. |
 
 ---
 
-## Stack
+## Stack Técnico
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Monorepo | pnpm workspaces + TypeScript strict |
-| Mobile / Web | Expo SDK 52 + Expo Router 4 (file-based routing) |
-| Backend | Supabase (PostgreSQL 15 + Auth + Realtime + Edge Functions) |
-| Estado / Sync | Legend-State v2 com `syncedSupabase` |
-| Cache local | expo-sqlite com FTS5 (nativo) / LIKE fallback (web) |
-| OCR | react-native-vision-camera v4 + react-native-vision-camera-mlkit |
-| Validação | Zod (schemas compartilhados em `packages/shared`) |
-| Auth storage | expo-secure-store com adapter chunked (tokens OAuth > 2 KB) |
-| Testes | Vitest + @vitest/coverage-v8 (cobertura ≥ 95%) |
+| App | Expo SDK 52 + Expo Router 4 (file-based routing) |
+| Linguagem | TypeScript 5.5 strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
+| UI | React Native 0.76 / React Native Web 0.19 |
+| Estado | Legend-State v2 com `syncedSupabase` |
+| Backend | Supabase (PostgreSQL + RLS + Edge Functions) |
+| Banco local | `expo-sqlite` com FTS5 (nativo) / LIKE fallback (web) |
+| Auth | Supabase Auth — e-mail/senha + Google OAuth |
+| Câmera | `react-native-vision-camera` v4 + ML Kit |
+| Animações | `react-native-reanimated` v4 |
+| Gestos | `react-native-gesture-handler` v2 |
+| Validação | Zod 3 (`@medstock/shared`) |
+| Build | EAS Build (Expo Application Services) |
+| Monorepo | pnpm workspaces |
 
 ---
 
-## Estrutura do monorepo
+## Estrutura do Monorepo
 
 ```
 medicine-tracker/
 ├── apps/
-│   ├── mobile/                   # Expo SDK 52 — Android, iOS e Web
-│   │   ├── app/
-│   │   │   ├── (auth)/           # sign-in, sign-up, forgot-password, invite/[token]
-│   │   │   └── (app)/
-│   │   │       ├── index.tsx     # Dashboard de validades
-│   │   │       ├── inventory/    # Lista · Adicionar · Detalhe
-│   │   │       ├── catalog/      # Busca · Detalhe do medicamento
-│   │   │       ├── scanner/      # OCR · Barcode · Resultado
-│   │   │       ├── settings/     # Perfil · Família · Convites
-│   │   │       └── onboarding/   # Criar família
-│   │   └── src/
-│   │       ├── lib/              # supabase.ts · local-db.ts · notifications.ts · ocr-parser.ts
-│   │       ├── stores/           # auth.store.ts · inventory.store.ts (Legend-State)
-│   │       ├── hooks/            # useSession · useLocalSearch
-│   │       └── utils/            # expiry.ts
+│   ├── mobile/                    # App principal (Android · iOS · Web)
+│   │   ├── app/                   # Rotas Expo Router (file-based)
+│   │   │   ├── _layout.tsx        # Root: GestureHandler → SafeArea → Toast → Stack
+│   │   │   ├── (auth)/            # Sign-in, Sign-up, Forgot password, Convite
+│   │   │   ├── (app)/             # Tab navigation autenticada
+│   │   │   │   ├── index.tsx      # Aba "Hoje" — doses do dia + alertas de estoque
+│   │   │   │   ├── inventory/     # Lista · Adicionar · Detalhe/Editar
+│   │   │   │   ├── treatments/    # Lista · Nova Receita · Detalhe
+│   │   │   │   ├── catalog/       # Busca CMED · Detalhe do medicamento
+│   │   │   │   ├── scanner/       # OCR · Barcode · Resultado
+│   │   │   │   └── settings/      # Perfil · Família · Convites
+│   │   │   ├── auth/callback.tsx  # Callback OAuth (obrigatório para web)
+│   │   │   └── onboarding/        # Criar família
+│   │   ├── src/
+│   │   │   ├── components/        # DatePickerField (nativo + web), DoseSlotRow
+│   │   │   ├── lib/               # supabase.ts · local-db · notifications · haptics · ocr-parser
+│   │   │   ├── stores/            # auth · inventory · treatment (Legend-State)
+│   │   │   ├── hooks/             # useSession · useLocalSearch
+│   │   │   └── utils/             # expiry.ts · treatment.ts
+│   │   ├── app.json
+│   │   ├── eas.json
+│   │   └── package.json
 │   │
-│   └── api/                      # Supabase backend
+│   └── api/                       # Supabase backend
 │       ├── supabase/
-│       │   ├── migrations/       # 5 migrations SQL (extensões, tabelas, FTS, RLS, view)
+│       │   ├── migrations/        # 18 migrations SQL
 │       │   └── functions/
-│       │       └── push-expiry/  # Edge Function — alertas de vencimento
+│       │       └── push-expiry/   # Edge Function: notificações de vencimento
 │       └── scripts/
-│           └── import-cmed.ts    # Importação da tabela CMED/ANVISA (.xlsx)
+│           ├── import-cmed.ts     # Importa ~50k medicamentos do XLSX CMED
+│           └── parse-presentation.ts
 │
 ├── packages/
-│   ├── shared/                   # @medstock/shared — tipos TS + validators Zod
-│   │   └── src/
-│   │       ├── types/            # auth · inventory · medication
-│   │       └── validators/       # auth · inventory · medication
-│   └── ui/                       # @medstock/ui — componentes React Native/Web
+│   ├── shared/  (@medstock/shared) # Tipos TypeScript + validators Zod
+│   └── ui/      (@medstock/ui)     # Toast · AnimatedPressable · ConfirmDialog · Skeleton
 │
-├── .npmrc                        # node-linker=hoisted (obrigatório para RN + pnpm)
-├── tsconfig.base.json
-├── pnpm-workspace.yaml
-└── CLAUDE.md
+├── .npmrc                          # node-linker=hoisted (obrigatório RN + pnpm)
+├── tsconfig.base.json              # TypeScript strict compartilhado
+└── pnpm-workspace.yaml
 ```
 
 ---
@@ -84,203 +92,306 @@ medicine-tracker/
 ## Pré-requisitos
 
 - **Node.js** ≥ 20
-- **pnpm** ≥ 9 (`npm install -g pnpm`)
-- **Supabase CLI** (`brew install supabase/tap/supabase` ou [docs](https://supabase.com/docs/guides/cli))
-- **Android Studio** (para build Android) ou **Xcode** (para build iOS)
+- **pnpm** ≥ 9 — `npm install -g pnpm`
+- **Supabase CLI** — `npm install -g supabase` (para rodar banco localmente)
+- **EAS CLI** — `npm install -g eas-cli` (para builds mobile)
 - Conta no [Supabase](https://supabase.com) (projeto criado)
-- Conta no [Expo](https://expo.dev) (para push notifications)
+- Conta no [Expo](https://expo.dev) (para EAS Build)
 
 ---
 
-## Instalação
+## Configuração Local
+
+### 1. Instalar dependências
 
 ```bash
-git clone https://github.com/GuiMarcosNogueira/medicine-tracker.git
+git clone <repo>
 cd medicine-tracker
 pnpm install
 ```
 
-### Variáveis de ambiente
+### 2. Variáveis de ambiente
 
-Crie `apps/mobile/.env.local` com:
+Crie `apps/mobile/.env.local`:
 
 ```env
-EXPO_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
+EXPO_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
-### Linkar o projeto Supabase
+Para scripts de importação (`apps/api`), crie `apps/api/.env`:
 
-Antes de aplicar as migrations, vincule o CLI ao seu projeto:
+```env
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
+
+### 3. Aplicar migrations no banco
 
 ```bash
-cd apps/api
-supabase link --project-ref <project-ref>
-cd ../..
+pnpm --filter api supabase db push
 ```
 
-> Você precisará da **database password** definida ao criar o projeto no Supabase.
-
-### Banco de dados
+Para desenvolvimento local com Supabase CLI:
 
 ```bash
-# Aplicar todas as migrations no projeto Supabase Cloud
-pnpm --filter api db:push
-
-# (Opcional) Subir Supabase local para desenvolvimento (requer Docker)
-pnpm --filter api start
+pnpm --filter api supabase start    # Sobe PostgreSQL local (Docker)
+pnpm --filter api supabase db push  # Aplica as migrations
 ```
 
-### Importar catálogo CMED/ANVISA
+### 4. (Opcional) Importar catálogo CMED
 
-Baixe a tabela CMED mais recente em [anvisa.gov.br](https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos).
-
-Exporte as variáveis de ambiente antes de rodar (o script usa a service role key para ignorar RLS):
+Baixe o XLSX em [ANVISA — Tabela CMED](https://www.gov.br/anvisa/pt-br/assuntos/medicamentos/cmed/precos) e execute:
 
 ```bash
-export SUPABASE_URL=https://<seu-projeto>.supabase.co
-export SUPABASE_SERVICE_ROLE_KEY=<sua-service-role-key>
+pnpm --filter api import:cmed -- ./cmed.xlsx
 ```
 
-Em seguida execute o script passando o **caminho absoluto** para o arquivo `.xlsx`:
+### 5. Iniciar o app
 
 ```bash
-pnpm --filter api import:cmed /caminho/absoluto/para/cmed.xlsx
+pnpm --filter mobile start    # Expo dev server (web + QR para Expo Go)
+pnpm --filter mobile web      # Abrir direto no browser
 ```
 
-> **Atenção:** os nomes das colunas da tabela CMED mudam a cada publicação mensal da ANVISA. Verifique o `COLUMN_MAP` no script antes de importar.
+> **Atenção:** módulos nativos (FTS5, VisionCamera, DatePicker) exigem **dev client**, não funcionam no Expo Go padrão. Use `eas build --profile development` para gerar o dev client.
 
 ---
 
-## Desenvolvimento
+## Build Mobile com EAS CLI
+
+As builds são geradas na nuvem pelo [EAS Build](https://docs.expo.dev/build/introduction/) — sem necessidade de Android Studio ou Xcode instalados localmente.
+
+### Login e configuração inicial (uma vez)
 
 ```bash
-# Iniciar servidor Expo (QR code para Expo Go ou dev client)
-pnpm --filter mobile start
-
-# Build dev client — Android (requer Android Studio)
-pnpm --filter mobile android
-
-# Build dev client — iOS (requer macOS + Xcode)
-pnpm --filter mobile ios
-
-# Web
-pnpm --filter mobile web
+npm install -g eas-cli
+eas login                   # Autenticar na conta Expo
+cd apps/mobile
+eas build:configure         # Gera eas.json com perfis padrão
 ```
 
-> **Importante:** funcionalidades que usam câmera (OCR, barcode) e SQLite FTS5 **não funcionam no Expo Go** — é necessário o dev client (`expo run:android` / `expo run:ios`).
+### Perfis de build
 
----
+| Perfil | Formato | Uso |
+|--------|---------|-----|
+| `development` | APK / .ipa | Dev client com hot reload e módulos nativos |
+| `preview` | APK / .ipa | Testes internos — instalação direta no dispositivo |
+| `production` | AAB / .ipa | Publicação no Google Play / App Store |
 
-## Testes
+### Android
 
 ```bash
-# Rodar todos os testes
-pnpm --filter @medstock/shared test
-pnpm --filter mobile test
+# APK para instalação direta (testes internos)
+eas build --platform android --profile preview
 
-# Com relatório de cobertura
-pnpm --filter @medstock/shared exec vitest run --coverage
-pnpm --filter mobile exec vitest run --coverage
+# Dev client com módulos nativos (FTS5, VisionCamera, DatePicker)
+eas build --platform android --profile development
+
+# AAB para Google Play
+eas build --platform android --profile production
 ```
 
-### Cobertura atual
+### iOS
 
-| Pacote | Testes | Statements | Branches | Functions | Lines |
-|--------|--------|-----------|----------|-----------|-------|
-| `@medstock/shared` | 53 | 100% | 100% | 100% | 100% |
-| `apps/mobile` (OCR + expiry) | 55 | 100% | 100% | 100% | 100% |
+```bash
+# IPA para testes via TestFlight
+eas build --platform ios --profile preview
 
----
+# Dev client com módulos nativos
+eas build --platform ios --profile development
 
-## Scripts disponíveis
+# IPA para App Store
+eas build --platform ios --profile production
+```
 
-| Comando | Descrição |
-|---------|-----------|
-| `pnpm lint` | ESLint em todo o monorepo |
-| `pnpm format` | Prettier em todo o monorepo |
-| `pnpm typecheck` | TypeScript strict em todos os packages |
-| `pnpm test` | Vitest em todos os packages |
-| `pnpm --filter mobile start` | Servidor Expo dev |
-| `pnpm --filter mobile android` | Build dev client Android |
-| `pnpm --filter mobile ios` | Build dev client iOS |
-| `pnpm --filter api db:push` | Aplicar migrations |
-| `pnpm --filter api start` | Subir Supabase local |
-| `pnpm --filter api import:cmed /path/to/cmed.xlsx` | Importar catálogo CMED/ANVISA |
+> **iOS:** requer Apple Developer Account ($99/ano). O EAS gerencia certificados e provisioning profiles automaticamente.
 
----
+### Acompanhar builds
 
-## Arquitetura — decisões relevantes
+```bash
+eas build:list                   # Listar builds anteriores
+eas build:view <build-id>        # Status de uma build específica
+```
 
-### pnpm + React Native → modo hoisted obrigatório
+O terminal exibe um link para a dashboard do Expo onde o APK/IPA fica disponível para download ao final.
 
-O `.npmrc` contém `node-linker=hoisted`. Sem isso, o Metro Bundler não resolve módulos nativos no monorepo.
+### Build local (com Android Studio ou Xcode instalado)
 
-### SecureStore — adapter chunked
-
-Tokens OAuth do Google excedem o limite de 2 048 bytes do `expo-secure-store`. O cliente Supabase em `src/lib/supabase.ts` usa um adapter que divide tokens em chunks de 2 000 bytes distribuídos em múltiplas chaves.
-
-### FTS5 — apenas no dev client
-
-`expo-sqlite` com FTS5 só funciona com o dev client (`expo run:android/ios`). Na web, o WASM SQLite não inclui FTS5 e a busca cai para `LIKE` fallback.
-
-### Timezone brasileiro — parseLocalDate
-
-`new Date('YYYY-MM-DD')` interpreta meia-noite UTC, que no fuso UTC-3 (Brasília) corresponde ao dia anterior. A função `parseLocalDate` usa `new Date(year, month-1, day)` para garantir que a data de validade exibida seja a data local correta.
-
-### Legend-State + noUncheckedIndexedAccess
-
-Legend-State v2 com `noUncheckedIndexedAccess` retorna `(T | undefined)[]` ao iterar observables. O cast `rawItems as InventoryRow[]` é necessário após verificação de tipo.
-
-### CMED — colunas mudam mensalmente
-
-A ANVISA publica a tabela CMED mensalmente e os nomes das colunas variam entre versões. Sempre valide o `COLUMN_MAP` em `apps/api/scripts/import-cmed.ts` antes de importar uma nova versão.
+```bash
+cd apps/mobile
+pnpm android    # expo run:android
+pnpm ios        # expo run:ios
+```
 
 ---
 
-## Banco de dados
+## Comandos Disponíveis
+
+### Raiz do monorepo
+
+```bash
+pnpm lint           # ESLint em todos os packages
+pnpm format         # Prettier em todos os packages
+pnpm typecheck      # TypeScript em todos os packages
+pnpm test           # Vitest em todos os packages
+```
+
+### apps/mobile
+
+```bash
+pnpm --filter mobile start           # Expo dev server
+pnpm --filter mobile web             # Dev server + abrir no browser
+pnpm --filter mobile android         # Build e run no Android (local)
+pnpm --filter mobile ios             # Build e run no iOS (local)
+pnpm --filter mobile typecheck       # tsc --noEmit
+pnpm --filter mobile test            # Vitest
+pnpm --filter mobile test:coverage   # Vitest com relatório de cobertura
+```
+
+### apps/api
+
+```bash
+pnpm --filter api supabase start     # Subir Supabase local (Docker)
+pnpm --filter api supabase stop      # Parar Supabase local
+pnpm --filter api supabase db push   # Aplicar migrations
+pnpm --filter api supabase db reset  # Resetar banco local
+pnpm --filter api supabase db diff   # Gerar migration do diff atual
+pnpm --filter api import:cmed        # Importar catálogo CMED
+```
+
+---
+
+## Banco de Dados
 
 ### Tabelas principais
 
 | Tabela | Descrição |
 |--------|-----------|
-| `profiles` | Espelho de `auth.users`; criado automaticamente via trigger |
-| `families` | Grupos familiares |
-| `family_members` | Relação usuário–família com role (`owner` / `editor` / `viewer`) |
-| `family_invites` | Tokens de convite com validade de 7 dias |
-| `medications` | Catálogo CMED com FTS em português (weighted: nome > genérico > ATC) |
-| `inventory_items` | Itens do estoque familiar com soft delete via `deleted_at` |
-| `device_tokens` | Tokens Expo Push para notificações |
+| `users` | Perfis de usuário (nome, avatar) |
+| `families` | Famílias — cada família tem um estoque compartilhado |
+| `family_members` | Relação usuário ↔ família com papel (owner/editor/viewer) |
+| `family_invites` | Convites pendentes (token único com expiração) |
+| `inventory_items` | Itens do estoque: medicamento, validade, quantidade, lote, localização |
+| `inventory_consumptions` | Histórico de consumo avulso (pessoa, quantidade, data) |
+| `medications` | Catálogo CMED (~50k medicamentos) |
+| `treatments` | Tratamentos: medicamento, dose, frequência, data início/fim, pessoa |
+| `treatment_doses` | Doses registradas (tomada/pulada) com horário e quantidade deduzida |
 
-### RLS (Row-Level Security)
+### Row-Level Security
 
-Todas as tabelas têm RLS ativo:
-- `medications`: leitura pública para usuários autenticados (catálogo global)
-- `inventory_items`: leitura por membros, escrita por editores/owners — sempre escopado por `family_id`
+Todo acesso é filtrado por família via funções `SECURITY DEFINER`:
+
+- `is_family_member(family_id)` — leitura
+- `is_family_editor(family_id)` — escrita
+
+### Histórico de migrations
+
+| # | Arquivo | Descrição |
+|---|---------|-----------|
+| 01 | `000001_extensions` | pgvector, pgsodium |
+| 02 | `000002_tables` | Tabelas base + índices |
+| 03 | `000003_fts` | Full-text search em medications |
+| 04 | `000004_rls` | Row-Level Security policies |
+| 05 | `000005_expiry_view` | View de vencimentos por status |
+| 06 | `000006_create_family_fn` | RPC criar família |
+| 07 | `000007_family_members_fn` | RPC listar membros |
+| 08 | `000008_medications_parsed` | Denormalizar dosagem/quantidade |
+| 09 | `000009_search_v2` | RPC busca com FTS + ordenação |
+| 10 | `000010_accept_invite_fn` | RPC aceitar convite |
+| 11 | `000011_push_expiry_cron` | Cron diário → Edge Function notificações |
+| 12 | `000012_search_v3` | RPC busca aprimorada |
+| 13 | `000013_snapshot` | Snapshot de medication no inventory |
+| 14 | `000014_soft_delete_fn` | RPC soft delete com `deleted_at` |
+| 15 | `000015_treatments` | Tabelas `treatments` + `treatment_doses` |
+| 16 | `000016_consumptions` | Tabela `inventory_consumptions` + RPC `log_consumption` |
+| 17 | `000017_search_v4` | Busca expandida por dosagem e quantidade |
+| 18 | `000018_log_dose_gotas` | Suporte à unidade "gotas" (1 gota = 0,05 mL) |
+
+### Aplicar migration manual (Supabase Dashboard)
+
+Ao alterar `RETURNS TABLE` de uma função existente, use o SQL Editor do dashboard:
+
+```sql
+DROP FUNCTION IF EXISTS public.nome_da_funcao(arg1 type, arg2 type);
+-- Em seguida cole o CREATE OR REPLACE
+```
 
 ---
 
-## Edge Function — push-expiry
+## Arquitetura
 
-Função Deno hospedada no Supabase que:
-1. Consulta itens vencendo em 0 / 7 / 15 / 30 dias
-2. Agrupa por família e busca tokens de dispositivo
-3. Envia notificações via [Expo Push API](https://docs.expo.dev/push-notifications/sending-notifications/)
+### Fluxo de dados
 
-Acionada por webhook do banco (mudança em `inventory_items`) ou por cron diário às 08h00.
+```
+Telas (Expo Router)
+  │
+  ├── Legend-State stores (estado em memória + otimista)
+  │       │
+  │       ├── syncedSupabase ──────────► Supabase cloud
+  │       └── offline queue ──────────► sincroniza ao reconectar
+  │
+  ├── expo-sqlite (FTS5/LIKE) ────────► busca catálogo offline
+  │
+  └── Supabase Auth ──────────────────► expo-secure-store (chunked)
+```
+
+### DatePickerField
+
+Componente com implementação separada por plataforma via extensão Metro:
+
+| Arquivo | Plataforma | Implementação |
+|---------|-----------|---------------|
+| `DatePickerField.tsx` | Android / iOS | Dialog nativo (Android) · Modal spinner (iOS) |
+| `DatePickerField.web.tsx` | Web | `<input type="date">` com locale do browser |
+
+O valor é sempre armazenado como `YYYY-MM-DD`. A exibição segue o locale do dispositivo.
+
+### Unidade Gotas
+
+1 gota = 0,05 mL (padrão farmacológico brasileiro). A conversão é aplicada em:
+- RPC `log_dose` (dedução do estoque ao registrar dose de tratamento)
+- Store `logDose` no cliente (atualização otimista)
+- RPC `log_consumption` (consumo avulso)
 
 ---
 
-## Contribuindo
+## Componentes UI (`@medstock/ui`)
 
-1. Crie um branch a partir de `main`: `git checkout -b feat/minha-feature`
-2. Implemente as mudanças seguindo as convenções em `CLAUDE.md`
-3. Rode `pnpm typecheck && pnpm test` antes do commit
-4. Use [Conventional Commits](https://www.conventionalcommits.org/): `feat(scope): descrição`
-5. Abra um Pull Request
+| Componente | Descrição |
+|-----------|-----------|
+| `<Toast>` / `useToast()` | Notificações em overlay — success, warning, error |
+| `<AnimatedPressable>` | Pressable com feedback de escala via Reanimated |
+| `<ConfirmDialog>` | Modal de confirmação (delete, sign-out) |
+| `<Skeleton>` | Placeholder animado durante carregamento |
 
 ---
 
-## Licença
+## Paleta de Cores
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais detalhes.
+| Nome | Hex | Uso |
+|------|-----|-----|
+| Teal | `#1A9E96` | Ações primárias, botões, links |
+| Coral | `#F0735A` | Alertas, erros, ações destrutivas |
+| Amber | `#F5A623` | Avisos, status atenção |
+| Sage | `#E8ECE5` | Fundos de cards, separadores |
+| Ink | `#1A1D1A` | Texto principal |
+| Mist | `#9CA59C` | Texto secundário, placeholders |
+| Snow | `#F6F8F5` | Background das telas |
+
+---
+
+## Gotchas Críticos
+
+| # | Problema | Solução |
+|---|---------|---------|
+| 1 | `pnpm` + React Native | `.npmrc` com `node-linker=hoisted` obrigatório |
+| 2 | FTS5 no Expo Go | Requer **dev client** — não funciona no Expo Go padrão |
+| 3 | OAuth tokens > 2048 bytes | `expo-secure-store` com adapter chunked em `supabase.ts` |
+| 4 | VisionCamera v4 | Requer `react-native-worklets-core` como dep direta |
+| 5 | Google OAuth web | Rota `app/auth/callback.tsx` (fora de route groups) com `WebBrowser.maybeCompleteAuthSession()` obrigatória |
+| 6 | Tokens OAuth no hash | `url.hash.slice(1)` → `URLSearchParams` — não na query string |
+| 7 | `exactOptionalPropertyTypes` | Props opcionais devem ser `prop?: string \| undefined` quando `undefined` é passado explicitamente |
+| 8 | `RETURNS TABLE` em migrations | `DROP FUNCTION IF EXISTS` antes do `CREATE OR REPLACE` ao mudar assinatura |
+| 9 | CMED colunas mudam mensalmente | Validar `COLUMN_MAP` em `import-cmed.ts` antes de importar novo arquivo |
+| 10 | Timezone em datas | Usar `new Date(y, m-1, d)` (local) — nunca `new Date('YYYY-MM-DD')` (UTC midnight) |
