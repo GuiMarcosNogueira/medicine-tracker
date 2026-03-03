@@ -16,6 +16,7 @@ import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
 import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
+import { DatePickerField } from '../../../src/components/DatePickerField';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -152,17 +153,12 @@ export default function OcrResultScreen() {
           </>
         )}
 
-        <Text style={styles.label}>Data de vencimento * (AAAA-MM-DD)</Text>
-        <TextInput
-          style={[styles.input, errors['expiryDate'] ? styles.inputError : null]}
+        <DatePickerField
+          label="Data de vencimento *"
           value={expiryDate}
-          onChangeText={v => { setExpiryDate(v); clearError('expiryDate'); }}
-          placeholder="2026-12-31"
-          placeholderTextColor="#9CA59C"
-          keyboardType="numbers-and-punctuation"
-          maxLength={10}
+          onChange={v => { setExpiryDate(v); clearError('expiryDate'); }}
+          error={errors['expiryDate']}
         />
-        {Boolean(errors['expiryDate']) && <Text style={styles.fieldError}>{errors['expiryDate']}</Text>}
 
         <View style={styles.row}>
           <View style={styles.rowField}>

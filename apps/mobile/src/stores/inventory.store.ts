@@ -184,3 +184,33 @@ export async function softDeleteItem(id: string): Promise<string | null> {
   }
   return error?.message ?? null;
 }
+
+export async function logConsumption(
+  itemId: string,
+  qty: number,
+  personName: string | null,
+  notes: string | null,
+): Promise<{ error: string | null; autoRemoved: boolean }> {
+  const { error } = await supabase.rpc('log_consumption', {
+    p_item_id:     itemId,
+    p_qty:         qty,
+    p_person_name: personName,
+    p_notes:       notes,
+  });
+  if (error) return { error: error.message, autoRemoved: false };
+
+  // Atualiza quantidade otimisticamente no store
+  const items  = inventoryStore.items.get();
+  const idx    = items.findIndex(i => i.id === itemId);
+  if (idx >= 0) {
+    const current = items[idx]?.quantity ?? 0;
+    const newQty  = Math.max(0, current - qty);
+    inventoryStore.items[idx]?.quantity.set(newQty);
+
+    if (newQty === 0) {
+      void softDeleteItem(itemId);
+      return { error: null, autoRemoved: true };
+    }
+  }
+  return { error: null, autoRemoved: false };
+}
