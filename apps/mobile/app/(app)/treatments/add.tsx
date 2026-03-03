@@ -15,6 +15,7 @@ import type { InventoryRow } from '../../../src/stores/inventory.store';
 import { treatmentStore, addTreatment } from '../../../src/stores/treatment.store';
 import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
+import { DatePickerField } from '../../../src/components/DatePickerField';
 
 // ─── Frequency presets ────────────────────────────────────────────────────────
 
@@ -358,17 +359,12 @@ export default function AddTreatmentScreen() {
         {errors['time'] && <Text style={styles.error}>{errors['time']}</Text>}
 
         {/* Data de início */}
-        <Text style={[styles.label, styles.labelTop]}>Data de início</Text>
-        <TextInput
-          style={styles.input}
+        <DatePickerField
+          label="Data de início"
           value={startDate}
-          onChangeText={setStartDate}
-          placeholder="AAAA-MM-DD"
-          placeholderTextColor="#9CA59C"
-          keyboardType="numbers-and-punctuation"
-          maxLength={10}
+          onChange={setStartDate}
+          error={errors['startDate']}
         />
-        {errors['startDate'] && <Text style={styles.error}>{errors['startDate']}</Text>}
 
         {/* Duração */}
         <Text style={[styles.label, styles.labelTop]}>Duração</Text>

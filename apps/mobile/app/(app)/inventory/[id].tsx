@@ -31,6 +31,7 @@ import {
 } from '../../../src/utils/expiry';
 import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
 import { hapticSuccess, hapticError, hapticMedium } from '../../../src/lib/haptics';
+import { DatePickerField } from '../../../src/components/DatePickerField';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -344,13 +345,10 @@ export default function InventoryItemDetailScreen() {
         {/* ── Detail card (view) or edit form ─────────────────────────────── */}
         {editing ? (
           <View>
-            <Text style={styles.label}>Data de vencimento (AAAA-MM-DD)</Text>
-            <TextInput
-              style={styles.input}
+            <DatePickerField
+              label="Data de vencimento"
               value={expiryDate}
-              onChangeText={setExpiryDate}
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
+              onChange={setExpiryDate}
             />
 
             <View style={styles.row}>

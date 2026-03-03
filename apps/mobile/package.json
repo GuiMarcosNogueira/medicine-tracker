@@ -17,6 +17,7 @@
     "@legendapp/state": "^2.1.15",
     "@medstock/shared": "workspace:*",
     "@medstock/ui": "workspace:*",
+    "@react-native-community/datetimepicker": "^8.6.0",
     "@supabase/supabase-js": "^2.97.0",
     "date-fns": "^4.1.0",
     "expo": "~52.0.0",

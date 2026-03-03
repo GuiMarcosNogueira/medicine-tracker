@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-native",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "dom"],
     "paths": {
       "@medstock/shared": ["../../packages/shared/src/index.ts"],
       "@medstock/shared/*": ["../../packages/shared/src/*"],
