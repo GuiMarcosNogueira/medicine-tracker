@@ -12,7 +12,7 @@ const config = getDefaultConfig(projectRoot);
 
 // Expo SDK 52 auto-detects pnpm monorepo via EXPO_USE_METRO_WORKSPACE_ROOT (on by default).
 // Still need to tell Metro about the workspace node_modules for hoisted pnpm.
-config.watchFolders = [workspaceRoot];
+config.watchFolders = [...(config.watchFolders ?? []), workspaceRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
