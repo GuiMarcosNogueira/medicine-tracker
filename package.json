@@ -12,6 +12,9 @@
   "pnpm": {
     "overrides": {
       "@expo/config-plugins": "~9.0.0"
+    },
+    "patchedDependencies": {
+      "react-native-vision-camera-mlkit@1.0.0": "patches/react-native-vision-camera-mlkit@1.0.0.patch"
     }
   },
   "devDependencies": {

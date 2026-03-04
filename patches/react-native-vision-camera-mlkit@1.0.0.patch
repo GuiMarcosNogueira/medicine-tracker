@@ -1,0 +1,19 @@
+diff --git a/android/src/main/java/com/visioncameramlkit/VisionCameraMLKitPackage.kt b/android/src/main/java/com/visioncameramlkit/VisionCameraMLKitPackage.kt
+index b3451cc12d640ab2485d951ad90f3602ec16845a..4c6ebc2b1f80b61b645e748709a25245bd264e3d 100644
+--- a/android/src/main/java/com/visioncameramlkit/VisionCameraMLKitPackage.kt
++++ b/android/src/main/java/com/visioncameramlkit/VisionCameraMLKitPackage.kt
+@@ -33,10 +33,10 @@ class VisionCameraMLKitPackage : BaseReactPackage() {
+           ReactModuleInfo(
+             VisionCameraMLKitModule.NAME,
+             VisionCameraMLKitModule.NAME,
+-            canOverrideExistingModule = false,
+-            needsEagerInit = false,
+-            isCxxModule = false,
+-            isTurboModule = false,
++            false,
++            false,
++            false,
++            false,
+           ),
+       )
+     }
