@@ -33,7 +33,7 @@ Funciona em **Android**, **iOS** e **Web** com código compartilhado via Expo SD
 | Banco local | `expo-sqlite` com FTS5 (nativo) / LIKE fallback (web) |
 | Auth | Supabase Auth — e-mail/senha + Google OAuth |
 | Câmera | `react-native-vision-camera` v4 + ML Kit |
-| Animações | `react-native-reanimated` v4 |
+| Animações | `react-native-reanimated` v3 |
 | Gestos | `react-native-gesture-handler` v2 |
 | Validação | Zod 3 (`@medstock/shared`) |
 | Build | EAS Build (Expo Application Services) |
@@ -82,6 +82,8 @@ medicine-tracker/
 │   ├── shared/  (@medstock/shared) # Tipos TypeScript + validators Zod
 │   └── ui/      (@medstock/ui)     # Toast · AnimatedPressable · ConfirmDialog · Skeleton
 │
+├── patches/                        # Patches de compatibilidade (pnpm patch)
+├── .vscode/launch.json             # Configurações de debug do VSCode
 ├── .npmrc                          # node-linker=hoisted (obrigatório RN + pnpm)
 ├── tsconfig.base.json              # TypeScript strict compartilhado
 └── pnpm-workspace.yaml
@@ -91,21 +93,59 @@ medicine-tracker/
 
 ## Pré-requisitos
 
-- **Node.js** ≥ 20
-- **pnpm** ≥ 9 — `npm install -g pnpm`
-- **Supabase CLI** — `npm install -g supabase` (para rodar banco localmente)
-- **EAS CLI** — `npm install -g eas-cli` (para builds mobile)
-- Conta no [Supabase](https://supabase.com) (projeto criado)
-- Conta no [Expo](https://expo.dev) (para EAS Build)
+### Obrigatórios (todos os ambientes)
+
+| Ferramenta | Versão | Instalação |
+|-----------|--------|-----------|
+| Node.js | ≥ 20 | [nodejs.org](https://nodejs.org) ou `nvm install 20` |
+| pnpm | ≥ 9 | `npm install -g pnpm` |
+| EAS CLI | ≥ 18 | `npm install -g eas-cli` |
+| Git | qualquer | já instalado na maioria dos sistemas |
+
+### Para builds locais (Android)
+
+> Necessário apenas se quiser compilar sem usar o EAS cloud.
+
+| Ferramenta | Versão | Instalação |
+|-----------|--------|-----------|
+| Java (JDK) | 17 | `sudo apt install openjdk-17-jdk` (Linux/WSL2) |
+| Android SDK | — | [command line tools](https://developer.android.com/studio#command-line-tools-only) |
+
+Após instalar, adicione ao `~/.zshrc` ou `~/.bashrc`:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export ANDROID_HOME=$HOME/android
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export PATH=$JAVA_HOME/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+```
+
+Instale os pacotes do SDK:
+```bash
+yes | sdkmanager --licenses
+sdkmanager "platform-tools" "build-tools;35.0.0" "platforms;android-35"
+```
+
+### Para debug no dispositivo físico
+
+Instale `adb`:
+
+```bash
+# Linux / WSL2
+sudo apt install adb
+
+# macOS
+brew install android-platform-tools
+```
 
 ---
 
 ## Configuração Local
 
-### 1. Instalar dependências
+### 1. Clonar e instalar dependências
 
 ```bash
-git clone <repo>
+git clone <repo-url>
 cd medicine-tracker
 pnpm install
 ```
@@ -126,17 +166,17 @@ SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
+> As chaves estão no painel do Supabase em **Project Settings → API**.
+
 ### 3. Aplicar migrations no banco
 
 ```bash
+# Banco remoto (Supabase cloud)
 pnpm --filter api supabase db push
-```
 
-Para desenvolvimento local com Supabase CLI:
-
-```bash
-pnpm --filter api supabase start    # Sobe PostgreSQL local (Docker)
-pnpm --filter api supabase db push  # Aplica as migrations
+# Banco local (requer Docker)
+pnpm --filter api supabase start
+pnpm --filter api supabase db push
 ```
 
 ### 4. (Opcional) Importar catálogo CMED
@@ -147,82 +187,161 @@ Baixe o XLSX em [ANVISA — Tabela CMED](https://www.gov.br/anvisa/pt-br/assunto
 pnpm --filter api import:cmed -- ./cmed.xlsx
 ```
 
-### 5. Iniciar o app
+---
+
+## Rodando Localmente
+
+### Web (mais rápido para testar UI)
 
 ```bash
-pnpm --filter mobile start    # Expo dev server (web + QR para Expo Go)
-pnpm --filter mobile web      # Abrir direto no browser
+pnpm --filter mobile start --web
+# ou
+pnpm --filter mobile web
 ```
 
-> **Atenção:** módulos nativos (FTS5, VisionCamera, DatePicker) exigem **dev client**, não funcionam no Expo Go padrão. Use `eas build --profile development` para gerar o dev client.
+Abre em `http://localhost:8082`. Sem necessidade de dispositivo físico.
+
+> **Limitação web:** FTS5, VisionCamera e DatePicker nativo não funcionam no browser — usam fallbacks automáticos.
+
+### Metro dev server (para dispositivo)
+
+```bash
+pnpm --filter mobile start
+```
+
+Ou com tunnel (recomendado para WSL2 / redes restritas):
+
+```bash
+pnpm --filter mobile start --tunnel
+```
+
+O terminal exibe um QR code. Abra o **dev client** instalado no dispositivo e escaneie.
 
 ---
 
-## Build Mobile com EAS CLI
+## Build do Dev Client
 
-As builds são geradas na nuvem pelo [EAS Build](https://docs.expo.dev/build/introduction/) — sem necessidade de Android Studio ou Xcode instalados localmente.
+O **dev client** é um APK/IPA personalizado com todos os módulos nativos (FTS5, VisionCamera, DatePicker) embutidos. Precisa ser instalado uma vez no dispositivo antes de usar o hot reload.
 
-### Login e configuração inicial (uma vez)
+> O Expo Go padrão **não funciona** com este projeto — sempre use o dev client.
 
-```bash
-npm install -g eas-cli
-eas login                   # Autenticar na conta Expo
-cd apps/mobile
-eas build:configure         # Gera eas.json com perfis padrão
-```
-
-### Perfis de build
-
-| Perfil | Formato | Uso |
-|--------|---------|-----|
-| `development` | APK / .ipa | Dev client com hot reload e módulos nativos |
-| `preview` | APK / .ipa | Testes internos — instalação direta no dispositivo |
-| `production` | AAB / .ipa | Publicação no Google Play / App Store |
-
-### Android
+### Via EAS cloud (recomendado — sem precisar de SDK local)
 
 ```bash
-# APK para instalação direta (testes internos)
-eas build --platform android --profile preview
+# Login na conta Expo (apenas uma vez)
+eas login
 
-# Dev client com módulos nativos (FTS5, VisionCamera, DatePicker)
-eas build --platform android --profile development
+# Android — gera APK e envia link para download
+eas build --profile development --platform android
 
-# AAB para Google Play
-eas build --platform android --profile production
+# iOS — gera IPA (requer Apple Developer Account)
+eas build --profile development --platform ios
 ```
 
-### iOS
+O terminal exibe um link para o painel do Expo onde o APK/IPA fica disponível. Instale diretamente no dispositivo.
+
+### Via build local (requer Java + Android SDK instalados)
 
 ```bash
-# IPA para testes via TestFlight
-eas build --platform ios --profile preview
-
-# Dev client com módulos nativos
-eas build --platform ios --profile development
-
-# IPA para App Store
-eas build --platform ios --profile production
+eas build --profile development --platform android --local
 ```
 
-> **iOS:** requer Apple Developer Account ($99/ano). O EAS gerencia certificados e provisioning profiles automaticamente.
+O APK gerado fica em `/tmp/eas-build-local-nodejs/*/build/` ao final da compilação.
 
-### Acompanhar builds
+---
+
+## Conectar Dispositivo ao Metro
+
+Após instalar o dev client, o celular precisa alcançar o servidor Metro para carregar o bundle JS.
+
+### Opção 1 — Tunnel (mais simples, funciona em qualquer rede)
 
 ```bash
-eas build:list                   # Listar builds anteriores
-eas build:view <build-id>        # Status de uma build específica
+pnpm --filter mobile start --tunnel
 ```
 
-O terminal exibe um link para a dashboard do Expo onde o APK/IPA fica disponível para download ao final.
+Escaneie o QR code com o dev client. Não requer nenhuma configuração de rede.
 
-### Build local (com Android Studio ou Xcode instalado)
+### Opção 2 — Wi-Fi LAN (mais rápido, sem ngrok)
+
+Celular e computador precisam estar na **mesma rede Wi-Fi**.
+
+1. Descubra o IP da sua máquina visível pelo celular:
 
 ```bash
-cd apps/mobile
-pnpm android    # expo run:android
-pnpm ios        # expo run:ios
+# Linux / WSL2 — IP do gateway (geralmente o IP do Windows)
+ip route show | grep default | awk '{print $3}'
+
+# macOS
+ipconfig getifaddr en0
 ```
+
+2. Inicie o Metro forçando esse IP:
+
+```bash
+REACT_NATIVE_PACKAGER_HOSTNAME=<ip> pnpm --filter mobile start --lan
+```
+
+3. No dev client, toque em "Enter URL manually" e digite: `exp://<ip>:8081`
+
+### Opção 3 — ADB Wi-Fi (para WSL2)
+
+Ative **Depuração wireless** nas Opções do desenvolvedor do celular e conecte:
+
+```bash
+adb connect <ip-do-celular>:<porta>
+adb devices   # deve listar o dispositivo
+
+# Encaminhar portas do celular para o Metro local
+adb reverse tcp:8081 tcp:8081
+adb reverse tcp:19000 tcp:19000
+```
+
+Depois inicie com `pnpm --filter mobile start --lan`.
+
+---
+
+## Debug com VSCode
+
+O repositório já inclui `.vscode/launch.json` com três configurações prontas.
+
+### Extensão necessária
+
+Instale **React Native Tools** (ID: `msjsdiag.vscode-react-native`) no VSCode.
+
+### Como depurar
+
+1. Inicie o Metro: `pnpm --filter mobile start`
+2. Abra o dev client no celular e carregue o bundle
+3. No celular, agite o dispositivo → **"Open Debugger"**
+4. No VSCode, pressione `F5` e selecione a configuração desejada:
+
+| Configuração | Quando usar |
+|-------------|------------|
+| **Debug Android (Hermes)** | Inicia o app e abre o debugger |
+| **Attach Android (app já rodando)** | Conecta ao app que já está aberto |
+| **Debug Web (Edge — attach)** | Debug da versão web no Edge |
+
+5. Coloque breakpoints nos arquivos `.tsx` normalmente — hot reload mantém os breakpoints ativos.
+
+> **Alternativa rápida:** no Metro pressione `j` para abrir o Hermes Inspector direto no Chrome DevTools.
+
+---
+
+## Habilitar Opções do Desenvolvedor no Android
+
+Necessário para depuração USB e wireless.
+
+**Samsung (Note 10+, Galaxy S/A):**
+1. Configurações → Sobre o telefone → Informações do software
+2. Toque em **Número da versão** 7 vezes (pode pedir senha)
+3. Configurações → **Opções do desenvolvedor** (no menu principal)
+4. Ative **Depuração USB** e/ou **Depuração wireless**
+
+**Android padrão (Pixel, etc.):**
+1. Configurações → Sobre o telefone
+2. Toque em **Número da versão** 7 vezes
+3. Configurações → Sistema → **Opções do desenvolvedor**
 
 ---
 
@@ -241,12 +360,26 @@ pnpm test           # Vitest em todos os packages
 
 ```bash
 pnpm --filter mobile start           # Expo dev server
+pnpm --filter mobile start --tunnel  # Dev server com tunnel (recomendado WSL2)
 pnpm --filter mobile web             # Dev server + abrir no browser
-pnpm --filter mobile android         # Build e run no Android (local)
-pnpm --filter mobile ios             # Build e run no iOS (local)
+pnpm --filter mobile android         # Build e run no Android (requer SDK local)
+pnpm --filter mobile ios             # Build e run no iOS (requer Xcode)
 pnpm --filter mobile typecheck       # tsc --noEmit
 pnpm --filter mobile test            # Vitest
-pnpm --filter mobile test:coverage   # Vitest com relatório de cobertura
+pnpm --filter mobile test:coverage   # Vitest com cobertura
+```
+
+### EAS Build
+
+```bash
+eas login                                              # Autenticar (uma vez)
+eas build --profile development --platform android     # Dev client Android (cloud)
+eas build --profile development --platform ios         # Dev client iOS (cloud)
+eas build --profile preview --platform android         # APK de testes internos
+eas build --profile production --platform android      # AAB para Google Play
+eas build --profile production --platform ios          # IPA para App Store
+eas build --profile development --platform android --local  # Build local
+eas build:list                                         # Listar builds anteriores
 ```
 
 ### apps/api
@@ -308,15 +441,6 @@ Todo acesso é filtrado por família via funções `SECURITY DEFINER`:
 | 17 | `000017_search_v4` | Busca expandida por dosagem e quantidade |
 | 18 | `000018_log_dose_gotas` | Suporte à unidade "gotas" (1 gota = 0,05 mL) |
 
-### Aplicar migration manual (Supabase Dashboard)
-
-Ao alterar `RETURNS TABLE` de uma função existente, use o SQL Editor do dashboard:
-
-```sql
-DROP FUNCTION IF EXISTS public.nome_da_funcao(arg1 type, arg2 type);
--- Em seguida cole o CREATE OR REPLACE
-```
-
 ---
 
 ## Arquitetura
@@ -344,8 +468,6 @@ Componente com implementação separada por plataforma via extensão Metro:
 |---------|-----------|---------------|
 | `DatePickerField.tsx` | Android / iOS | Dialog nativo (Android) · Modal spinner (iOS) |
 | `DatePickerField.web.tsx` | Web | `<input type="date">` com locale do browser |
-
-O valor é sempre armazenado como `YYYY-MM-DD`. A exibição segue o locale do dispositivo.
 
 ### Unidade Gotas
 
@@ -395,3 +517,8 @@ O valor é sempre armazenado como `YYYY-MM-DD`. A exibição segue o locale do d
 | 8 | `RETURNS TABLE` em migrations | `DROP FUNCTION IF EXISTS` antes do `CREATE OR REPLACE` ao mudar assinatura |
 | 9 | CMED colunas mudam mensalmente | Validar `COLUMN_MAP` em `import-cmed.ts` antes de importar novo arquivo |
 | 10 | Timezone em datas | Usar `new Date(y, m-1, d)` (local) — nunca `new Date('YYYY-MM-DD')` (UTC midnight) |
+| 11 | `react-native-vision-camera-mlkit` no RN 0.76 | Patch aplicado via `pnpm patch` em `patches/` — `ReactModuleInfo` removeu named params |
+| 12 | Metro `watchFolders` no monorepo | Usar spread `[...(config.watchFolders ?? []), workspaceRoot]` — nunca substituir |
+| 13 | `@expo/config-plugins` versão errada | Override forçado em `package.json` raiz: `"@expo/config-plugins": "~9.0.0"` |
+| 14 | Gradle cache corrompido | Limpar com `pkill -f gradle && rm -rf ~/.gradle/` antes de novo build local |
+| 15 | `expo install --fix` em pnpm monorepo | Usar `pnpm --filter mobile add pkg@version` diretamente — expo CLI usa npm internamente |
