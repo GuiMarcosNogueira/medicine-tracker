@@ -22,6 +22,11 @@ yarn.lock
 .env.local
 .env.*.local
 
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+
 # OS
 .DS_Store
 Thumbs.db
