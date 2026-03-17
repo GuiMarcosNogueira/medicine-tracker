@@ -32,6 +32,7 @@ import {
 import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
 import { hapticSuccess, hapticError, hapticMedium } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
+import { TagInput } from '../../../src/components/TagInput';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -65,6 +66,7 @@ export default function InventoryItemDetailScreen() {
   const [unit, setUnit] = useState<InventoryUnit>('un');
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
+  const [indications, setIndications] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleteVisible, setDeleteVisible] = useState(false);
 
@@ -99,6 +101,7 @@ export default function InventoryItemDetailScreen() {
     setUnit(item.unit);
     setLotNumber(item.lot_number ?? '');
     setLocation(item.location ?? '');
+    setIndications(item.indications ?? []);
     setEditing(true);
   }
 
@@ -130,6 +133,7 @@ export default function InventoryItemDetailScreen() {
         unit:        d.unit,
         lot_number:  d.lotNumber ?? null,
         location:    d.location ?? null,
+        indications,
       })
       .eq('id', item.id);
 
@@ -383,6 +387,9 @@ export default function InventoryItemDetailScreen() {
             <Text style={styles.label}>Local</Text>
             <TextInput style={styles.input} value={location} onChangeText={setLocation} />
 
+            <Text style={styles.label}>Indicações</Text>
+            <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor..." />
+
             <View style={styles.editActions}>
               <AnimatedPressable style={styles.cancelBtn} onPress={() => { setEditing(false); }}>
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
@@ -400,16 +407,30 @@ export default function InventoryItemDetailScreen() {
             </View>
           </View>
         ) : (
-          <View style={styles.card}>
-            <Row label="Vencimento"      value={formatExpiryDate(item.expiry_date)} />
-            <Row label="Quantidade"      value={`${item.quantity} ${item.unit}`} />
-            <Row label="Fabricante"      value={item.manufacturer} />
-            <Row label="Dosagem"         value={item.presentation_dosage} />
-            <Row label="Forma"           value={item.pharma_form_friendly ?? item.pharmaceutical_form} />
-            <Row label="Princípio ativo" value={item.active_ingredient} />
-            <Row label="Lote"            value={item.lot_number} />
-            <Row label="Local"           value={item.location} />
-          </View>
+          <>
+            <View style={styles.card}>
+              <Row label="Vencimento"      value={formatExpiryDate(item.expiry_date)} />
+              <Row label="Quantidade"      value={`${item.quantity} ${item.unit}`} />
+              <Row label="Fabricante"      value={item.manufacturer} />
+              <Row label="Dosagem"         value={item.presentation_dosage} />
+              <Row label="Forma"           value={item.pharma_form_friendly ?? item.pharmaceutical_form} />
+              <Row label="Princípio ativo" value={item.active_ingredient} />
+              <Row label="Lote"            value={item.lot_number} />
+              <Row label="Local"           value={item.location} />
+            </View>
+            {item.indications.length > 0 && (
+              <View style={styles.indicationsSection}>
+                <Text style={styles.indicationsTitle}>PARA QUE SERVE</Text>
+                <View style={styles.indicationsTags}>
+                  {item.indications.map((ind, i) => (
+                    <View key={`${ind}-${i}`} style={styles.indicationChip}>
+                      <Text style={styles.indicationChipText}>{ind}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </>
         )}
 
         {/* ── Histórico de uso ─────────────────────────────────────────────── */}
@@ -521,6 +542,13 @@ const styles = StyleSheet.create({
   saveBtn:         { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText:     { color: '#FFFFFF', fontWeight: '700' },
+
+  // Indications (view mode)
+  indicationsSection:   { marginTop: 16 },
+  indicationsTitle:     { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 10 },
+  indicationsTags:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  indicationChip:       { backgroundColor: '#E6F5F4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 },
+  indicationChipText:   { fontSize: 13, color: '#1A9E96', fontWeight: '600' },
 
   // History
   historySection:  { marginTop: 24 },

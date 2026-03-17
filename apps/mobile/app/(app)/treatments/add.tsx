@@ -140,7 +140,10 @@ function MedicationSearch({
   const filtered = useMemo(() => {
     if (!query.trim() || !focused) return [];
     const q = normalize(query);
-    return items.filter(item => normalize(getItemDisplayName(item)).includes(q)).slice(0, 6);
+    return items.filter(item =>
+      normalize(getItemDisplayName(item)).includes(q) ||
+      item.indications.some(ind => normalize(ind).includes(q))
+    ).slice(0, 6);
   }, [items, query, focused]);
 
   return (
@@ -170,6 +173,12 @@ function MedicationSearch({
               <Text style={styles.suggestionName}>{getItemDisplayName(item)}</Text>
               {item.presentation_dosage ? (
                 <Text style={styles.suggestionMeta}>{item.presentation_dosage}</Text>
+              ) : null}
+              {!normalize(getItemDisplayName(item)).includes(normalize(query)) &&
+                item.indications.some(ind => normalize(ind).includes(normalize(query))) ? (
+                <Text style={styles.suggestionIndication}>
+                  {'↳ ' + item.indications.filter(ind => normalize(ind).includes(normalize(query))).join(', ')}
+                </Text>
               ) : null}
             </Pressable>
           ))}
@@ -703,7 +712,8 @@ const styles = StyleSheet.create({
   suggestions:  { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 12, marginTop: 4, overflow: 'hidden' },
   suggestionRow:{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0F2EF' },
   suggestionName:{ fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
-  suggestionMeta:{ fontSize: 12, color: '#1A9E96', marginTop: 1 },
+  suggestionMeta:       { fontSize: 12, color: '#1A9E96', marginTop: 1 },
+  suggestionIndication: { fontSize: 11, color: '#9CA59C', marginTop: 1 },
   error:        { color: '#F0735A', fontSize: 12, marginTop: 4 },
 });
 

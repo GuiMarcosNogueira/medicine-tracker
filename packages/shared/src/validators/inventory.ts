@@ -14,6 +14,7 @@ export const inventoryItemSchema = z
     unit: z.enum(INVENTORY_UNITS).default('un'),
     location: z.string().max(100).optional(),
     notes: z.string().max(500).optional(),
+    indications: z.array(z.string().min(1).max(60)).max(15).default([]),
   })
   .refine((d) => d.medicationId !== undefined || d.customName !== undefined, {
     message: 'Informe o medicamento do catálogo ou um nome personalizado',

@@ -15,6 +15,7 @@ export interface InventoryItem {
   unit: InventoryUnit;
   location: string | null;
   notes: string | null;
+  indications: string[];
   scanned_image_url: string | null;
   added_by: string | null;
   created_at: string;

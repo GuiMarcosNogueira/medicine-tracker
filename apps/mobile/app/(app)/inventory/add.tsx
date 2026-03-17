@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import type { InventoryUnit } from '@medstock/shared';
 import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
+import { TagInput } from '../../../src/components/TagInput';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -60,11 +61,34 @@ export default function AddInventoryScreen() {
   });
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
+  const [indications, setIndications] = useState<string[]>([]);
+  const [loadingIndications, setLoadingIndications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const medicationId = params.medicationId ?? null;
   const fromCatalog = Boolean(medicationId);
+
+  // Auto-fetch indications when a catalog item is selected (has activeIngredient)
+  useEffect(() => {
+    const ai = params.activeIngredient;
+    const pn = params.productName;
+    if (!ai && !pn) return;
+    setLoadingIndications(true);
+    supabase.functions
+      .invoke('get-indications', {
+        body: { productName: pn ?? '', activeIngredient: ai ?? '' },
+      })
+      .then(({ data }) => {
+        const result = data as { indications?: unknown } | null;
+        if (Array.isArray(result?.indications)) {
+          setIndications(result.indications as string[]);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => { setLoadingIndications(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function clearError(field: string) {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
@@ -85,6 +109,7 @@ export default function AddInventoryScreen() {
       unit,
       ...(lotNumber.trim() ? { lotNumber: lotNumber.trim() } : {}),
       ...(location.trim() ? { location: location.trim() } : {}),
+      indications,
     });
 
     if (!parseResult.success) {
@@ -118,6 +143,7 @@ export default function AddInventoryScreen() {
       unit:                d.unit,
       lot_number:          d.lotNumber ?? null,
       location:            d.location ?? null,
+      indications:         d.indications,
       added_by:            userData.user?.id ?? null,
     });
 
@@ -234,6 +260,15 @@ export default function AddInventoryScreen() {
           placeholderTextColor="#9CA59C"
         />
 
+        <Text style={styles.label}>Indicações (para que serve)</Text>
+        <Text style={styles.hint}>
+          {loadingIndications ? 'Buscando indicações automaticamente...' : 'Digite e pressione vírgula ou Enter para adicionar'}
+        </Text>
+        {loadingIndications
+          ? <ActivityIndicator color="#1A9E96" style={styles.indicationsLoader} />
+          : <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor de cabeça..." />
+        }
+
         <AnimatedPressable
           style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
           onPress={() => { void handleSave(); }}
@@ -250,28 +285,30 @@ export default function AddInventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#F6F8F5' },
-  content:         { padding: 16, paddingBottom: 40 },
-  backBtn:         { marginBottom: 12, alignSelf: 'flex-start' },
-  backText:        { color: '#1A9E96', fontSize: 15 },
-  title:           { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
-  scanRow:         { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  scanChip:        { flex: 1, borderWidth: 1, borderColor: '#1A9E96', borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
-  scanChipText:    { color: '#1A9E96', fontWeight: '600', fontSize: 13 },
-  label:           { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
-  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputSpaced:     { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError:      { borderColor: '#F0735A' },
-  fieldError:      { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
-  readOnly:        { backgroundColor: '#E8ECE5', borderRadius: 16, padding: 12, marginBottom: 16 },
-  readOnlyText:    { fontSize: 15, color: '#5A625A' },
-  row:             { flexDirection: 'row', alignItems: 'flex-start' },
-  rowField:        { flex: 1 },
-  unitChip:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive:  { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
-  unitText:        { fontSize: 13, color: '#5A625A' },
-  unitTextActive:  { color: '#FFFFFF' },
-  saveBtn:         { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
-  saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText:     { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  container:          { flex: 1, backgroundColor: '#F6F8F5' },
+  content:            { padding: 16, paddingBottom: 40 },
+  backBtn:            { marginBottom: 12, alignSelf: 'flex-start' },
+  backText:           { color: '#1A9E96', fontSize: 15 },
+  title:              { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
+  scanRow:            { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  scanChip:           { flex: 1, borderWidth: 1, borderColor: '#1A9E96', borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
+  scanChipText:       { color: '#1A9E96', fontWeight: '600', fontSize: 13 },
+  label:              { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
+  hint:               { fontSize: 12, color: '#9CA59C', marginBottom: 8, marginTop: -2 },
+  input:              { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputSpaced:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
+  inputError:         { borderColor: '#F0735A' },
+  fieldError:         { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
+  readOnly:           { backgroundColor: '#E8ECE5', borderRadius: 16, padding: 12, marginBottom: 16 },
+  readOnlyText:       { fontSize: 15, color: '#5A625A' },
+  row:                { flexDirection: 'row', alignItems: 'flex-start' },
+  rowField:           { flex: 1 },
+  unitChip:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+  unitChipActive:     { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
+  unitText:           { fontSize: 13, color: '#5A625A' },
+  unitTextActive:     { color: '#FFFFFF' },
+  indicationsLoader:  { marginBottom: 16 },
+  saveBtn:            { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
+  saveBtnDisabled:    { opacity: 0.6 },
+  saveBtnText:        { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });
