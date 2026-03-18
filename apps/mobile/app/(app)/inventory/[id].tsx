@@ -107,11 +107,12 @@ export default function InventoryItemDetailScreen() {
     setEditing(true);
 
     // Auto-fetch when item has no indications yet
-    if (existing.length === 0 && (item.active_ingredient ?? item.product_name)) {
+    const nameForLookup = item.product_name ?? item.custom_name;
+    if (existing.length === 0 && (item.active_ingredient ?? nameForLookup)) {
       setLoadingIndications(true);
       supabase.functions
         .invoke('get-indications', {
-          body: { productName: item.product_name ?? '', activeIngredient: item.active_ingredient ?? '' },
+          body: { productName: nameForLookup ?? '', activeIngredient: item.active_ingredient ?? '' },
         })
         .then(({ data, error }) => {
           if (error) { console.warn('[get-indications] edit error:', error); return; }
