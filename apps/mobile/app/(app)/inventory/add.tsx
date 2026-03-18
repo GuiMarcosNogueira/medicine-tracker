@@ -69,12 +69,13 @@ export default function AddInventoryScreen() {
   const medicationId = params.medicationId ?? null;
   const fromCatalog = Boolean(medicationId);
 
-  // Auto-fetch indications when a catalog item is selected (has activeIngredient)
+  // Auto-fetch indications when a catalog item is selected (has activeIngredient or productName)
   useEffect(() => {
     const ai = params.activeIngredient;
     const pn = params.productName;
     if (!ai && !pn) return;
     setLoadingIndications(true);
+    setIndications([]);
     supabase.functions
       .invoke('get-indications', {
         body: { productName: pn ?? '', activeIngredient: ai ?? '' },
@@ -84,16 +85,14 @@ export default function AddInventoryScreen() {
           console.warn('[get-indications] invoke error:', error);
           return;
         }
-        const result = data as { indications?: unknown; _debug?: { log?: string[] } } | null;
-        console.log('[get-indications] debug log:', result?._debug?.log?.join('\n'));
+        const result = data as { indications?: unknown } | null;
         if (Array.isArray(result?.indications)) {
           setIndications(result.indications as string[]);
         }
       })
       .catch((e: unknown) => { console.error('[get-indications] catch:', e); })
       .finally(() => { setLoadingIndications(false); });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [params.activeIngredient, params.productName]);
 
   function clearError(field: string) {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
