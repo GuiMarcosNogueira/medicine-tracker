@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,29 +36,10 @@ export default function AddInventoryScreen() {
   }>();
   const familyId = useSelector(inventoryStore.familyId);
 
-  const [customName, setCustomName] = useState(params.productName ?? '');
+  const [customName, setCustomName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
-  const [quantity, setQuantity] = useState(() => {
-    if (params.quantityVolume) {
-      // Extract numeric part from e.g. "150 ML", "30 G"
-      return params.quantityVolume.match(/^(\d+(?:[.,]\d+)?)/)?.[1] ?? '1';
-    }
-    return params.quantityCount ?? '1';
-  });
-  const [unit, setUnit] = useState<InventoryUnit>(() => {
-    if (params.quantityVolume) {
-      const u = params.quantityVolume.replace(/^\d+(?:[.,]\d+)?\s*/, '').toLowerCase();
-      if (u === 'ml' || u === 'l') return 'ml';
-      if (u === 'g') return 'g';
-      return 'ml';
-    }
-    if (params.quantityCount) {
-      const form = (params.pharmaFormFriendly ?? '').toLowerCase();
-      if (form.includes('comprimido')) return 'comprimidos';
-      if (form.includes('cápsula') || form.includes('capsula')) return 'cápsulas';
-    }
-    return 'un';
-  });
+  const [quantity, setQuantity] = useState('1');
+  const [unit, setUnit] = useState<InventoryUnit>('un');
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
   const [indications, setIndications] = useState<string[]>([]);
@@ -68,6 +49,27 @@ export default function AddInventoryScreen() {
 
   const medicationId = params.medicationId ?? null;
   const fromCatalog = Boolean(medicationId);
+
+  // Initialize form fields from params — useEffect garante que os params
+  // do Expo Router já foram populados (useState initializer pode rodar antes)
+  const paramInitialized = useRef(false);
+  useEffect(() => {
+    if (paramInitialized.current) return;
+    if (!params.productName && !params.quantityCount && !params.quantityVolume) return;
+    paramInitialized.current = true;
+    if (params.productName) setCustomName(params.productName);
+    if (params.quantityVolume) {
+      const num = params.quantityVolume.match(/^(\d+(?:[.,]\d+)?)/)?.[1];
+      if (num) setQuantity(num);
+      const u = params.quantityVolume.replace(/^\d+(?:[.,]\d+)?\s*/, '').toLowerCase();
+      setUnit(u === 'g' ? 'g' : 'ml');
+    } else if (params.quantityCount) {
+      setQuantity(params.quantityCount);
+      const form = (params.pharmaFormFriendly ?? '').toLowerCase();
+      if (form.includes('comprimido')) setUnit('comprimidos');
+      else if (form.includes('cápsula') || form.includes('capsula')) setUnit('cápsulas');
+    }
+  }, [params.productName, params.quantityCount, params.quantityVolume, params.pharmaFormFriendly]);
 
   // Auto-fetch indications when a catalog item is selected (has activeIngredient or productName)
   useEffect(() => {
