@@ -63,7 +63,16 @@ export default function AppLayout() {
             },
           }}
         />
-        <Tabs.Screen name="treatments" options={{ title: 'Tratamentos' }} />
+        <Tabs.Screen
+          name="treatments"
+          options={{ title: 'Tratamentos' }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              router.navigate('/(app)/treatments');
+            },
+          }}
+        />
         <Tabs.Screen name="settings"   options={{ title: 'Config' }} />
         <Tabs.Screen name="catalog"    options={{ href: null }} />
         <Tabs.Screen name="scanner"    options={{ href: null }} />
