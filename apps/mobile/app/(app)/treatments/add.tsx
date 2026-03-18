@@ -142,7 +142,7 @@ function MedicationSearch({
     const q = normalize(query);
     return items.filter(item =>
       normalize(getItemDisplayName(item)).includes(q) ||
-      item.indications.some(ind => normalize(ind).includes(q))
+      (item.indications ?? []).some(ind => normalize(ind).includes(q))
     ).slice(0, 6);
   }, [items, query, focused]);
 
@@ -175,9 +175,9 @@ function MedicationSearch({
                 <Text style={styles.suggestionMeta}>{item.presentation_dosage}</Text>
               ) : null}
               {!normalize(getItemDisplayName(item)).includes(normalize(query)) &&
-                item.indications.some(ind => normalize(ind).includes(normalize(query))) ? (
+                (item.indications ?? []).some(ind => normalize(ind).includes(normalize(query))) ? (
                 <Text style={styles.suggestionIndication}>
-                  {'↳ ' + item.indications.filter(ind => normalize(ind).includes(normalize(query))).join(', ')}
+                  {'↳ ' + (item.indications ?? []).filter(ind => normalize(ind).includes(normalize(query))).join(', ')}
                 </Text>
               ) : null}
             </Pressable>

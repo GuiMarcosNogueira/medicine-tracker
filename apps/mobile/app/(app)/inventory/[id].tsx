@@ -67,6 +67,7 @@ export default function InventoryItemDetailScreen() {
   const [lotNumber, setLotNumber] = useState('');
   const [location, setLocation] = useState('');
   const [indications, setIndications] = useState<string[]>([]);
+  const [loadingIndications, setLoadingIndications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteVisible, setDeleteVisible] = useState(false);
 
@@ -101,8 +102,27 @@ export default function InventoryItemDetailScreen() {
     setUnit(item.unit);
     setLotNumber(item.lot_number ?? '');
     setLocation(item.location ?? '');
-    setIndications(item.indications ?? []);
+    const existing = item.indications ?? [];
+    setIndications(existing);
     setEditing(true);
+
+    // Auto-fetch when item has no indications yet
+    if (existing.length === 0 && (item.active_ingredient ?? item.product_name)) {
+      setLoadingIndications(true);
+      supabase.functions
+        .invoke('get-indications', {
+          body: { productName: item.product_name ?? '', activeIngredient: item.active_ingredient ?? '' },
+        })
+        .then(({ data, error }) => {
+          if (error) { console.warn('[get-indications] edit error:', error); return; }
+          const result = data as { indications?: unknown } | null;
+          if (Array.isArray(result?.indications)) {
+            setIndications(result.indications as string[]);
+          }
+        })
+        .catch((e: unknown) => { console.error('[get-indications] edit catch:', e); })
+        .finally(() => { setLoadingIndications(false); });
+    }
   }
 
   async function handleSave() {
@@ -144,6 +164,12 @@ export default function InventoryItemDetailScreen() {
       return;
     }
     hapticSuccess();
+
+    // Optimistically update the store so re-entering edit mode sees the saved indications
+    const idx = inventoryStore.items.get().findIndex(i => i.id === item.id);
+    if (idx >= 0) {
+      inventoryStore.items[idx]?.indications.set(indications);
+    }
 
     // Se o usuário salvou com quantidade zero, remover item automaticamente
     if (d.quantity === 0) {
@@ -387,8 +413,11 @@ export default function InventoryItemDetailScreen() {
             <Text style={styles.label}>Local</Text>
             <TextInput style={styles.input} value={location} onChangeText={setLocation} />
 
-            <Text style={styles.label}>Indicações</Text>
-            <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor..." />
+            <Text style={styles.label}>Indicações (para que serve)</Text>
+            {loadingIndications
+              ? <ActivityIndicator color="#1A9E96" style={styles.indicationsLoader} />
+              : <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor..." />
+            }
 
             <View style={styles.editActions}>
               <AnimatedPressable style={styles.cancelBtn} onPress={() => { setEditing(false); }}>
@@ -418,11 +447,11 @@ export default function InventoryItemDetailScreen() {
               <Row label="Lote"            value={item.lot_number} />
               <Row label="Local"           value={item.location} />
             </View>
-            {item.indications.length > 0 && (
+            {(item.indications ?? []).length > 0 && (
               <View style={styles.indicationsSection}>
                 <Text style={styles.indicationsTitle}>PARA QUE SERVE</Text>
                 <View style={styles.indicationsTags}>
-                  {item.indications.map((ind, i) => (
+                  {(item.indications ?? []).map((ind, i) => (
                     <View key={`${ind}-${i}`} style={styles.indicationChip}>
                       <Text style={styles.indicationChipText}>{ind}</Text>
                     </View>
@@ -542,6 +571,7 @@ const styles = StyleSheet.create({
   saveBtn:         { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText:     { color: '#FFFFFF', fontWeight: '700' },
+  indicationsLoader: { marginBottom: 16 },
 
   // Indications (view mode)
   indicationsSection:   { marginTop: 16 },

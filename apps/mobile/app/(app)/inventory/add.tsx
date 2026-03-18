@@ -79,13 +79,18 @@ export default function AddInventoryScreen() {
       .invoke('get-indications', {
         body: { productName: pn ?? '', activeIngredient: ai ?? '' },
       })
-      .then(({ data }) => {
-        const result = data as { indications?: unknown } | null;
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('[get-indications] invoke error:', error);
+          return;
+        }
+        const result = data as { indications?: unknown; _debug?: { log?: string[] } } | null;
+        console.log('[get-indications] debug log:', result?._debug?.log?.join('\n'));
         if (Array.isArray(result?.indications)) {
           setIndications(result.indications as string[]);
         }
       })
-      .catch(() => undefined)
+      .catch((e: unknown) => { console.error('[get-indications] catch:', e); })
       .finally(() => { setLoadingIndications(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
