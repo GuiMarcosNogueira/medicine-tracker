@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSelector } from '@legendapp/state/react';
 import { authStore } from '../../src/stores/auth.store';
@@ -53,8 +53,26 @@ export default function AppLayout() {
             } : {}),
           }}
         />
-        <Tabs.Screen name="inventory"  options={{ title: 'Estoque' }} />
-        <Tabs.Screen name="treatments" options={{ title: 'Tratamentos' }} />
+        <Tabs.Screen
+          name="inventory"
+          options={{ title: 'Estoque' }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              router.navigate('/(app)/inventory');
+            },
+          }}
+        />
+        <Tabs.Screen
+          name="treatments"
+          options={{ title: 'Tratamentos' }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              router.navigate('/(app)/treatments');
+            },
+          }}
+        />
         <Tabs.Screen name="settings"   options={{ title: 'Config' }} />
         <Tabs.Screen name="catalog"    options={{ href: null }} />
         <Tabs.Screen name="scanner"    options={{ href: null }} />

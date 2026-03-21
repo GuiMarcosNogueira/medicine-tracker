@@ -25,6 +25,7 @@ export interface InventoryRow {
   unit: InventoryUnit;
   location: string | null;
   notes: string | null;
+  indications: string[];
   scanned_image_url: string | null;
   added_by: string | null;
   created_at: string;
@@ -82,6 +83,7 @@ export async function addInventoryItem(payload: {
   unit: InventoryUnit;
   lot_number: string | null;
   location: string | null;
+  indications: string[];
   added_by: string | null;
 }): Promise<{ error: string | null; queued: boolean }> {
   const { error } = await supabase.from('inventory_items').insert(payload);

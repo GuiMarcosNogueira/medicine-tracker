@@ -105,6 +105,7 @@ export default function OcrResultScreen() {
       unit:                d.unit,
       lot_number:          d.lotNumber ?? null,
       location:            null,
+      indications:         [],
       added_by:            userData.user?.id ?? null,
     });
     setSaving(false);

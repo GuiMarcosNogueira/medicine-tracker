@@ -35,6 +35,10 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
     item.active_ingredient,
   ].filter(Boolean);
 
+  const indications = item.indications ?? [];
+  const visibleTags = indications.slice(0, 3);
+  const extraCount = indications.length - visibleTags.length;
+
   const row = (
     <Pressable
       style={styles.item}
@@ -49,6 +53,20 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
         <Text style={styles.itemMeta}>
           {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
         </Text>
+        {visibleTags.length > 0 && (
+          <View style={styles.tagRow}>
+            {visibleTags.map(tag => (
+              <View key={tag} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+            {extraCount > 0 && (
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>+{extraCount}</Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -100,7 +118,8 @@ export default function InventoryListScreen() {
     return items.filter(item => {
       const name = normalize(getItemDisplayName(item));
       const sub  = normalize(item.active_ingredient ?? '');
-      return name.includes(q) || sub.includes(q);
+      const tags = (item.indications ?? []).some(ind => normalize(ind).includes(q));
+      return name.includes(q) || sub.includes(q) || tags;
     });
   }, [items, search]);
 
@@ -133,7 +152,7 @@ export default function InventoryListScreen() {
         style={styles.search}
         value={search}
         onChangeText={setSearch}
-        placeholder="Buscar por nome..."
+        placeholder="Buscar por nome, sintoma..."
         placeholderTextColor="#9CA59C"
         autoCapitalize="none"
         clearButtonMode="while-editing"
@@ -190,4 +209,7 @@ const styles = StyleSheet.create({
   empty:            { padding: 32, alignItems: 'center' },
   emptyText:        { color: '#9CA59C', fontSize: 14 },
   listEmpty:        { flex: 1 },
+  tagRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
+  tag:              { backgroundColor: '#E6F7F6', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 },
+  tagText:          { fontSize: 10, color: '#1A9E96', fontWeight: '600' },
 });
