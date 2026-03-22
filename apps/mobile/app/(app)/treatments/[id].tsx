@@ -330,10 +330,13 @@ export default function TreatmentDetailScreen() {
             </Text>
           </Pressable>
           <Pressable
-            style={[styles.actionBtnLg, styles.completeBtn]}
+            style={[styles.actionBtnLg, styles.completeBtn, treatment.status === 'completed' && styles.completeBtnDisabled]}
             onPress={() => { void handleComplete(); }}
+            disabled={treatment.status === 'completed'}
           >
-            <Text style={styles.completeBtnText}>Concluir</Text>
+            <Text style={[styles.completeBtnText, treatment.status === 'completed' && styles.completeBtnTextDisabled]}>
+              {treatment.status === 'completed' ? 'Concluído' : 'Concluir'}
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.actionBtnLg, styles.deleteBtn]}
@@ -411,8 +414,10 @@ const styles = StyleSheet.create({
   actionBtnLg:      { flex: 1, borderRadius: 12, paddingVertical: 11, alignItems: 'center' },
   pauseBtn:         { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D9CC' },
   pauseBtnText:     { color: '#5A625A', fontWeight: '700', fontSize: 13 },
-  completeBtn:      { backgroundColor: '#EEFCFB', borderWidth: 1, borderColor: '#22C9BF' },
-  completeBtnText:  { color: '#1A9E96', fontWeight: '700', fontSize: 13 },
+  completeBtn:            { backgroundColor: '#EEFCFB', borderWidth: 1, borderColor: '#22C9BF' },
+  completeBtnText:        { color: '#1A9E96', fontWeight: '700', fontSize: 13 },
+  completeBtnDisabled:    { backgroundColor: '#F0F0EE', borderColor: '#D1D9CC' },
+  completeBtnTextDisabled:{ color: '#9CA59C' },
   deleteBtn:        { backgroundColor: '#FEE9E4', borderWidth: 1, borderColor: '#F0735A' },
   deleteBtnText:    { color: '#F0735A', fontWeight: '700', fontSize: 13 },
 
