@@ -2,19 +2,35 @@ import { useEffect, useMemo } from 'react';
 import { Tabs, router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSelector } from '@legendapp/state/react';
+import { Ionicons } from '@expo/vector-icons';
 import { authStore } from '../../src/stores/auth.store';
 import { initInventory, cleanupInventory } from '../../src/stores/inventory.store';
 import { initTreatments, cleanupTreatments, treatmentStore } from '../../src/stores/treatment.store';
 import type { TreatmentRow, TreatmentDoseRow } from '../../src/stores/treatment.store';
 import { registerPushToken } from '../../src/lib/notifications';
 import { getTodaySlots } from '../../src/utils/treatment';
+import { fonts } from '../../src/lib/theme';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+function tabIcon(name: IoniconsName, nameActive: IoniconsName) {
+  return ({ color, focused }: { color: string; focused: boolean }) => (
+    <Ionicons name={focused ? nameActive : name} size={22} color={color} />
+  );
+}
 
 const TAB_OPTIONS = {
   headerShown: false,
   tabBarActiveTintColor: '#1A9E96',
   tabBarInactiveTintColor: '#9CA59C',
-  tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E0E4E0' },
-  tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const },
+  tabBarStyle: {
+    backgroundColor: '#FFFFFF',
+    borderTopColor: '#E0E4E0',
+    height: 60,
+    paddingBottom: 8,
+    paddingTop: 6,
+  },
+  tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const, fontFamily: fonts.bodySemi },
 };
 
 export default function AppLayout() {
@@ -22,7 +38,6 @@ export default function AppLayout() {
   const rawTreatments  = useSelector(treatmentStore.treatments);
   const rawTodayDoses  = useSelector(treatmentStore.todayDoses);
 
-  // Pending doses: scheduled in the past, not yet logged
   const pendingCount = useMemo(() => {
     const treatments = rawTreatments as TreatmentRow[];
     const todayDoses = rawTodayDoses as TreatmentDoseRow[];
@@ -47,6 +62,7 @@ export default function AppLayout() {
           name="index"
           options={{
             title: 'Hoje',
+            tabBarIcon: tabIcon('home-outline', 'home'),
             ...(pendingCount > 0 ? {
               tabBarBadge: pendingCount,
               tabBarBadgeStyle: { backgroundColor: '#F0735A', fontSize: 10 },
@@ -55,7 +71,10 @@ export default function AppLayout() {
         />
         <Tabs.Screen
           name="inventory"
-          options={{ title: 'Estoque' }}
+          options={{
+            title: 'Estoque',
+            tabBarIcon: tabIcon('medkit-outline', 'medkit'),
+          }}
           listeners={{
             tabPress: (e) => {
               e.preventDefault();
@@ -65,7 +84,10 @@ export default function AppLayout() {
         />
         <Tabs.Screen
           name="treatments"
-          options={{ title: 'Tratamentos' }}
+          options={{
+            title: 'Tratamentos',
+            tabBarIcon: tabIcon('pulse-outline', 'pulse'),
+          }}
           listeners={{
             tabPress: (e) => {
               e.preventDefault();
@@ -73,9 +95,15 @@ export default function AppLayout() {
             },
           }}
         />
-        <Tabs.Screen name="settings"   options={{ title: 'Config' }} />
-        <Tabs.Screen name="catalog"    options={{ href: null }} />
-        <Tabs.Screen name="scanner"    options={{ href: null }} />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Perfil',
+            tabBarIcon: tabIcon('person-circle-outline', 'person-circle'),
+          }}
+        />
+        <Tabs.Screen name="catalog" options={{ href: null }} />
+        <Tabs.Screen name="scanner" options={{ href: null }} />
       </Tabs>
     </SafeAreaProvider>
   );
