@@ -96,15 +96,20 @@ export default function TreatmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const toast = useToast();
 
-  const rawTreatments = useSelector(treatmentStore.treatments);
-  const rawTodayDoses = useSelector(treatmentStore.todayDoses);
-  const treatments = rawTreatments as TreatmentRow[];
-  const todayDoses = rawTodayDoses as TreatmentDoseRow[];
+  const rawTreatments  = useSelector(treatmentStore.treatments);
+  const rawPaused      = useSelector(treatmentStore.pausedTreatments);
+  const rawCompleted   = useSelector(treatmentStore.completedTreatments);
+  const rawTodayDoses  = useSelector(treatmentStore.todayDoses);
+  const todayDoses     = rawTodayDoses as TreatmentDoseRow[];
 
-  const treatment = useMemo(
-    () => treatments.find(t => t.id === id) ?? null,
-    [treatments, id],
-  );
+  const treatment = useMemo(() => {
+    const all = [
+      ...(rawTreatments as TreatmentRow[]),
+      ...(rawPaused as TreatmentRow[]),
+      ...(rawCompleted as TreatmentRow[]),
+    ];
+    return all.find(t => t.id === id) ?? null;
+  }, [rawTreatments, rawPaused, rawCompleted, id]);
 
   const [allDoses, setAllDoses] = useState<TreatmentDoseRow[]>([]);
   const [loadingDoses, setLoadingDoses] = useState(false);
