@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,9 @@ import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
 import { hapticSuccess, hapticError, hapticMedium } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 import { TagInput } from '../../../src/components/TagInput';
+import { treatmentStore } from '../../../src/stores/treatment.store';
+import type { TreatmentRow } from '../../../src/stores/treatment.store';
+import { formatFrequency } from '../../../src/utils/treatment';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -77,6 +80,19 @@ export default function InventoryItemDetailScreen() {
   const [consumeUnit, setConsumeUnit] = useState<'item' | 'gotas'>('item');
   const [consumePerson, setConsumePerson] = useState('');
   const [consumeLoading, setConsumeLoading] = useState(false);
+
+  // Treatments linked to this item
+  const rawActive    = useSelector(treatmentStore.treatments);
+  const rawPaused    = useSelector(treatmentStore.pausedTreatments);
+  const rawCompleted = useSelector(treatmentStore.completedTreatments);
+  const linkedTreatments = useMemo<TreatmentRow[]>(() => {
+    const all = [
+      ...(rawActive    as TreatmentRow[]),
+      ...(rawPaused    as TreatmentRow[]),
+      ...(rawCompleted as TreatmentRow[]),
+    ];
+    return all.filter(t => t.inventory_item_id === id);
+  }, [rawActive, rawPaused, rawCompleted, id]);
 
   // Consumption history
   const [consumptions, setConsumptions] = useState<ConsumptionRow[]>([]);
@@ -489,6 +505,46 @@ export default function InventoryItemDetailScreen() {
           </View>
         )}
 
+        {/* ── Tratamentos vinculados ───────────────────────────────────────── */}
+        {linkedTreatments.length > 0 && (
+          <View style={styles.treatmentsSection}>
+            <Text style={styles.treatmentsSectionTitle}>TRATAMENTOS COM ESTE MEDICAMENTO</Text>
+            <View style={styles.card}>
+              {linkedTreatments.map((t: TreatmentRow, index: number) => {
+                const badgeColor = t.status === 'active' ? '#1A9E96' : t.status === 'paused' ? '#F5A623' : '#7A827A';
+                const badgeBg    = t.status === 'active' ? '#EEFCFB' : t.status === 'paused' ? '#FFF8EC' : '#F0F0EE';
+                const badgeLabel = t.status === 'active' ? 'Ativo' : t.status === 'paused' ? 'Pausado' : 'Concluído';
+                const [sy, sm, sd] = t.start_date.split('-');
+                const startFmt = `${sd}/${sm}/${sy}`;
+                const period   = t.end_date
+                  ? (() => { const [ey, em, ed] = t.end_date.split('-'); return `${startFmt} → ${ed}/${em}/${ey}`; })()
+                  : `desde ${startFmt}`;
+                return (
+                  <Pressable
+                    key={t.id}
+                    style={[styles.treatmentLinkRow, index === 0 && { borderTopWidth: 0 }]}
+                    onPress={() => { router.push(`/(app)/treatments/${t.id}`); }}
+                  >
+                    <View style={styles.treatmentLinkContent}>
+                      <View style={styles.treatmentLinkHeader}>
+                        <Text style={styles.treatmentLinkName}>{t.person_name}</Text>
+                        <View style={[styles.treatmentLinkBadge, { backgroundColor: badgeBg }]}>
+                          <Text style={[styles.treatmentLinkBadgeText, { color: badgeColor }]}>{badgeLabel}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.treatmentLinkMeta}>
+                        {formatFrequency(t.frequency_hours)} · {t.dose_quantity} {t.dose_unit}
+                      </Text>
+                      <Text style={styles.treatmentLinkPeriod}>{period}</Text>
+                    </View>
+                    <Text style={styles.chevron}>›</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
       </ScrollView>
 
       <ConfirmDialog
@@ -580,6 +636,19 @@ const styles = StyleSheet.create({
   indicationsTags:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   indicationChip:       { backgroundColor: '#E6F5F4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 },
   indicationChipText:   { fontSize: 13, color: '#1A9E96', fontWeight: '600' },
+
+  // Linked treatments
+  treatmentsSection:       { marginTop: 24 },
+  treatmentsSectionTitle:  { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 8 },
+  treatmentLinkRow:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E8ECE5' },
+  treatmentLinkContent:    { flex: 1 },
+  treatmentLinkHeader:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  treatmentLinkName:       { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
+  treatmentLinkBadge:      { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  treatmentLinkBadgeText:  { fontSize: 11, fontWeight: '700' },
+  treatmentLinkMeta:       { fontSize: 12, color: '#5A625A', marginBottom: 1 },
+  treatmentLinkPeriod:     { fontSize: 11, color: '#9CA59C' },
+  chevron:                 { fontSize: 20, color: '#9CA59C', marginLeft: 8 },
 
   // History
   historySection:  { marginTop: 24 },
