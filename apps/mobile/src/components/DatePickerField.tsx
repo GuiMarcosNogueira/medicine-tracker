@@ -43,8 +43,8 @@ export function DatePickerField({ label, value, onChange, error }: Props) {
   const [showModal, setShowModal] = useState(false);
 
   const date = parseDateSafe(value);
-  const [viewYear, setViewYear]   = useState(date.getFullYear);
-  const [viewMonth, setViewMonth] = useState(date.getMonth);
+  const [viewYear, setViewYear]   = useState(date.getFullYear());
+  const [viewMonth, setViewMonth] = useState(date.getMonth());
 
   const displayValue = value
     ? parseDateSafe(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
