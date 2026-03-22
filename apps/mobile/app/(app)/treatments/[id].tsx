@@ -24,6 +24,7 @@ import {
 import type { DoseSlot } from '../../../src/utils/treatment';
 import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
+import { fonts } from '../../../src/lib/theme';
 
 // ─── Today dose slot row (same logic as index.tsx) ───────────────────────────
 
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
   scroll:           { flex: 1 },
   scrollContent:    { paddingHorizontal: 16, paddingBottom: 40 },
 
-  medName:          { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginTop: 4 },
+  medName:          { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginTop: 4, fontFamily: fonts.heading },
   medSub:           { fontSize: 13, color: '#1A9E96', marginTop: 2 },
   metaLine:         { fontSize: 13, color: '#5A625A', marginTop: 6 },
   notes:            { fontSize: 13, color: '#5A625A', marginTop: 6, fontStyle: 'italic' },
@@ -401,14 +402,14 @@ const styles = StyleSheet.create({
   loggedBadgeText:  { fontSize: 12, fontWeight: '700' },
 
   scheduleRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E8ECE5' },
-  scheduleDate:     { fontSize: 13, color: '#5A625A' },
+  scheduleDate:     { fontSize: 13, color: '#5A625A', fontFamily: fonts.mono },
   scheduleTime:     { fontSize: 13, fontWeight: '700', color: '#1A1D1A' },
 
   historyRow:       { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E8ECE5', gap: 10 },
   historyIcon:      { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   historyInfo:      { flex: 1 },
   historyStatus:    { fontSize: 13, fontWeight: '700', color: '#1A1D1A' },
-  historyDate:      { fontSize: 12, color: '#9CA59C', marginTop: 1 },
+  historyDate:      { fontSize: 12, color: '#9CA59C', marginTop: 1, fontFamily: fonts.mono },
 
   actions:          { flexDirection: 'row', gap: 8, marginTop: 24 },
   actionBtnLg:      { flex: 1, borderRadius: 12, paddingVertical: 11, alignItems: 'center' },

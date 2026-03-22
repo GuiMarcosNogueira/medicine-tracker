@@ -36,6 +36,7 @@ import { TagInput } from '../../../src/components/TagInput';
 import { treatmentStore } from '../../../src/stores/treatment.store';
 import type { TreatmentRow } from '../../../src/stores/treatment.store';
 import { formatFrequency } from '../../../src/utils/treatment';
+import { fonts } from '../../../src/lib/theme';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -587,7 +588,7 @@ const styles = StyleSheet.create({
   deleteBtnText:   { color: '#9CA59C', fontWeight: '600', fontSize: 12 },
 
   // Item header
-  itemName:        { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
+  itemName:        { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4, fontFamily: fonts.heading },
   itemSub:         { fontSize: 13, color: '#5A625A', marginBottom: 12 },
   statusBadge:     { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
   statusText:      { fontSize: 13, fontWeight: '700' },
@@ -656,7 +657,7 @@ const styles = StyleSheet.create({
   histSeparator:   { height: 1, backgroundColor: '#E8ECE5', marginHorizontal: 14 },
   histRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11 },
   histDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1A9E96', marginRight: 10 },
-  histDate:        { fontSize: 12, color: '#5A625A', marginRight: 8, width: 68 },
+  histDate:        { fontSize: 12, color: '#5A625A', marginRight: 8, width: 68, fontFamily: fonts.mono },
   histQty:         { fontSize: 13, fontWeight: '600', color: '#1A1D1A' },
   histPerson:      { fontSize: 12, color: '#5A625A', flex: 1 },
 });

@@ -7,6 +7,7 @@ import { authStore } from '../../../src/stores/auth.store';
 import { supabase } from '../../../src/lib/supabase';
 import { cleanupInventory, inventoryStore } from '../../../src/stores/inventory.store';
 import { AnimatedPressable, ConfirmDialog } from '@medstock/ui';
+import { fonts } from '../../../src/lib/theme';
 
 export default function SettingsScreen() {
   const session = useSelector(authStore.session);
@@ -92,7 +93,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container:       { flex: 1, backgroundColor: '#F6F8F5' },
   content:         { flex: 1, padding: 16 },
-  title:           { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 20 },
+  title:           { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 20, fontFamily: fonts.heading },
   card:            { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 12 },
   label:           { fontSize: 12, color: '#5A625A', marginBottom: 2 },
   value:           { fontSize: 15, color: '#1A1D1A', fontWeight: '500', marginBottom: 12 },

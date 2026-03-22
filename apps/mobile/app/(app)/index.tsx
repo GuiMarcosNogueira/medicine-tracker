@@ -24,6 +24,7 @@ import {
 import { getTodaySlots } from '../../src/utils/treatment';
 import { DoseSlotRow } from '../../src/components/DoseSlotRow';
 import { AnimatedPressable } from '@medstock/ui';
+import { fonts } from '../../src/lib/theme';
 
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const MONTHS   = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -228,7 +229,7 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container:             { flex: 1, backgroundColor: '#F6F8F5' },
   header:                { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  title:                 { fontSize: 26, fontWeight: '700', color: '#1A1D1A' },
+  title:                 { fontSize: 26, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
   dateLabel:             { fontSize: 13, color: '#5A625A', marginTop: 2 },
   headerActions:         { flexDirection: 'row', gap: 6, marginTop: 4 },
   actionChip:            { backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#D1D9CC' },

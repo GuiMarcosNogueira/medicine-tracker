@@ -18,6 +18,7 @@ import type { InventoryRow } from '../../../src/stores/inventory.store';
 import { treatmentStore, addTreatment } from '../../../src/stores/treatment.store';
 import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
+import { fonts } from '../../../src/lib/theme';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: '#F6F8F5' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   backText:     { fontSize: 15, color: '#1A9E96', fontWeight: '600' },
-  title:        { fontSize: 18, fontWeight: '700', color: '#1A1D1A' },
+  title:        { fontSize: 18, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
   scroll:       { flex: 1 },
   scrollContent:{ padding: 16, paddingBottom: 48 },
   // Empty state

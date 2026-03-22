@@ -18,6 +18,7 @@ import { AnimatedPressable, useToast } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 import { TagInput } from '../../../src/components/TagInput';
+import { fonts } from '../../../src/lib/theme';
 
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   content:            { padding: 16, paddingBottom: 40 },
   backBtn:            { marginBottom: 12, alignSelf: 'flex-start' },
   backText:           { color: '#1A9E96', fontSize: 15 },
-  title:              { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
+  title:              { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12, fontFamily: fonts.heading },
   scanRow:            { flexDirection: 'row', gap: 8, marginBottom: 20 },
   scanChip:           { flex: 1, borderWidth: 1, borderColor: '#1A9E96', borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
   scanChipText:       { color: '#1A9E96', fontWeight: '600', fontSize: 13 },

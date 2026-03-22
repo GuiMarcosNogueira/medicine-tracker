@@ -18,6 +18,7 @@ import { useSelector } from '@legendapp/state/react';
 import { inventoryStore, getItemDisplayName, softDeleteItem, refreshInventory } from '../../../src/stores/inventory.store';
 import { getExpiryStatus, formatExpiryDate, EXPIRY_COLORS } from '../../../src/utils/expiry';
 import { AnimatedPressable, InventoryListSkeleton, useToast } from '@medstock/ui';
+import { fonts } from '../../../src/lib/theme';
 import { hapticMedium } from '../../../src/lib/haptics';
 
 function normalize(text: string): string {
@@ -190,7 +191,7 @@ export default function InventoryListScreen() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#F6F8F5' },
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
-  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A' },
+  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
   addBtn:           { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   search:           { margin: 12, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },

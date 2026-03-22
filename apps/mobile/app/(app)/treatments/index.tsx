@@ -35,6 +35,7 @@ import {
 } from '../../../src/utils/treatment';
 import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
+import { fonts } from '../../../src/lib/theme';
 
 // suppress unused import warning — formatDoseTime is used in DoseSlotRow (shared component)
 void formatDoseTime;
@@ -604,7 +605,7 @@ export default function TreatmentsScreen() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#F6F8F5' },
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A' },
+  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
   addBtn:           { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
   addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 
