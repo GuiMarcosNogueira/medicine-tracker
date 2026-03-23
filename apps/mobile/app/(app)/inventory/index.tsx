@@ -17,15 +17,14 @@ import { router } from 'expo-router';
 import { useSelector } from '@legendapp/state/react';
 import { inventoryStore, getItemDisplayName, softDeleteItem, refreshInventory } from '../../../src/stores/inventory.store';
 import { getExpiryStatus, formatExpiryDate, EXPIRY_COLORS } from '../../../src/utils/expiry';
-import { AnimatedPressable, InventoryListSkeleton, useToast } from '@medstock/ui';
-import { fonts } from '../../../src/lib/theme';
+import { AnimatedPressable, InventoryListSkeleton, useToast, useTheme, fonts, type Theme } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
 
 function normalize(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: string) => void }) {
+function InventoryItem({ item, onDelete, theme, s }: { item: InventoryRow; onDelete: (id: string) => void; theme: Theme; s: ReturnType<typeof styles> }) {
   const swipeRef = useRef<Swipeable>(null);
   const status = getExpiryStatus(item.expiry_date);
 
@@ -42,28 +41,28 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
 
   const row = (
     <Pressable
-      style={styles.item}
+      style={s.item}
       onPress={() => { router.push(`/(app)/inventory/${item.id}`); }}
     >
-      <View style={[styles.dot, { backgroundColor: EXPIRY_COLORS[status] }]} />
-      <View style={styles.itemContent}>
-        <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
+      <View style={[s.dot, { backgroundColor: EXPIRY_COLORS[status] }]} />
+      <View style={s.itemContent}>
+        <Text style={s.itemName}>{getItemDisplayName(item)}</Text>
         {descParts.length > 0 && (
-          <Text style={styles.itemDesc} numberOfLines={1}>{descParts.join(' · ')}</Text>
+          <Text style={s.itemDesc} numberOfLines={1}>{descParts.join(' · ')}</Text>
         )}
-        <Text style={styles.itemMeta}>
+        <Text style={s.itemMeta}>
           {item.quantity} {item.unit} · Venc. {formatExpiryDate(item.expiry_date)}
         </Text>
         {visibleTags.length > 0 && (
-          <View style={styles.tagRow}>
+          <View style={s.tagRow}>
             {visibleTags.map(tag => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
+              <View key={tag} style={s.tag}>
+                <Text style={s.tagText}>{tag}</Text>
               </View>
             ))}
             {extraCount > 0 && (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>+{extraCount}</Text>
+              <View style={s.tag}>
+                <Text style={s.tagText}>+{extraCount}</Text>
               </View>
             )}
           </View>
@@ -77,10 +76,10 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
   // Use a plain visible delete button instead.
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.webRow}>
+      <View style={s.webRow}>
         {row}
-        <Pressable style={styles.webDeleteBtn} onPress={() => { onDelete(item.id); }}>
-          <Text style={styles.webDeleteText}>✕</Text>
+        <Pressable style={s.webDeleteBtn} onPress={() => { onDelete(item.id); }}>
+          <Text style={s.webDeleteText}>✕</Text>
         </Pressable>
       </View>
     );
@@ -91,10 +90,10 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
       ref={swipeRef}
       renderRightActions={() => (
         <Pressable
-          style={styles.deleteAction}
+          style={s.deleteAction}
           onPress={() => { swipeRef.current?.close(); onDelete(item.id); }}
         >
-          <Text style={styles.deleteActionText}>Remover</Text>
+          <Text style={s.deleteActionText}>Remover</Text>
         </Pressable>
       )}
       overshootRight={false}
@@ -105,6 +104,9 @@ function InventoryItem({ item, onDelete }: { item: InventoryRow; onDelete: (id: 
 }
 
 export default function InventoryListScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+
   const toast = useToast();
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
@@ -141,20 +143,20 @@ export default function InventoryListScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Estoque</Text>
-        <AnimatedPressable style={styles.addBtn} onPress={() => { router.push('/(app)/inventory/add'); }}>
-          <Text style={styles.addBtnText}>+ Adicionar</Text>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
+        <Text style={s.title}>Estoque</Text>
+        <AnimatedPressable style={s.addBtn} onPress={() => { router.push('/(app)/inventory/add'); }}>
+          <Text style={s.addBtnText}>+ Adicionar</Text>
         </AnimatedPressable>
       </View>
 
       <TextInput
-        style={styles.search}
+        style={s.search}
         value={search}
         onChangeText={setSearch}
         placeholder="Buscar por nome, sintoma..."
-        placeholderTextColor="#9CA59C"
+        placeholderTextColor={theme.textMuted}
         autoCapitalize="none"
         clearButtonMode="while-editing"
       />
@@ -165,52 +167,54 @@ export default function InventoryListScreen() {
         data={filtered}
         keyExtractor={item => item.id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1A9E96" />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} />
         }
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
-            <InventoryItem item={item} onDelete={id => { void handleDelete(id); }} />
+            <InventoryItem item={item} onDelete={id => { void handleDelete(id); }} theme={theme} s={s} />
           </Animated.View>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={s.separator} />}
         ListEmptyComponent={
           !loading ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>
+            <View style={s.empty}>
+              <Text style={s.emptyText}>
                 {search ? 'Nenhum item encontrado.' : 'Estoque vazio.'}
               </Text>
             </View>
           ) : null
         }
-        contentContainerStyle={filtered.length === 0 ? styles.listEmpty : undefined}
+        contentContainerStyle={filtered.length === 0 ? s.listEmpty : undefined}
       />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#F6F8F5' },
-  header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
-  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
-  addBtn:           { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
-  addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  search:           { margin: 12, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  item:             { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
-  dot:              { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
-  itemContent:      { flex: 1 },
-  itemName:         { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
-  itemDesc:         { fontSize: 11, color: '#1A9E96', marginTop: 2 },
-  itemMeta:         { fontSize: 12, color: '#5A625A', marginTop: 2 },
-  deleteAction:     { width: 80, backgroundColor: '#F0735A', alignItems: 'center', justifyContent: 'center' },
-  deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
-  webRow:           { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  webDeleteBtn:     { paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'center' },
-  webDeleteText:    { color: '#F0735A', fontWeight: '700', fontSize: 16 },
-  separator:        { height: 1, backgroundColor: '#E8ECE5' },
-  empty:            { padding: 32, alignItems: 'center' },
-  emptyText:        { color: '#9CA59C', fontSize: 14 },
-  listEmpty:        { flex: 1 },
-  tagRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
-  tag:              { backgroundColor: '#E6F7F6', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 },
-  tagText:          { fontSize: 10, color: '#1A9E96', fontWeight: '600' },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:        { flex: 1, backgroundColor: t.bg },
+    header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
+    title:            { fontSize: 22, fontWeight: '700', color: t.text, fontFamily: fonts.heading },
+    addBtn:           { backgroundColor: t.primary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
+    addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+    search:           { margin: 12, borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    item:             { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: t.surface },
+    dot:              { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
+    itemContent:      { flex: 1 },
+    itemName:         { fontSize: 14, fontWeight: '600', color: t.text },
+    itemDesc:         { fontSize: 11, color: t.primary, marginTop: 2 },
+    itemMeta:         { fontSize: 12, color: t.textSub, marginTop: 2 },
+    deleteAction:     { width: 80, backgroundColor: t.coral, alignItems: 'center', justifyContent: 'center' },
+    deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+    webRow:           { flexDirection: 'row', alignItems: 'center', backgroundColor: t.surface },
+    webDeleteBtn:     { paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'center' },
+    webDeleteText:    { color: t.coral, fontWeight: '700', fontSize: 16 },
+    separator:        { height: 1, backgroundColor: t.surfaceAlt },
+    empty:            { padding: 32, alignItems: 'center' },
+    emptyText:        { color: t.textMuted, fontSize: 14 },
+    listEmpty:        { flex: 1 },
+    tagRow:           { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
+    tag:              { backgroundColor: t.primaryBg, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 },
+    tagText:          { fontSize: 10, color: t.primary, fontWeight: '600' },
+  });
+}

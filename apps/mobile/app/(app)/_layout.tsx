@@ -3,13 +3,13 @@ import { Tabs, router } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSelector } from '@legendapp/state/react';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme, fonts } from '@medstock/ui';
 import { authStore } from '../../src/stores/auth.store';
 import { initInventory, cleanupInventory } from '../../src/stores/inventory.store';
 import { initTreatments, cleanupTreatments, treatmentStore } from '../../src/stores/treatment.store';
 import type { TreatmentRow, TreatmentDoseRow } from '../../src/stores/treatment.store';
 import { registerPushToken } from '../../src/lib/notifications';
 import { getTodaySlots } from '../../src/utils/treatment';
-import { fonts } from '../../src/lib/theme';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -19,24 +19,25 @@ function tabIcon(name: IoniconsName, nameActive: IoniconsName) {
   );
 }
 
-const TAB_OPTIONS = {
-  headerShown: false,
-  tabBarActiveTintColor: '#1A9E96',
-  tabBarInactiveTintColor: '#9CA59C',
-  tabBarStyle: {
-    backgroundColor: '#FFFFFF',
-    borderTopColor: '#E0E4E0',
-    height: 60,
-    paddingBottom: 8,
-    paddingTop: 6,
-  },
-  tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const, fontFamily: fonts.bodySemi },
-};
-
 export default function AppLayout() {
+  const theme = useTheme();
   const session        = useSelector(authStore.session);
   const rawTreatments  = useSelector(treatmentStore.treatments);
   const rawTodayDoses  = useSelector(treatmentStore.todayDoses);
+
+  const tabOptions = useMemo(() => ({
+    headerShown: false,
+    tabBarActiveTintColor:   theme.primary,
+    tabBarInactiveTintColor: theme.textMuted,
+    tabBarStyle: {
+      backgroundColor: theme.surface,
+      borderTopColor:  theme.border,
+      height: 60,
+      paddingBottom: 8,
+      paddingTop: 6,
+    },
+    tabBarLabelStyle: { fontSize: 11, fontWeight: '600' as const, fontFamily: fonts.bodySemi },
+  }), [theme]);
 
   const pendingCount = useMemo(() => {
     const treatments = rawTreatments as TreatmentRow[];
@@ -57,7 +58,7 @@ export default function AppLayout() {
 
   return (
     <SafeAreaProvider>
-      <Tabs screenOptions={TAB_OPTIONS}>
+      <Tabs screenOptions={tabOptions}>
         <Tabs.Screen
           name="index"
           options={{

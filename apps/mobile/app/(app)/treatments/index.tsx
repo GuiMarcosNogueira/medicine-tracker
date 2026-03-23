@@ -33,16 +33,12 @@ import {
   getTodaySlots,
   getAdherenceStats,
 } from '../../../src/utils/treatment';
-import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
+import { AnimatedPressable, ConfirmDialog, useToast, useTheme, fonts, type Theme } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
-import { fonts } from '../../../src/lib/theme';
 
-// suppress unused import warning — formatDoseTime is used in DoseSlotRow (shared component)
 void formatDoseTime;
 
 type Tab = 'active' | 'paused' | 'completed' | 'adherence';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayISO(): string {
   const now = new Date();
@@ -57,7 +53,7 @@ function formatDatePT(dateStr: string): string {
   return `${d}/${m}/${y}`;
 }
 
-// ─── Active treatment row (unchanged) ─────────────────────────────────────────
+// ─── Active treatment row ──────────────────────────────────────────────────────
 
 function ActiveTreatmentRow({
   treatment,
@@ -68,6 +64,8 @@ function ActiveTreatmentRow({
   todayDoses: TreatmentDoseRow[];
   onDelete: (id: string) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const swipeRef = useRef<Swipeable>(null);
   const rem = daysRemaining(treatment);
   const isWeb = Platform.OS === 'web';
@@ -75,30 +73,30 @@ function ActiveTreatmentRow({
   const todayProgress = useMemo(() => {
     const slots = getTodaySlots([treatment], todayDoses);
     if (slots.length === 0) return null;
-    const taken = slots.filter(s => s.logged?.status === 'taken').length;
+    const taken = slots.filter(sl => sl.logged?.status === 'taken').length;
     return { taken, total: slots.length };
   }, [treatment, todayDoses]);
 
   const row = (
     <Pressable
-      style={styles.treatmentItem}
+      style={s.treatmentItem}
       onPress={() => { router.push(`/(app)/treatments/${treatment.id}`); }}
     >
-      <View style={styles.treatmentContent}>
-        <Text style={styles.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
-        <View style={styles.treatmentMetaRow}>
-          <Text style={styles.treatmentMeta}>
+      <View style={s.treatmentContent}>
+        <Text style={s.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
+        <View style={s.treatmentMetaRow}>
+          <Text style={s.treatmentMeta}>
             {treatment.person_name} · {formatFrequency(treatment.frequency_hours)}
             {rem !== null ? ` · ${rem >= 0 ? `${rem}d restantes` : 'concluído'}` : ''}
           </Text>
           {todayProgress !== null && (
             <View style={[
-              styles.progressPill,
-              { backgroundColor: todayProgress.taken === todayProgress.total ? '#EEFCFB' : '#FFF8EC' },
+              s.progressPill,
+              { backgroundColor: todayProgress.taken === todayProgress.total ? theme.primaryLight : theme.amberBg },
             ]}>
               <Text style={[
-                styles.progressPillText,
-                { color: todayProgress.taken === todayProgress.total ? '#1A9E96' : '#F5A623' },
+                s.progressPillText,
+                { color: todayProgress.taken === todayProgress.total ? theme.primary : theme.amber },
               ]}>
                 {todayProgress.taken}/{todayProgress.total} hoje
               </Text>
@@ -106,16 +104,16 @@ function ActiveTreatmentRow({
           )}
         </View>
       </View>
-      {!isWeb && <Text style={styles.chevron}>›</Text>}
+      {!isWeb && <Text style={s.chevron}>›</Text>}
     </Pressable>
   );
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.webRow}>
+      <View style={s.webRow}>
         {row}
-        <Pressable style={styles.webDeleteBtn} onPress={() => { onDelete(treatment.id); }}>
-          <Text style={styles.webDeleteText}>✕</Text>
+        <Pressable style={s.webDeleteBtn} onPress={() => { onDelete(treatment.id); }}>
+          <Text style={s.webDeleteText}>✕</Text>
         </Pressable>
       </View>
     );
@@ -126,10 +124,10 @@ function ActiveTreatmentRow({
       ref={swipeRef}
       renderRightActions={() => (
         <Pressable
-          style={styles.deleteAction}
+          style={s.deleteAction}
           onPress={() => { swipeRef.current?.close(); onDelete(treatment.id); }}
         >
-          <Text style={styles.deleteActionText}>Remover</Text>
+          <Text style={s.deleteActionText}>Remover</Text>
         </Pressable>
       )}
       overshootRight={false}
@@ -139,7 +137,7 @@ function ActiveTreatmentRow({
   );
 }
 
-// ─── Paused treatment row ─────────────────────────────────────────────────────
+// ─── Paused treatment row ──────────────────────────────────────────────────────
 
 function PausedTreatmentRow({
   treatment,
@@ -148,33 +146,35 @@ function PausedTreatmentRow({
   treatment: TreatmentRow;
   onResume: (id: string) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   return (
     <Pressable
-      style={styles.treatmentItem}
+      style={s.treatmentItem}
       onPress={() => { router.push(`/(app)/treatments/${treatment.id}`); }}
     >
-      <View style={styles.treatmentContent}>
-        <Text style={styles.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
-        <View style={styles.treatmentMetaRow}>
-          <Text style={styles.treatmentMeta}>
+      <View style={s.treatmentContent}>
+        <Text style={s.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
+        <View style={s.treatmentMetaRow}>
+          <Text style={s.treatmentMeta}>
             {treatment.person_name} · {formatFrequency(treatment.frequency_hours)}
           </Text>
-          <View style={styles.badgeAmber}>
-            <Text style={styles.badgeAmberText}>Pausado</Text>
+          <View style={s.badgeAmber}>
+            <Text style={s.badgeAmberText}>Pausado</Text>
           </View>
         </View>
       </View>
       <Pressable
-        style={styles.resumeBtn}
+        style={s.resumeBtn}
         onPress={(e) => { e.stopPropagation?.(); onResume(treatment.id); }}
       >
-        <Text style={styles.resumeBtnText}>Retomar</Text>
+        <Text style={s.resumeBtnText}>Retomar</Text>
       </Pressable>
     </Pressable>
   );
 }
 
-// ─── Completed treatment row ──────────────────────────────────────────────────
+// ─── Completed treatment row ───────────────────────────────────────────────────
 
 function CompletedTreatmentRow({
   treatment,
@@ -185,6 +185,8 @@ function CompletedTreatmentRow({
   onReactivate: (t: TreatmentRow) => void;
   onDelete: (id: string) => void;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const swipeRef = useRef<Swipeable>(null);
   const period = treatment.end_date
     ? `${formatDatePT(treatment.start_date)} → ${formatDatePT(treatment.end_date)}`
@@ -192,28 +194,28 @@ function CompletedTreatmentRow({
 
   const row = (
     <Pressable
-      style={styles.treatmentItem}
+      style={s.treatmentItem}
       onPress={() => { router.push(`/(app)/treatments/${treatment.id}`); }}
     >
-      <View style={styles.treatmentContent}>
-        <Text style={styles.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
-        <View style={styles.treatmentMetaRow}>
-          <Text style={styles.treatmentMeta}>{treatment.person_name} · {period}</Text>
-          <View style={styles.badgeGray}>
-            <Text style={styles.badgeGrayText}>Concluído</Text>
+      <View style={s.treatmentContent}>
+        <Text style={s.treatmentName} numberOfLines={1}>{treatment.medication_name}</Text>
+        <View style={s.treatmentMetaRow}>
+          <Text style={s.treatmentMeta}>{treatment.person_name} · {period}</Text>
+          <View style={s.badgeGray}>
+            <Text style={s.badgeGrayText}>Concluído</Text>
           </View>
         </View>
       </View>
-      <View style={styles.completedActions}>
+      <View style={s.completedActions}>
         <Pressable
-          style={styles.reactivateBtn}
+          style={s.reactivateBtn}
           onPress={(e) => { e.stopPropagation?.(); onReactivate(treatment); }}
         >
-          <Text style={styles.reactivateBtnText}>Reativar</Text>
+          <Text style={s.reactivateBtnText}>Reativar</Text>
         </Pressable>
         {Platform.OS === 'web' && (
-          <Pressable style={styles.webDeleteBtn} onPress={() => { onDelete(treatment.id); }}>
-            <Text style={styles.webDeleteText}>✕</Text>
+          <Pressable style={s.webDeleteBtn} onPress={() => { onDelete(treatment.id); }}>
+            <Text style={s.webDeleteText}>✕</Text>
           </Pressable>
         )}
       </View>
@@ -227,10 +229,10 @@ function CompletedTreatmentRow({
       ref={swipeRef}
       renderRightActions={() => (
         <Pressable
-          style={styles.deleteAction}
+          style={s.deleteAction}
           onPress={() => { swipeRef.current?.close(); onDelete(treatment.id); }}
         >
-          <Text style={styles.deleteActionText}>Remover</Text>
+          <Text style={s.deleteActionText}>Remover</Text>
         </Pressable>
       )}
       overshootRight={false}
@@ -240,7 +242,7 @@ function CompletedTreatmentRow({
   );
 }
 
-// ─── Adherence tab ────────────────────────────────────────────────────────────
+// ─── Adherence tab ─────────────────────────────────────────────────────────────
 
 function AdherenceTab({
   treatments,
@@ -255,6 +257,9 @@ function AdherenceTab({
   adherenceDoses: Record<string, TreatmentDoseRow[]>;
   adherenceLoading: boolean;
 }) {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+
   const allTreatments = useMemo(
     () => [...treatments, ...pausedTreatments, ...completedTreatments],
     [treatments, pausedTreatments, completedTreatments],
@@ -283,58 +288,55 @@ function AdherenceTab({
 
   if (adherenceLoading) {
     return (
-      <View style={styles.loadingCenter}>
-        <ActivityIndicator color="#1A9E96" size="large" />
+      <View style={s.loadingCenter}>
+        <ActivityIndicator color={theme.primary} size="large" />
       </View>
     );
   }
 
   if (perStats.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>Nenhum dado de aderência disponível.</Text>
+      <View style={s.empty}>
+        <Text style={s.emptyText}>Nenhum dado de aderência disponível.</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.adherenceContainer}>
-      {/* Overall card */}
-      <View style={styles.adherenceOverallCard}>
-        <Text style={styles.adherenceOverallPct}>{overall.pct}%</Text>
-        <Text style={styles.adherenceOverallLabel}>aderência geral</Text>
-        <Text style={styles.adherenceOverallSub}>
+    <ScrollView contentContainerStyle={s.adherenceContainer}>
+      <View style={s.adherenceOverallCard}>
+        <Text style={s.adherenceOverallPct}>{overall.pct}%</Text>
+        <Text style={s.adherenceOverallLabel}>aderência geral</Text>
+        <Text style={s.adherenceOverallSub}>
           {allTreatments.length} tratamento{allTreatments.length !== 1 ? 's' : ''} · {overall.totalTaken} de {overall.totalDoses} doses
         </Text>
       </View>
 
-      {/* Per-treatment cards */}
       {perStats.map(({ treatment, stats }) => (
         <Pressable
           key={treatment.id}
-          style={styles.adherenceCard}
+          style={s.adherenceCard}
           onPress={() => { router.push(`/(app)/treatments/${treatment.id}`); }}
         >
-          <View style={styles.adherenceCardHeader}>
-            <Text style={styles.adherenceCardName} numberOfLines={1}>{treatment.medication_name}</Text>
+          <View style={s.adherenceCardHeader}>
+            <Text style={s.adherenceCardName} numberOfLines={1}>{treatment.medication_name}</Text>
             <Text style={[
-              styles.adherenceCardPct,
-              { color: stats.pct >= 80 ? '#1A9E96' : stats.pct >= 50 ? '#F5A623' : '#F0735A' },
+              s.adherenceCardPct,
+              { color: stats.pct >= 80 ? theme.primary : stats.pct >= 50 ? theme.amber : theme.coral },
             ]}>
               {stats.pct}%
             </Text>
           </View>
-          {/* Progress bar */}
-          <View style={styles.progressBarBg}>
+          <View style={s.progressBarBg}>
             <View style={[
-              styles.progressBarFill,
+              s.progressBarFill,
               {
                 width: `${stats.pct}%` as `${number}%`,
-                backgroundColor: stats.pct >= 80 ? '#1A9E96' : stats.pct >= 50 ? '#F5A623' : '#F0735A',
+                backgroundColor: stats.pct >= 80 ? theme.primary : stats.pct >= 50 ? theme.amber : theme.coral,
               },
             ]} />
           </View>
-          <Text style={styles.adherenceCardSub}>
+          <Text style={s.adherenceCardSub}>
             {treatment.person_name} · {stats.taken}/{stats.total} doses ·{' '}
             {treatment.end_date
               ? `${formatDatePT(treatment.start_date)} → ${formatDatePT(treatment.end_date)}`
@@ -346,9 +348,11 @@ function AdherenceTab({
   );
 }
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
+// ─── Main screen ───────────────────────────────────────────────────────────────
 
 export default function TreatmentsScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const toast               = useToast();
   const rawTreatments       = useSelector(treatmentStore.treatments);
   const rawPaused           = useSelector(treatmentStore.pausedTreatments);
@@ -359,23 +363,18 @@ export default function TreatmentsScreen() {
   const loading             = useSelector(treatmentStore.loading);
   const familyId            = useSelector(treatmentStore.familyId);
 
-  const treatments        = rawTreatments as TreatmentRow[];
-  const pausedTreatments  = rawPaused as TreatmentRow[];
+  const treatments          = rawTreatments as TreatmentRow[];
+  const pausedTreatments    = rawPaused as TreatmentRow[];
   const completedTreatments = rawCompleted as TreatmentRow[];
-  const todayDoses        = rawTodayDoses as TreatmentDoseRow[];
-  const adherenceDoses    = rawAdherenceDoses as Record<string, TreatmentDoseRow[]>;
+  const todayDoses          = rawTodayDoses as TreatmentDoseRow[];
+  const adherenceDoses      = rawAdherenceDoses as Record<string, TreatmentDoseRow[]>;
 
   const [tab, setTab]               = useState<Tab>('active');
   const [refreshing, setRefreshing] = useState(false);
-
-  // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
-  // Reactivate dialog
   const [reactivateTarget, setReactivateTarget] = useState<TreatmentRow | null>(null);
   const [reactivateDate, setReactivateDate]     = useState('');
 
-  // Load adherence data when entering completed or adherence tab (lazy, once)
   const adherenceLoadedRef = useRef(false);
   useEffect(() => {
     if ((tab === 'completed' || tab === 'adherence') && !adherenceLoadedRef.current) {
@@ -387,7 +386,7 @@ export default function TreatmentsScreen() {
   const handleRefresh = useCallback(() => {
     if (!familyId) return;
     setRefreshing(true);
-    adherenceLoadedRef.current = false; // force reload on manual refresh
+    adherenceLoadedRef.current = false;
     void refreshTreatments(familyId).finally(() => { setRefreshing(false); });
   }, [familyId]);
 
@@ -436,41 +435,38 @@ export default function TreatmentsScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Tratamentos</Text>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
+        <Text style={s.title}>Tratamentos</Text>
         <AnimatedPressable
-          style={styles.addBtn}
+          style={s.addBtn}
           onPress={() => { router.push('/(app)/treatments/add'); }}
         >
-          <Text style={styles.addBtnText}>+ Novo</Text>
+          <Text style={s.addBtnText}>+ Novo</Text>
         </AnimatedPressable>
       </View>
 
-      {/* Tab bar */}
-      <View style={styles.tabBar}>
+      <View style={s.tabBar}>
         {TAB_LABELS.map(({ key, label }) => (
           <Pressable
             key={key}
-            style={styles.tabItem}
+            style={s.tabItem}
             onPress={() => { setTab(key); }}
           >
-            <Text style={[styles.tabLabel, tab === key && styles.tabLabelActive]}>
+            <Text style={[s.tabLabel, tab === key && s.tabLabelActive]}>
               {label}
             </Text>
-            {tab === key && <View style={styles.tabUnderline} />}
+            {tab === key && <View style={s.tabUnderline} />}
           </Pressable>
         ))}
       </View>
 
-      {/* Tab content */}
       {tab === 'active' && (
         <FlatList
           data={treatments}
           keyExtractor={t => t.id}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1A9E96" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} />
           }
           renderItem={({ item, index }) => (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
@@ -481,15 +477,15 @@ export default function TreatmentsScreen() {
               />
             </Animated.View>
           )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={s.separator} />}
           ListEmptyComponent={
             !loading ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyText}>Nenhum tratamento ativo.</Text>
+              <View style={s.empty}>
+                <Text style={s.emptyText}>Nenhum tratamento ativo.</Text>
               </View>
             ) : null
           }
-          contentContainerStyle={treatments.length === 0 ? styles.listEmpty : undefined}
+          contentContainerStyle={treatments.length === 0 ? s.listEmpty : undefined}
         />
       )}
 
@@ -498,7 +494,7 @@ export default function TreatmentsScreen() {
           data={pausedTreatments}
           keyExtractor={t => t.id}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1A9E96" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} />
           }
           renderItem={({ item, index }) => (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
@@ -508,13 +504,13 @@ export default function TreatmentsScreen() {
               />
             </Animated.View>
           )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={s.separator} />}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum tratamento pausado.</Text>
+            <View style={s.empty}>
+              <Text style={s.emptyText}>Nenhum tratamento pausado.</Text>
             </View>
           }
-          contentContainerStyle={pausedTreatments.length === 0 ? styles.listEmpty : undefined}
+          contentContainerStyle={pausedTreatments.length === 0 ? s.listEmpty : undefined}
         />
       )}
 
@@ -523,7 +519,7 @@ export default function TreatmentsScreen() {
           data={completedTreatments}
           keyExtractor={t => t.id}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1A9E96" />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} />
           }
           renderItem={({ item, index }) => (
             <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
@@ -534,13 +530,13 @@ export default function TreatmentsScreen() {
               />
             </Animated.View>
           )}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => <View style={s.separator} />}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum tratamento concluído.</Text>
+            <View style={s.empty}>
+              <Text style={s.emptyText}>Nenhum tratamento concluído.</Text>
             </View>
           }
-          contentContainerStyle={completedTreatments.length === 0 ? styles.listEmpty : undefined}
+          contentContainerStyle={completedTreatments.length === 0 ? s.listEmpty : undefined}
         />
       )}
 
@@ -554,7 +550,6 @@ export default function TreatmentsScreen() {
         />
       )}
 
-      {/* Delete confirmation */}
       <ConfirmDialog
         visible={deleteTarget !== null}
         title="Remover tratamento"
@@ -565,32 +560,32 @@ export default function TreatmentsScreen() {
         onCancel={() => { setDeleteTarget(null); }}
       />
 
-      {/* Reactivate dialog */}
       <Modal transparent animationType="fade" visible={reactivateTarget !== null} onRequestClose={() => { setReactivateTarget(null); }}>
-        <View style={styles.modalBackdrop}>
+        <View style={s.modalBackdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => { setReactivateTarget(null); }} />
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Reativar {reactivateTarget?.medication_name}</Text>
-            <Text style={styles.modalLabel}>Nova data de início</Text>
-            <View style={styles.dateRow}>
+          <View style={s.modalCard}>
+            <Text style={s.modalTitle}>Reativar {reactivateTarget?.medication_name}</Text>
+            <Text style={s.modalLabel}>Nova data de início</Text>
+            <View style={s.dateRow}>
               <TextInput
-                style={styles.dateInput}
+                style={s.dateInput}
                 value={reactivateDate}
                 onChangeText={setReactivateDate}
                 placeholder="AAAA-MM-DD"
                 keyboardType="numeric"
                 maxLength={10}
+                placeholderTextColor={theme.textMuted}
               />
-              <Pressable style={styles.todayBtn} onPress={() => { setReactivateDate(todayISO()); }}>
-                <Text style={styles.todayBtnText}>Hoje</Text>
+              <Pressable style={s.todayBtn} onPress={() => { setReactivateDate(todayISO()); }}>
+                <Text style={s.todayBtnText}>Hoje</Text>
               </Pressable>
             </View>
-            <View style={styles.modalActions}>
-              <Pressable style={styles.modalCancelBtn} onPress={() => { setReactivateTarget(null); }}>
-                <Text style={styles.modalCancelText}>Cancelar</Text>
+            <View style={s.modalActions}>
+              <Pressable style={s.modalCancelBtn} onPress={() => { setReactivateTarget(null); }}>
+                <Text style={s.modalCancelText}>Cancelar</Text>
               </Pressable>
-              <Pressable style={styles.modalConfirmBtn} onPress={() => { void handleReactivate(); }}>
-                <Text style={styles.modalConfirmText}>Confirmar</Text>
+              <Pressable style={s.modalConfirmBtn} onPress={() => { void handleReactivate(); }}>
+                <Text style={s.modalConfirmText}>Confirmar</Text>
               </Pressable>
             </View>
           </View>
@@ -600,103 +595,94 @@ export default function TreatmentsScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:        { flex: 1, backgroundColor: t.bg },
+    header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+    title:            { fontSize: 22, fontWeight: '700', color: t.text, fontFamily: fonts.heading },
+    addBtn:           { backgroundColor: t.primary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
+    addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 
-const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#F6F8F5' },
-  header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  title:            { fontSize: 22, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
-  addBtn:           { backgroundColor: '#1A9E96', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 7 },
-  addBtnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+    tabBar:           { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: t.surfaceAlt, backgroundColor: t.surface },
+    tabItem:          { flex: 1, alignItems: 'center', paddingVertical: 10 },
+    tabLabel:         { fontSize: 13, fontWeight: '600', color: t.textMuted },
+    tabLabelActive:   { color: t.primary },
+    tabUnderline:     { position: 'absolute', bottom: 0, left: 8, right: 8, height: 2, backgroundColor: t.primary, borderRadius: 1 },
 
-  // Tab bar
-  tabBar:           { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E8ECE5', backgroundColor: '#FFFFFF' },
-  tabItem:          { flex: 1, alignItems: 'center', paddingVertical: 10 },
-  tabLabel:         { fontSize: 13, fontWeight: '600', color: '#9CA59C' },
-  tabLabelActive:   { color: '#1A9E96' },
-  tabUnderline:     { position: 'absolute', bottom: 0, left: 8, right: 8, height: 2, backgroundColor: '#1A9E96', borderRadius: 1 },
+    treatmentItem:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: t.surface },
+    treatmentContent: { flex: 1 },
+    treatmentName:    { fontSize: 14, fontWeight: '600', color: t.text },
+    treatmentMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' },
+    treatmentMeta:    { fontSize: 12, color: t.textSub },
+    chevron:          { fontSize: 20, color: t.textMuted, marginLeft: 8 },
 
-  // Treatment list rows
-  treatmentItem:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
-  treatmentContent: { flex: 1 },
-  treatmentName:    { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
-  treatmentMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' },
-  treatmentMeta:    { fontSize: 12, color: '#5A625A' },
-  chevron:          { fontSize: 20, color: '#9CA59C', marginLeft: 8 },
+    progressPill:     { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+    progressPillText: { fontSize: 11, fontWeight: '700' },
 
-  progressPill:     { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  progressPillText: { fontSize: 11, fontWeight: '700' },
+    badgeAmber:       { backgroundColor: t.amberBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+    badgeAmberText:   { fontSize: 11, fontWeight: '700', color: t.amber },
+    badgeGray:        { backgroundColor: t.surfaceAlt, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+    badgeGrayText:    { fontSize: 11, fontWeight: '700', color: t.textSub },
 
-  // Badges
-  badgeAmber:       { backgroundColor: '#FFF8EC', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  badgeAmberText:   { fontSize: 11, fontWeight: '700', color: '#F5A623' },
-  badgeGray:        { backgroundColor: '#F0F0EE', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  badgeGrayText:    { fontSize: 11, fontWeight: '700', color: '#7A827A' },
+    resumeBtn:        { backgroundColor: t.primary, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
+    resumeBtnText:    { color: '#FFFFFF', fontWeight: '700', fontSize: 12 },
 
-  // Paused row
-  resumeBtn:        { backgroundColor: '#1A9E96', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
-  resumeBtnText:    { color: '#FFFFFF', fontWeight: '700', fontSize: 12 },
+    completedActions: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    reactivateBtn:    { backgroundColor: t.primaryLight, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
+    reactivateBtnText:{ color: t.primary, fontWeight: '700', fontSize: 12 },
 
-  // Completed row
-  completedActions: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  reactivateBtn:    { backgroundColor: '#EEFCFB', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
-  reactivateBtnText:{ color: '#1A9E96', fontWeight: '700', fontSize: 12 },
+    webRow:           { flexDirection: 'row', alignItems: 'center', backgroundColor: t.surface },
+    webDeleteBtn:     { paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'center' },
+    webDeleteText:    { color: t.coral, fontWeight: '700', fontSize: 16 },
 
-  // Web delete
-  webRow:           { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  webDeleteBtn:     { paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'center' },
-  webDeleteText:    { color: '#F0735A', fontWeight: '700', fontSize: 16 },
+    deleteAction:     { width: 80, backgroundColor: t.coral, alignItems: 'center', justifyContent: 'center' },
+    deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
 
-  // Swipe delete
-  deleteAction:     { width: 80, backgroundColor: '#F0735A', alignItems: 'center', justifyContent: 'center' },
-  deleteActionText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+    separator:        { height: 1, backgroundColor: t.surfaceAlt },
+    empty:            { padding: 32, alignItems: 'center' },
+    emptyText:        { color: t.textMuted, fontSize: 14 },
+    listEmpty:        { flex: 1 },
+    loadingCenter:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  separator:        { height: 1, backgroundColor: '#E8ECE5' },
-  empty:            { padding: 32, alignItems: 'center' },
-  emptyText:        { color: '#9CA59C', fontSize: 14 },
-  listEmpty:        { flex: 1 },
-  loadingCenter:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    adherenceContainer: { padding: 16, gap: 12 },
+    adherenceOverallCard: {
+      backgroundColor: t.primary,
+      borderRadius: 20,
+      padding: 24,
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    adherenceOverallPct:   { fontSize: 48, fontWeight: '800', color: '#FFFFFF', letterSpacing: -2 },
+    adherenceOverallLabel: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+    adherenceOverallSub:   { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+    adherenceCard: {
+      backgroundColor: t.surface,
+      borderRadius: 16,
+      padding: 14,
+      shadowColor: '#000',
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    adherenceCardHeader:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    adherenceCardName:    { fontSize: 14, fontWeight: '600', color: t.text, flex: 1 },
+    adherenceCardPct:     { fontSize: 16, fontWeight: '800', marginLeft: 8 },
+    progressBarBg:        { height: 6, backgroundColor: t.surfaceAlt, borderRadius: 3, overflow: 'hidden', marginBottom: 6 },
+    progressBarFill:      { height: 6, borderRadius: 3 },
+    adherenceCardSub:     { fontSize: 11, color: t.textMuted },
 
-  // Adherence tab
-  adherenceContainer: { padding: 16, gap: 12 },
-  adherenceOverallCard: {
-    backgroundColor: '#1A9E96',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  adherenceOverallPct:   { fontSize: 48, fontWeight: '800', color: '#FFFFFF', letterSpacing: -2 },
-  adherenceOverallLabel: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
-  adherenceOverallSub:   { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
-  adherenceCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  adherenceCardHeader:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  adherenceCardName:    { fontSize: 14, fontWeight: '600', color: '#1A1D1A', flex: 1 },
-  adherenceCardPct:     { fontSize: 16, fontWeight: '800', marginLeft: 8 },
-  progressBarBg:        { height: 6, backgroundColor: '#E8ECE5', borderRadius: 3, overflow: 'hidden', marginBottom: 6 },
-  progressBarFill:      { height: 6, borderRadius: 3 },
-  adherenceCardSub:     { fontSize: 11, color: '#9CA59C' },
-
-  // Reactivate modal
-  modalBackdrop:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 32 },
-  modalCard:        { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, width: '100%', maxWidth: 360, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 12 },
-  modalTitle:       { fontSize: 18, fontWeight: '700', color: '#1A1D1A', marginBottom: 16 },
-  modalLabel:       { fontSize: 13, fontWeight: '600', color: '#5A625A', marginBottom: 8 },
-  dateRow:          { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  dateInput:        { flex: 1, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: '#1A1D1A', backgroundColor: '#F6F8F5' },
-  todayBtn:         { backgroundColor: '#E8ECE5', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center' },
-  todayBtnText:     { fontSize: 13, fontWeight: '600', color: '#5A625A' },
-  modalActions:     { flexDirection: 'row', gap: 10 },
-  modalCancelBtn:   { flex: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC', backgroundColor: '#F6F8F5' },
-  modalCancelText:  { color: '#5A625A', fontWeight: '600', fontSize: 15 },
-  modalConfirmBtn:  { flex: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center', backgroundColor: '#1A9E96' },
-  modalConfirmText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-});
+    modalBackdrop:    { flex: 1, backgroundColor: t.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 32 },
+    modalCard:        { backgroundColor: t.surface, borderRadius: 24, padding: 24, width: '100%', maxWidth: 360, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 12 },
+    modalTitle:       { fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 16 },
+    modalLabel:       { fontSize: 13, fontWeight: '600', color: t.textSub, marginBottom: 8 },
+    dateRow:          { flexDirection: 'row', gap: 8, marginBottom: 20 },
+    dateInput:        { flex: 1, borderWidth: 1, borderColor: t.borderSub, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 15, color: t.text, backgroundColor: t.bg },
+    todayBtn:         { backgroundColor: t.surfaceAlt, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, justifyContent: 'center' },
+    todayBtnText:     { fontSize: 13, fontWeight: '600', color: t.textSub },
+    modalActions:     { flexDirection: 'row', gap: 10 },
+    modalCancelBtn:   { flex: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: t.borderSub, backgroundColor: t.bg },
+    modalCancelText:  { color: t.textSub, fontWeight: '600', fontSize: 15 },
+    modalConfirmBtn:  { flex: 1, borderRadius: 14, paddingVertical: 12, alignItems: 'center', backgroundColor: t.primary },
+    modalConfirmText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  });
+}

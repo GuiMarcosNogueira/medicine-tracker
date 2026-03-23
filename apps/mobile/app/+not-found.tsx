@@ -1,13 +1,17 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme, type Theme } from '@medstock/ui';
 
 export default function NotFoundScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Página não encontrada</Text>
-        <Link href="/" style={styles.link}>
+    <SafeAreaView style={s.container}>
+      <View style={s.content}>
+        <Text style={s.title}>Página não encontrada</Text>
+        <Link href="/" style={s.link}>
           Voltar ao início
         </Link>
       </View>
@@ -15,9 +19,11 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#1e293b', marginBottom: 16 },
-  link: { color: '#2563eb', fontSize: 16 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: t.bg },
+    content:   { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+    title:     { fontSize: 20, fontWeight: 'bold', color: t.text, marginBottom: 16 },
+    link:      { color: t.primary, fontSize: 16 },
+  });
+}

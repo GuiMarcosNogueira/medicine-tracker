@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fonts } from '../lib/theme';
+import { useTheme, fonts, type Theme } from '@medstock/ui';
 
 interface Props {
   label: string;
@@ -39,6 +39,8 @@ function buildGrid(year: number, month: number): (number | null)[] {
 }
 
 export function DatePickerField({ label, value, onChange, error }: Props) {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const { width } = useWindowDimensions();
   const [showModal, setShowModal] = useState(false);
 
@@ -90,46 +92,46 @@ export function DatePickerField({ label, value, onChange, error }: Props) {
 
   return (
     <View>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={s.label}>{label}</Text>
       <Pressable
-        style={[styles.input, Boolean(error) && styles.inputError]}
+        style={[s.input, Boolean(error) && s.inputError]}
         onPress={openPicker}
         accessibilityRole="button"
         accessibilityLabel={label}
       >
-        <Text style={[styles.inputText, !value && styles.placeholder]}>
+        <Text style={[s.inputText, !value && s.placeholder]}>
           {displayValue || 'Selecionar data'}
         </Text>
-        <Ionicons name="calendar-outline" size={18} color="#9CA59C" />
+        <Ionicons name="calendar-outline" size={18} color={theme.textMuted} />
       </Pressable>
-      {Boolean(error) && <Text style={styles.error}>{error}</Text>}
+      {Boolean(error) && <Text style={s.error}>{error}</Text>}
 
       <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
-        <Pressable style={styles.overlay} onPress={() => setShowModal(false)} />
-        <View style={styles.sheet}>
+        <Pressable style={s.overlay} onPress={() => setShowModal(false)} />
+        <View style={s.sheet}>
 
           {/* Month navigation */}
-          <View style={styles.navRow}>
-            <Pressable onPress={prevMonth} style={styles.navBtn} hitSlop={12}>
-              <Ionicons name="chevron-back" size={20} color="#147570" />
+          <View style={s.navRow}>
+            <Pressable onPress={prevMonth} style={s.navBtn} hitSlop={12}>
+              <Ionicons name="chevron-back" size={20} color={theme.primary} />
             </Pressable>
-            <Text style={styles.monthTitle}>
+            <Text style={s.monthTitle}>
               {MONTHS_PT[viewMonth]} {viewYear}
             </Text>
-            <Pressable onPress={nextMonth} style={styles.navBtn} hitSlop={12}>
-              <Ionicons name="chevron-forward" size={20} color="#147570" />
+            <Pressable onPress={nextMonth} style={s.navBtn} hitSlop={12}>
+              <Ionicons name="chevron-forward" size={20} color={theme.primary} />
             </Pressable>
           </View>
 
           {/* Day-of-week header */}
-          <View style={styles.dowRow}>
+          <View style={s.dowRow}>
             {DAYS_PT.map(d => (
-              <Text key={d} style={[styles.dowCell, { width: cellSize }]}>{d}</Text>
+              <Text key={d} style={[s.dowCell, { width: cellSize }]}>{d}</Text>
             ))}
           </View>
 
           {/* Grid */}
-          <View style={styles.grid}>
+          <View style={s.grid}>
             {grid.map((day, idx) => {
               if (!day) return <View key={idx} style={{ width: cellSize, height: cellSize }} />;
 
@@ -140,17 +142,17 @@ export function DatePickerField({ label, value, onChange, error }: Props) {
                 <Pressable
                   key={idx}
                   style={[
-                    styles.dayCell,
+                    s.dayCell,
                     { width: cellSize, height: cellSize },
-                    isSelected && styles.dayCellSelected,
-                    !isSelected && isToday && styles.dayCellToday,
+                    isSelected && s.dayCellSelected,
+                    !isSelected && isToday && s.dayCellToday,
                   ]}
                   onPress={() => { selectDay(day); }}
                 >
                   <Text style={[
-                    styles.dayText,
-                    isSelected && styles.dayTextSelected,
-                    !isSelected && isToday && styles.dayTextToday,
+                    s.dayText,
+                    isSelected && s.dayTextSelected,
+                    !isSelected && isToday && s.dayTextToday,
                   ]}>
                     {day}
                   </Text>
@@ -160,8 +162,8 @@ export function DatePickerField({ label, value, onChange, error }: Props) {
           </View>
 
           {/* Cancel footer */}
-          <Pressable style={styles.cancelRow} onPress={() => setShowModal(false)}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+          <Pressable style={s.cancelRow} onPress={() => setShowModal(false)}>
+            <Text style={s.cancelText}>Cancelar</Text>
           </Pressable>
 
         </View>
@@ -170,37 +172,39 @@ export function DatePickerField({ label, value, onChange, error }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  label:       { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6, fontFamily: fonts.bodySemi },
-  input:       { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 13, marginBottom: 4, backgroundColor: '#FFFFFF' },
-  inputError:  { borderColor: '#F0735A' },
-  inputText:   { flex: 1, fontSize: 15, color: '#1A1D1A', fontFamily: fonts.mono },
-  placeholder: { color: '#9CA59C', fontFamily: fonts.body },
-  error:       { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
+function styles(t: Theme) {
+  return StyleSheet.create({
+    label:       { fontSize: 13, fontWeight: '600', color: t.text, marginBottom: 6, fontFamily: fonts.bodySemi },
+    input:       { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 13, marginBottom: 4, backgroundColor: t.surface },
+    inputError:  { borderColor: t.coral },
+    inputText:   { flex: 1, fontSize: 15, color: t.text, fontFamily: fonts.mono },
+    placeholder: { color: t.textMuted, fontFamily: fonts.body },
+    error:       { color: t.coral, fontSize: 12, marginBottom: 12, marginLeft: 4 },
 
-  // Modal
-  overlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
-  sheet:     { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 16, paddingBottom: 32 },
+    // Modal
+    overlay:   { flex: 1, backgroundColor: t.isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.4)' },
+    sheet:     { backgroundColor: t.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 16, paddingBottom: 32 },
 
-  // Navigation
-  navRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 },
-  navBtn:    { padding: 4 },
-  monthTitle:{ fontSize: 18, fontWeight: '700', color: '#1A1D1A', fontFamily: fonts.heading },
+    // Navigation
+    navRow:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 20 },
+    navBtn:    { padding: 4 },
+    monthTitle:{ fontSize: 18, fontWeight: '700', color: t.text, fontFamily: fonts.heading },
 
-  // Day-of-week
-  dowRow:    { flexDirection: 'row', marginBottom: 4 },
-  dowCell:   { textAlign: 'center', fontSize: 11, color: '#9CA59C', fontFamily: fonts.mono, paddingVertical: 4 },
+    // Day-of-week
+    dowRow:    { flexDirection: 'row', marginBottom: 4 },
+    dowCell:   { textAlign: 'center', fontSize: 11, color: t.textMuted, fontFamily: fonts.mono, paddingVertical: 4 },
 
-  // Grid
-  grid:            { flexDirection: 'row', flexWrap: 'wrap' },
-  dayCell:         { alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
-  dayCellSelected: { backgroundColor: '#1A9E96' },
-  dayCellToday:    { borderWidth: 1.5, borderColor: '#1A9E96' },
-  dayText:         { fontSize: 14, color: '#1A1D1A', fontFamily: fonts.body },
-  dayTextSelected: { color: '#FFFFFF', fontWeight: '700', fontFamily: fonts.bodySemi },
-  dayTextToday:    { color: '#1A9E96', fontWeight: '600', fontFamily: fonts.bodySemi },
+    // Grid
+    grid:            { flexDirection: 'row', flexWrap: 'wrap' },
+    dayCell:         { alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
+    dayCellSelected: { backgroundColor: t.primary },
+    dayCellToday:    { borderWidth: 1.5, borderColor: t.primary },
+    dayText:         { fontSize: 14, color: t.text, fontFamily: fonts.body },
+    dayTextSelected: { color: '#FFFFFF', fontWeight: '700', fontFamily: fonts.bodySemi },
+    dayTextToday:    { color: t.primary, fontWeight: '600', fontFamily: fonts.bodySemi },
 
-  // Footer
-  cancelRow:  { alignItems: 'center', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E8ECE5' },
-  cancelText: { fontSize: 15, color: '#9CA59C', fontWeight: '600', fontFamily: fonts.bodySemi },
-});
+    // Footer
+    cancelRow:  { alignItems: 'center', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: t.surfaceAlt },
+    cancelText: { fontSize: 15, color: t.textMuted, fontWeight: '600', fontFamily: fonts.bodySemi },
+  });
+}

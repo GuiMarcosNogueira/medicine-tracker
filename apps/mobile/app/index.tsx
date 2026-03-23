@@ -3,11 +3,13 @@ import { View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useSession } from '../src/hooks/useSession';
 import { supabase } from '../src/lib/supabase';
+import { useTheme } from '@medstock/ui';
 
 export default function IndexGuard() {
   const { session, loading } = useSession();
   const [familyLoading, setFamilyLoading] = useState(true);
   const [hasFamily, setHasFamily] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     if (loading) return;
@@ -30,7 +32,7 @@ export default function IndexGuard() {
   }
 
   if (loading || (session && familyLoading)) {
-    return <View style={{ flex: 1, backgroundColor: '#F6F8F5' }} />;
+    return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
   }
 
   if (!session) return <Redirect href="/(auth)/sign-in" />;

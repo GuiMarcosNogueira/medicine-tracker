@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, TextInput, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { familySchema } from '@medstock/shared';
-import { AnimatedPressable, useToast } from '@medstock/ui';
+import { AnimatedPressable, useToast, useTheme, type Theme } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../src/lib/haptics';
 import { initInventory } from '../../src/stores/inventory.store';
 
 export default function CreateFamilyScreen() {
   const toast = useToast();
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,43 +52,43 @@ export default function CreateFamilyScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>💊</Text>
+    <SafeAreaView style={s.container}>
+      <ScrollView contentContainerStyle={s.inner} keyboardShouldPersistTaps="handled">
+        <View style={s.iconContainer}>
+          <Text style={s.icon}>💊</Text>
         </View>
 
-        <Text style={styles.title}>Bem-vindo ao MedStock!</Text>
-        <Text style={styles.subtitle}>
+        <Text style={s.title}>Bem-vindo ao MedStock!</Text>
+        <Text style={s.subtitle}>
           Para começar, crie seu grupo familiar.
         </Text>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>Como funciona</Text>
-          <Text style={styles.infoItem}>{'•  '}O grupo familiar compartilha um estoque de medicamentos.</Text>
-          <Text style={styles.infoItem}>{'•  '}Você pode convidar outros membros depois.</Text>
-          <Text style={styles.infoItem}>{'•  '}Alertas de vencimento são enviados para todos.</Text>
+        <View style={s.infoCard}>
+          <Text style={s.infoTitle}>Como funciona</Text>
+          <Text style={s.infoItem}>{'•  '}O grupo familiar compartilha um estoque de medicamentos.</Text>
+          <Text style={s.infoItem}>{'•  '}Você pode convidar outros membros depois.</Text>
+          <Text style={s.infoItem}>{'•  '}Alertas de vencimento são enviados para todos.</Text>
         </View>
 
-        <Text style={styles.label}>Nome do grupo</Text>
+        <Text style={s.label}>Nome do grupo</Text>
         <TextInput
-          style={[styles.input, errors['name'] ? styles.inputError : null]}
+          style={[s.input, errors['name'] ? s.inputError : null]}
           value={name}
           onChangeText={v => { setName(v); if (errors['name']) setErrors({}); }}
           placeholder="Ex: Família Silva"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
           maxLength={100}
         />
-        {Boolean(errors['name']) && <Text style={styles.fieldError}>{errors['name']}</Text>}
+        {Boolean(errors['name']) && <Text style={s.fieldError}>{errors['name']}</Text>}
 
         <AnimatedPressable
-          style={[styles.btn, loading && styles.btnDisabled]}
+          style={[s.btn, loading && s.btnDisabled]}
           onPress={() => { void handleCreate(); }}
           disabled={loading}
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.btnText}>Criar grupo e começar</Text>
+            : <Text style={s.btnText}>Criar grupo e começar</Text>
           }
         </AnimatedPressable>
       </ScrollView>
@@ -94,21 +96,23 @@ export default function CreateFamilyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#F6F8F5' },
-  inner:         { padding: 28, maxWidth: 480, alignSelf: 'center', width: '100%', paddingTop: 40 },
-  iconContainer: { alignItems: 'center', marginBottom: 20 },
-  icon:          { fontSize: 56 },
-  title:         { fontSize: 28, fontWeight: '700', color: '#1A1D1A', marginBottom: 8, letterSpacing: -0.5, textAlign: 'center' },
-  subtitle:      { fontSize: 15, color: '#5A625A', marginBottom: 24, lineHeight: 22, textAlign: 'center' },
-  infoCard:      { backgroundColor: '#EAF6F5', borderRadius: 16, padding: 18, marginBottom: 28, gap: 8 },
-  infoTitle:     { fontSize: 13, fontWeight: '700', color: '#1A9E96', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  infoItem:      { fontSize: 14, color: '#2D3B2D', lineHeight: 20 },
-  label:         { fontSize: 13, fontWeight: '600', color: '#4A534A', marginBottom: 6, marginLeft: 2 },
-  input:         { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError:    { borderColor: '#F0735A' },
-  fieldError:    { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
-  btn:           { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
-  btnDisabled:   { opacity: 0.6 },
-  btnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:     { flex: 1, backgroundColor: t.bg },
+    inner:         { padding: 28, maxWidth: 480, alignSelf: 'center', width: '100%', paddingTop: 40 },
+    iconContainer: { alignItems: 'center', marginBottom: 20 },
+    icon:          { fontSize: 56 },
+    title:         { fontSize: 28, fontWeight: '700', color: t.text, marginBottom: 8, letterSpacing: -0.5, textAlign: 'center' },
+    subtitle:      { fontSize: 15, color: t.textSub, marginBottom: 24, lineHeight: 22, textAlign: 'center' },
+    infoCard:      { backgroundColor: t.primaryBg, borderRadius: 16, padding: 18, marginBottom: 28, gap: 8 },
+    infoTitle:     { fontSize: 13, fontWeight: '700', color: t.primary, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+    infoItem:      { fontSize: 14, color: t.text, lineHeight: 20 },
+    label:         { fontSize: 13, fontWeight: '600', color: t.textSub, marginBottom: 6, marginLeft: 2 },
+    input:         { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 14, marginBottom: 4, fontSize: 16, backgroundColor: t.surface, color: t.text },
+    inputError:    { borderColor: t.coral },
+    fieldError:    { color: t.coral, fontSize: 12, marginBottom: 12, marginLeft: 4 },
+    btn:           { backgroundColor: t.primary, borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
+    btnDisabled:   { opacity: 0.6 },
+    btnText:       { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  });
+}

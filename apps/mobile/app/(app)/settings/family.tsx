@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useSelector } from '@legendapp/state/react';
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryStore } from '../../../src/stores/inventory.store';
 import { authStore } from '../../../src/stores/auth.store';
-import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
+import { AnimatedPressable, ConfirmDialog, useToast, useTheme, type Theme } from '@medstock/ui';
 import { hapticError } from '../../../src/lib/haptics';
 
 interface Member {
@@ -27,13 +27,9 @@ const ROLE_LABEL: Record<Member['role'], string> = {
   viewer: 'Visualizador',
 };
 
-const ROLE_COLORS: Record<Member['role'], { bg: string; text: string }> = {
-  owner:  { bg: '#EAF6F5', text: '#1A9E96' },
-  editor: { bg: '#FEF3D9', text: '#D97706' },
-  viewer: { bg: '#E8ECE5', text: '#5A625A' },
-};
-
 export default function FamilyScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const toast = useToast();
   const familyId = useSelector(inventoryStore.familyId);
   const currentUserId = useSelector(authStore.session)?.user.id;
@@ -82,37 +78,43 @@ export default function FamilyScreen() {
     }
   }
 
+  const roleColors = (role: Member['role']): { bg: string; text: string } => ({
+    owner:  { bg: theme.primaryBg,  text: theme.primary },
+    editor: { bg: theme.amberBg,    text: theme.amber },
+    viewer: { bg: theme.surfaceAlt, text: theme.textSub },
+  }[role]);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <AnimatedPressable onPress={() => { router.back(); }} style={styles.backBtn}>
-          <Text style={styles.backText}>← Voltar</Text>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
+        <AnimatedPressable onPress={() => { router.back(); }} style={s.backBtn}>
+          <Text style={s.backText}>← Voltar</Text>
         </AnimatedPressable>
-        <Text style={styles.title}>Família</Text>
+        <Text style={s.title}>Família</Text>
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1A9E96" />
+        <View style={s.center}>
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <>
-          <View style={styles.nameCard}>
-            <Text style={styles.nameLabel}>Nome do grupo</Text>
-            <Text style={styles.nameValue}>{familyName}</Text>
+          <View style={s.nameCard}>
+            <Text style={s.nameLabel}>Nome do grupo</Text>
+            <Text style={s.nameValue}>{familyName}</Text>
           </View>
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
+          <View style={s.section}>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>
                 Membros ({members.length})
               </Text>
               {isOwner && (
                 <AnimatedPressable
-                  style={styles.inviteBtn}
+                  style={s.inviteBtn}
                   onPress={() => { router.push('/(app)/settings/invite'); }}
                 >
-                  <Text style={styles.inviteBtnText}>+ Convidar</Text>
+                  <Text style={s.inviteBtnText}>+ Convidar</Text>
                 </AnimatedPressable>
               )}
             </View>
@@ -122,17 +124,17 @@ export default function FamilyScreen() {
               keyExtractor={m => m.profile_id}
               scrollEnabled={false}
               renderItem={({ item }) => {
-                const colors = ROLE_COLORS[item.role];
+                const colors = roleColors(item.role);
                 const canRemove =
                   isOwner &&
                   item.profile_id !== currentUserId &&
                   item.role !== 'owner';
                 return (
-                  <View style={styles.memberRow}>
-                    <View style={styles.memberInfo}>
-                      <Text style={styles.memberName}>{item.full_name}</Text>
-                      <View style={[styles.roleBadge, { backgroundColor: colors.bg }]}>
-                        <Text style={[styles.roleText, { color: colors.text }]}>
+                  <View style={s.memberRow}>
+                    <View style={s.memberInfo}>
+                      <Text style={s.memberName}>{item.full_name}</Text>
+                      <View style={[s.roleBadge, { backgroundColor: colors.bg }]}>
+                        <Text style={[s.roleText, { color: colors.text }]}>
                           {ROLE_LABEL[item.role]}
                         </Text>
                       </View>
@@ -140,16 +142,16 @@ export default function FamilyScreen() {
                     {canRemove && (
                       <AnimatedPressable
                         onPress={() => { setRemoveTarget(item); }}
-                        style={styles.removeBtn}
+                        style={s.removeBtn}
                         hitSlop={8}
                       >
-                        <Text style={styles.removeText}>Remover</Text>
+                        <Text style={s.removeText}>Remover</Text>
                       </AnimatedPressable>
                     )}
                   </View>
                 );
               }}
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ItemSeparatorComponent={() => <View style={s.separator} />}
             />
           </View>
         </>
@@ -169,27 +171,29 @@ export default function FamilyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container:     { flex: 1, backgroundColor: '#F6F8F5' },
-  header:        { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  backBtn:       { paddingRight: 4 },
-  backText:      { color: '#1A9E96', fontSize: 15 },
-  title:         { fontSize: 22, fontWeight: '700', color: '#1A1D1A' },
-  center:        { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  nameCard:      { backgroundColor: '#FFFFFF', marginHorizontal: 16, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 16 },
-  nameLabel:     { fontSize: 12, color: '#5A625A', marginBottom: 4 },
-  nameValue:     { fontSize: 17, fontWeight: '600', color: '#1A1D1A' },
-  section:       { backgroundColor: '#FFFFFF', marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingBottom: 12 },
-  sectionTitle:  { fontSize: 15, fontWeight: '700', color: '#1A1D1A' },
-  inviteBtn:     { backgroundColor: '#1A9E96', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
-  inviteBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
-  memberRow:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  memberInfo:    { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  memberName:    { fontSize: 14, fontWeight: '500', color: '#1A1D1A' },
-  roleBadge:     { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  roleText:      { fontSize: 11, fontWeight: '700' },
-  removeBtn:     { paddingLeft: 8 },
-  removeText:    { color: '#F0735A', fontSize: 13, fontWeight: '600' },
-  separator:     { height: 1, backgroundColor: '#E8ECE5', marginHorizontal: 16 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:     { flex: 1, backgroundColor: t.bg },
+    header:        { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+    backBtn:       { paddingRight: 4 },
+    backText:      { color: t.primary, fontSize: 15 },
+    title:         { fontSize: 22, fontWeight: '700', color: t.text },
+    center:        { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    nameCard:      { backgroundColor: t.surface, marginHorizontal: 16, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: t.border, marginBottom: 16 },
+    nameLabel:     { fontSize: 12, color: t.textSub, marginBottom: 4 },
+    nameValue:     { fontSize: 17, fontWeight: '600', color: t.text },
+    section:       { backgroundColor: t.surface, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: t.border },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, paddingBottom: 12 },
+    sectionTitle:  { fontSize: 15, fontWeight: '700', color: t.text },
+    inviteBtn:     { backgroundColor: t.primary, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+    inviteBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+    memberRow:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
+    memberInfo:    { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    memberName:    { fontSize: 14, fontWeight: '500', color: t.text },
+    roleBadge:     { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+    roleText:      { fontSize: 11, fontWeight: '700' },
+    removeBtn:     { paddingLeft: 8 },
+    removeText:    { color: t.coral, fontSize: 13, fontWeight: '600' },
+    separator:     { height: 1, backgroundColor: t.surfaceAlt, marginHorizontal: 16 },
+  });
+}

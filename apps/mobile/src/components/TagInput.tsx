@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   type TextInputKeyPressEventData,
   type NativeSyntheticEvent,
 } from 'react-native';
+import { useTheme, type Theme } from '@medstock/ui';
 
 interface TagInputProps {
   tags: string[];
@@ -18,6 +19,8 @@ interface TagInputProps {
 export function TagInput({ tags, onChange, placeholder = 'Adicionar...' }: TagInputProps) {
   const [input, setInput] = useState('');
   const inputRef = useRef<TextInput>(null);
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
 
   function commitInput(raw: string) {
     const value = raw.trim().replace(/,$/, '').trim();
@@ -52,25 +55,25 @@ export function TagInput({ tags, onChange, placeholder = 'Adicionar...' }: TagIn
   }
 
   return (
-    <Pressable style={styles.container} onPress={() => { inputRef.current?.focus(); }}>
+    <Pressable style={s.container} onPress={() => { inputRef.current?.focus(); }}>
       {tags.map((tag, i) => (
-        <View key={`${tag}-${i}`} style={styles.chip}>
-          <Text style={styles.chipText}>{tag}</Text>
-          <Pressable onPress={() => { removeTag(i); }} hitSlop={6} style={styles.chipRemove}>
-            <Text style={styles.chipRemoveText}>✕</Text>
+        <View key={`${tag}-${i}`} style={s.chip}>
+          <Text style={s.chipText}>{tag}</Text>
+          <Pressable onPress={() => { removeTag(i); }} hitSlop={6} style={s.chipRemove}>
+            <Text style={s.chipRemoveText}>✕</Text>
           </Pressable>
         </View>
       ))}
       {tags.length < 15 && (
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={s.input}
           value={input}
           onChangeText={handleChangeText}
           onKeyPress={handleKeyPress}
           onSubmitEditing={handleSubmitEditing}
           placeholder={tags.length === 0 ? placeholder : ''}
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
           returnKeyType="done"
           blurOnSubmit={false}
           autoCapitalize="sentences"
@@ -80,48 +83,50 @@ export function TagInput({ tags, onChange, placeholder = 'Adicionar...' }: TagIn
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D9CC',
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    padding: 8,
-    marginBottom: 16,
-    gap: 6,
-    minHeight: 46,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E6F5F4',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 4,
-  },
-  chipText: {
-    fontSize: 13,
-    color: '#1A9E96',
-    fontWeight: '600',
-  },
-  chipRemove: {
-    marginLeft: 2,
-  },
-  chipRemoveText: {
-    fontSize: 11,
-    color: '#1A9E96',
-    fontWeight: '700',
-  },
-  input: {
-    fontSize: 14,
-    color: '#1A1D1A',
-    flex: 1,
-    minWidth: 80,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-  },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: t.borderSub,
+      borderRadius: 16,
+      backgroundColor: t.surface,
+      padding: 8,
+      marginBottom: 16,
+      gap: 6,
+      minHeight: 46,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: t.primaryBg,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      gap: 4,
+    },
+    chipText: {
+      fontSize: 13,
+      color: t.primary,
+      fontWeight: '600',
+    },
+    chipRemove: {
+      marginLeft: 2,
+    },
+    chipRemoveText: {
+      fontSize: 11,
+      color: t.primary,
+      fontWeight: '700',
+    },
+    input: {
+      fontSize: 14,
+      color: t.text,
+      flex: 1,
+      minWidth: 80,
+      paddingVertical: 2,
+      paddingHorizontal: 4,
+    },
+  });
+}
