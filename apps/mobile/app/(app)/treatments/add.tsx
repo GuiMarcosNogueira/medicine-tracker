@@ -16,7 +16,7 @@ import { useSelector } from '@legendapp/state/react';
 import { inventoryStore, getItemDisplayName } from '../../../src/stores/inventory.store';
 import type { InventoryRow } from '../../../src/stores/inventory.store';
 import { treatmentStore, addTreatment } from '../../../src/stores/treatment.store';
-import { AnimatedPressable, useToast } from '@medstock/ui';
+import { AnimatedPressable, useToast, useTheme, fonts, type Theme } from '@medstock/ui';
 import { hapticMedium } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 
@@ -93,15 +93,17 @@ function ChipGroup<T extends string | number>({
   onChange: (v: T) => void;
   labelOf: (v: T) => string;
 }) {
+  const theme = useTheme();
+  const cs = useMemo(() => chipStyles(theme), [theme]);
   return (
-    <View style={chipStyles.row}>
+    <View style={cs.row}>
       {options.map(opt => (
         <Pressable
           key={String(opt)}
-          style={[chipStyles.chip, value === opt && chipStyles.chipActive]}
+          style={[cs.chip, value === opt && cs.chipActive]}
           onPress={() => { onChange(opt); }}
         >
-          <Text style={[chipStyles.chipText, value === opt && chipStyles.chipTextActive]}>
+          <Text style={[cs.chipText, value === opt && cs.chipTextActive]}>
             {labelOf(opt)}
           </Text>
         </Pressable>
@@ -109,14 +111,6 @@ function ChipGroup<T extends string | number>({
     </View>
   );
 }
-
-const chipStyles = StyleSheet.create({
-  row:            { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip:           { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D9CC' },
-  chipActive:     { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
-  chipText:       { fontSize: 13, color: '#5A625A', fontWeight: '600' },
-  chipTextActive: { color: '#FFFFFF' },
-});
 
 // ─── MedicationSearch ─────────────────────────────────────────────────────────
 
@@ -133,6 +127,8 @@ function MedicationSearch({
   const [focused, setFocused] = useState(false);
   const rawItems = useSelector(inventoryStore.items);
   const items = rawItems as InventoryRow[];
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
 
   // Sync when parent resets the value (modal reopen)
   useEffect(() => { setQuery(value); }, [value]);
@@ -149,34 +145,34 @@ function MedicationSearch({
   return (
     <View>
       <TextInput
-        style={styles.input}
+        style={s.input}
         value={query}
         onChangeText={text => { setQuery(text); onCustom(text); }}
         onFocus={() => { setFocused(true); }}
         onBlur={() => { setTimeout(() => { setFocused(false); }, 150); }}
         placeholder="Buscar no estoque ou digitar nome..."
-        placeholderTextColor="#9CA59C"
+        placeholderTextColor={theme.textMuted}
         autoCapitalize="none"
       />
       {filtered.length > 0 && (
-        <View style={styles.suggestions}>
+        <View style={s.suggestions}>
           {filtered.map(item => (
             <Pressable
               key={item.id}
-              style={styles.suggestionRow}
+              style={s.suggestionRow}
               onPress={() => {
                 setQuery(getItemDisplayName(item));
                 setFocused(false);
                 onSelect(item);
               }}
             >
-              <Text style={styles.suggestionName}>{getItemDisplayName(item)}</Text>
+              <Text style={s.suggestionName}>{getItemDisplayName(item)}</Text>
               {item.presentation_dosage ? (
-                <Text style={styles.suggestionMeta}>{item.presentation_dosage}</Text>
+                <Text style={s.suggestionMeta}>{item.presentation_dosage}</Text>
               ) : null}
               {!normalize(getItemDisplayName(item)).includes(normalize(query)) &&
                 (item.indications ?? []).some(ind => normalize(ind).includes(normalize(query))) ? (
-                <Text style={styles.suggestionIndication}>
+                <Text style={s.suggestionIndication}>
                   {'↳ ' + (item.indications ?? []).filter(ind => normalize(ind).includes(normalize(query))).join(', ')}
                 </Text>
               ) : null}
@@ -222,6 +218,10 @@ function MedFormModal({
   const [indefinite, setInfinite] = useState(false);
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+  const ms = useMemo(() => modalStyles(theme), [theme]);
+  const cs = useMemo(() => chipStyles(theme), [theme]);
 
   // Reset / pre-fill when modal opens
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -324,27 +324,27 @@ function MedFormModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false}>
-      <SafeAreaView style={modalStyles.container}>
+      <SafeAreaView style={ms.container}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={modalStyles.header}>
+          <View style={ms.header}>
             <Pressable onPress={onCancel} hitSlop={8}>
-              <Text style={modalStyles.cancelText}>Cancelar</Text>
+              <Text style={ms.cancelText}>Cancelar</Text>
             </Pressable>
-            <Text style={modalStyles.headerTitle}>Medicamento</Text>
+            <Text style={ms.headerTitle}>Medicamento</Text>
             <Pressable onPress={handleConfirm} hitSlop={8}>
-              <Text style={modalStyles.confirmText}>{isEditing ? 'Salvar' : 'Adicionar'}</Text>
+              <Text style={ms.confirmText}>{isEditing ? 'Salvar' : 'Adicionar'}</Text>
             </Pressable>
           </View>
 
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={modalStyles.content}
+            contentContainerStyle={ms.content}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.label}>Medicamento *</Text>
+            <Text style={s.label}>Medicamento *</Text>
             <MedicationSearch
               value={medicationName}
               onSelect={handleSelectItem}
@@ -354,28 +354,28 @@ function MedFormModal({
                 setSnapshot({ activeIngredient: null, presentationDosage: null, pharmaFormFriendly: null });
               }}
             />
-            {errors['medication'] ? <Text style={styles.error}>{errors['medication']}</Text> : null}
+            {errors['medication'] ? <Text style={s.error}>{errors['medication']}</Text> : null}
 
-            <Text style={[styles.label, styles.labelTop]}>Para quem *</Text>
+            <Text style={[s.label, s.labelTop]}>Para quem *</Text>
             <TextInput
-              style={styles.input}
+              style={s.input}
               value={personName}
               onChangeText={setPersonName}
               placeholder="Nome da pessoa"
-              placeholderTextColor="#9CA59C"
+              placeholderTextColor={theme.textMuted}
               autoCapitalize="words"
             />
-            {errors['person'] ? <Text style={styles.error}>{errors['person']}</Text> : null}
+            {errors['person'] ? <Text style={s.error}>{errors['person']}</Text> : null}
 
-            <Text style={[styles.label, styles.labelTop]}>Quantidade por dose *</Text>
-            <View style={styles.row}>
+            <Text style={[s.label, s.labelTop]}>Quantidade por dose *</Text>
+            <View style={s.row}>
               <TextInput
-                style={[styles.input, styles.qtyInput]}
+                style={[s.input, s.qtyInput]}
                 value={doseQuantity}
                 onChangeText={setDoseQuantity}
                 keyboardType="decimal-pad"
                 placeholder="1"
-                placeholderTextColor="#9CA59C"
+                placeholderTextColor={theme.textMuted}
               />
               <ChipGroup
                 options={DOSE_UNITS}
@@ -384,9 +384,9 @@ function MedFormModal({
                 labelOf={v => v}
               />
             </View>
-            {errors['quantity'] ? <Text style={styles.error}>{errors['quantity']}</Text> : null}
+            {errors['quantity'] ? <Text style={s.error}>{errors['quantity']}</Text> : null}
 
-            <Text style={[styles.label, styles.labelTop]}>Frequência *</Text>
+            <Text style={[s.label, s.labelTop]}>Frequência *</Text>
             <ChipGroup
               options={FREQ_PRESETS.map(p => p.hours)}
               value={showCustomFreq ? null : frequencyHours}
@@ -394,34 +394,34 @@ function MedFormModal({
               labelOf={h => FREQ_PRESETS.find(p => p.hours === h)?.label ?? `${h}h`}
             />
             <Pressable
-              style={[chipStyles.chip, showCustomFreq && chipStyles.chipActive, styles.otherChip]}
+              style={[cs.chip, showCustomFreq && cs.chipActive, s.otherChip]}
               onPress={() => { setShowCustomFreq(!showCustomFreq); setFrequencyHours(null); }}
             >
-              <Text style={[chipStyles.chipText, showCustomFreq && chipStyles.chipTextActive]}>Outro</Text>
+              <Text style={[cs.chipText, showCustomFreq && cs.chipTextActive]}>Outro</Text>
             </Pressable>
             {showCustomFreq && (
               <TextInput
-                style={[styles.input, styles.labelTop]}
+                style={[s.input, s.labelTop]}
                 value={customFreqHours}
                 onChangeText={setCustomFreqHours}
                 keyboardType="number-pad"
                 placeholder="Intervalo em horas (ex: 6)"
-                placeholderTextColor="#9CA59C"
+                placeholderTextColor={theme.textMuted}
               />
             )}
-            {errors['frequency'] ? <Text style={styles.error}>{errors['frequency']}</Text> : null}
+            {errors['frequency'] ? <Text style={s.error}>{errors['frequency']}</Text> : null}
 
-            <Text style={[styles.label, styles.labelTop]}>Primeiro horário *</Text>
+            <Text style={[s.label, s.labelTop]}>Primeiro horário *</Text>
             <TextInput
-              style={styles.input}
+              style={s.input}
               value={firstDoseTime}
               onChangeText={setFirstDoseTime}
               placeholder="08:00"
-              placeholderTextColor="#9CA59C"
+              placeholderTextColor={theme.textMuted}
               keyboardType="numbers-and-punctuation"
               maxLength={5}
             />
-            {errors['time'] ? <Text style={styles.error}>{errors['time']}</Text> : null}
+            {errors['time'] ? <Text style={s.error}>{errors['time']}</Text> : null}
 
             <DatePickerField
               label="Data de início"
@@ -430,34 +430,34 @@ function MedFormModal({
               error={errors['startDate']}
             />
 
-            <Text style={[styles.label, styles.labelTop]}>Duração</Text>
-            <View style={styles.row}>
+            <Text style={[s.label, s.labelTop]}>Duração</Text>
+            <View style={s.row}>
               <TextInput
-                style={[styles.input, styles.qtyInput, indefinite && styles.inputDisabled]}
+                style={[s.input, s.qtyInput, indefinite && s.inputDisabled]}
                 value={durationDays}
                 onChangeText={setDurationDays}
                 keyboardType="number-pad"
                 placeholder="7"
-                placeholderTextColor="#9CA59C"
+                placeholderTextColor={theme.textMuted}
                 editable={!indefinite}
               />
-              <Text style={styles.unit}>dias</Text>
+              <Text style={s.unit}>dias</Text>
               <Pressable
-                style={[chipStyles.chip, indefinite && chipStyles.chipActive]}
+                style={[cs.chip, indefinite && cs.chipActive]}
                 onPress={() => { setInfinite(!indefinite); }}
               >
-                <Text style={[chipStyles.chipText, indefinite && chipStyles.chipTextActive]}>Indefinido</Text>
+                <Text style={[cs.chipText, indefinite && cs.chipTextActive]}>Indefinido</Text>
               </Pressable>
             </View>
-            {errors['duration'] ? <Text style={styles.error}>{errors['duration']}</Text> : null}
+            {errors['duration'] ? <Text style={s.error}>{errors['duration']}</Text> : null}
 
-            <Text style={[styles.label, styles.labelTop]}>Observações</Text>
+            <Text style={[s.label, s.labelTop]}>Observações</Text>
             <TextInput
-              style={[styles.input, styles.notesInput]}
+              style={[s.input, s.notesInput]}
               value={notes}
               onChangeText={setNotes}
               placeholder="Opcional"
-              placeholderTextColor="#9CA59C"
+              placeholderTextColor={theme.textMuted}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -480,43 +480,36 @@ function MedDraftCard({
   onEdit: () => void;
   onRemove: () => void;
 }) {
+  const theme = useTheme();
+  const cs = useMemo(() => cardStyles(theme), [theme]);
   return (
-    <View style={cardStyles.card}>
-      <View style={cardStyles.topRow}>
-        <Text style={cardStyles.name} numberOfLines={1}>{draft.medicationName}</Text>
-        <View style={cardStyles.actions}>
-          <Pressable onPress={onEdit} hitSlop={10} style={cardStyles.actionBtn}>
-            <Text style={cardStyles.editIcon}>✏️</Text>
+    <View style={cs.card}>
+      <View style={cs.topRow}>
+        <Text style={cs.name} numberOfLines={1}>{draft.medicationName}</Text>
+        <View style={cs.actions}>
+          <Pressable onPress={onEdit} hitSlop={10} style={cs.actionBtn}>
+            <Text style={cs.editIcon}>✏️</Text>
           </Pressable>
-          <Pressable onPress={onRemove} hitSlop={10} style={cardStyles.actionBtn}>
-            <Text style={cardStyles.removeIcon}>✕</Text>
+          <Pressable onPress={onRemove} hitSlop={10} style={cs.actionBtn}>
+            <Text style={cs.removeIcon}>✕</Text>
           </Pressable>
         </View>
       </View>
-      <Text style={cardStyles.meta}>Para: {draft.personName}</Text>
-      <Text style={cardStyles.meta}>{draft.doseQuantity} {draft.doseUnit} · {formatFreq(draft)}</Text>
-      <Text style={cardStyles.meta}>
+      <Text style={cs.meta}>Para: {draft.personName}</Text>
+      <Text style={cs.meta}>{draft.doseQuantity} {draft.doseUnit} · {formatFreq(draft)}</Text>
+      <Text style={cs.meta}>
         {formatCardDate(draft.startDate)} · {draft.indefinite ? 'Indefinido' : `${draft.durationDays} dias`}
       </Text>
     </View>
   );
 }
 
-const cardStyles = StyleSheet.create({
-  card:      { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#E8ECE5' },
-  topRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  name:      { flex: 1, fontSize: 15, fontWeight: '700', color: '#1A1D1A' },
-  actions:   { flexDirection: 'row', gap: 8 },
-  actionBtn: { padding: 4 },
-  editIcon:  { fontSize: 15 },
-  removeIcon:{ fontSize: 14, color: '#F0735A', fontWeight: '700' },
-  meta:      { fontSize: 13, color: '#5A625A', marginTop: 2 },
-});
-
 // ─── PrescriptionScreen ───────────────────────────────────────────────────────
 
 export default function PrescriptionScreen() {
   const toast = useToast();
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const familyId = useSelector(treatmentStore.familyId) as string | null;
 
   const [defaultPerson, setDefaultPerson] = useState('');
@@ -606,37 +599,37 @@ export default function PrescriptionScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
         <AnimatedPressable onPress={() => {
           if (router.canGoBack()) router.back();
           else router.replace('/(app)/treatments');
         }}>
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={s.backText}>← Voltar</Text>
         </AnimatedPressable>
-        <Text style={styles.title}>Nova Receita</Text>
+        <Text style={s.title}>Nova Receita</Text>
         <View style={{ width: 60 }} />
       </View>
 
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.label}>Para quem é esta receita?</Text>
+        <Text style={s.label}>Para quem é esta receita?</Text>
         <TextInput
-          style={[styles.input, { marginBottom: 20 }]}
+          style={[s.input, { marginBottom: 20 }]}
           value={defaultPerson}
           onChangeText={setDefaultPerson}
           placeholder="Nome da pessoa (pré-preenche cada medicamento)"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
           autoCapitalize="words"
         />
 
         {drafts.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Nenhum medicamento</Text>
-            <Text style={styles.emptySubtitle}>
+          <View style={s.emptyState}>
+            <Text style={s.emptyTitle}>Nenhum medicamento</Text>
+            <Text style={s.emptySubtitle}>
               Adicione os medicamentos da receita um a um e salve tudo de uma vez.
             </Text>
           </View>
@@ -651,17 +644,17 @@ export default function PrescriptionScreen() {
           ))
         )}
 
-        <AnimatedPressable style={styles.addBtn} onPress={openNew}>
-          <Text style={styles.addBtnText}>+ Adicionar medicamento</Text>
+        <AnimatedPressable style={s.addBtn} onPress={openNew}>
+          <Text style={s.addBtnText}>+ Adicionar medicamento</Text>
         </AnimatedPressable>
 
         {drafts.length > 0 && (
           <AnimatedPressable
-            style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+            style={[s.saveBtn, saving && s.saveBtnDisabled]}
             onPress={() => { void handleSave(); }}
             disabled={saving}
           >
-            <Text style={styles.saveBtnText}>
+            <Text style={s.saveBtnText}>
               {saving ? 'Salvando...' : `Salvar receita (${drafts.length})`}
             </Text>
           </AnimatedPressable>
@@ -681,47 +674,74 @@ export default function PrescriptionScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  // Layout
-  container:    { flex: 1, backgroundColor: '#F6F8F5' },
-  header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  backText:     { fontSize: 15, color: '#1A9E96', fontWeight: '600' },
-  title:        { fontSize: 18, fontWeight: '700', color: '#1A1D1A' },
-  scroll:       { flex: 1 },
-  scrollContent:{ padding: 16, paddingBottom: 48 },
-  // Empty state
-  emptyState:   { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 24 },
-  emptyTitle:   { fontSize: 16, fontWeight: '700', color: '#5A625A', marginBottom: 8 },
-  emptySubtitle:{ fontSize: 13, color: '#9CA59C', textAlign: 'center', lineHeight: 20 },
-  // Buttons
-  addBtn:       { borderWidth: 1.5, borderColor: '#1A9E96', borderStyle: 'dashed', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 4, marginBottom: 12 },
-  addBtnText:   { color: '#1A9E96', fontWeight: '700', fontSize: 15 },
-  saveBtn:      { backgroundColor: '#1A9E96', borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 4 },
-  saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText:  { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-  // Form elements (shared with MedFormModal)
-  label:        { fontSize: 13, fontWeight: '700', color: '#5A625A', marginBottom: 6 },
-  labelTop:     { marginTop: 20 },
-  input:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputDisabled:{ opacity: 0.4 },
-  qtyInput:     { width: 70, marginRight: 10 },
-  notesInput:   { height: 80, paddingTop: 12 },
-  row:          { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  unit:         { fontSize: 14, color: '#5A625A', marginRight: 4 },
-  otherChip:    { marginTop: 8 },
-  suggestions:  { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 12, marginTop: 4, overflow: 'hidden' },
-  suggestionRow:{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0F2EF' },
-  suggestionName:{ fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
-  suggestionMeta:       { fontSize: 12, color: '#1A9E96', marginTop: 1 },
-  suggestionIndication: { fontSize: 11, color: '#9CA59C', marginTop: 1 },
-  error:        { color: '#F0735A', fontSize: 12, marginTop: 4 },
-});
+function chipStyles(t: Theme) {
+  return StyleSheet.create({
+    row:            { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip:           { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: t.surface, borderWidth: 1, borderColor: t.borderSub },
+    chipActive:     { backgroundColor: t.primary, borderColor: t.primary },
+    chipText:       { fontSize: 13, color: t.textSub, fontWeight: '600' },
+    chipTextActive: { color: '#FFFFFF' },
+  });
+}
 
-const modalStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F8F5' },
-  header:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E8ECE5', backgroundColor: '#FFFFFF' },
-  headerTitle:{ fontSize: 16, fontWeight: '700', color: '#1A1D1A' },
-  cancelText: { fontSize: 15, color: '#9CA59C', fontWeight: '600' },
-  confirmText:{ fontSize: 15, color: '#1A9E96', fontWeight: '700' },
-  content:   { padding: 16, paddingBottom: 48 },
-});
+function cardStyles(t: Theme) {
+  return StyleSheet.create({
+    card:      { backgroundColor: t.surface, borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: t.surfaceAlt },
+    topRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+    name:      { flex: 1, fontSize: 15, fontWeight: '700', color: t.text },
+    actions:   { flexDirection: 'row', gap: 8 },
+    actionBtn: { padding: 4 },
+    editIcon:  { fontSize: 15 },
+    removeIcon:{ fontSize: 14, color: t.coral, fontWeight: '700' },
+    meta:      { fontSize: 13, color: t.textSub, marginTop: 2 },
+  });
+}
+
+function styles(t: Theme) {
+  return StyleSheet.create({
+    // Layout
+    container:    { flex: 1, backgroundColor: t.bg },
+    header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+    backText:     { fontSize: 15, color: t.primary, fontWeight: '600' },
+    title:        { fontSize: 18, fontWeight: '700', color: t.text, fontFamily: fonts.heading },
+    scroll:       { flex: 1 },
+    scrollContent:{ padding: 16, paddingBottom: 48 },
+    // Empty state
+    emptyState:   { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 24 },
+    emptyTitle:   { fontSize: 16, fontWeight: '700', color: t.textSub, marginBottom: 8 },
+    emptySubtitle:{ fontSize: 13, color: t.textMuted, textAlign: 'center', lineHeight: 20 },
+    // Buttons
+    addBtn:       { borderWidth: 1.5, borderColor: t.primary, borderStyle: 'dashed', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 4, marginBottom: 12 },
+    addBtnText:   { color: t.primary, fontWeight: '700', fontSize: 15 },
+    saveBtn:      { backgroundColor: t.primary, borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 4 },
+    saveBtnDisabled: { opacity: 0.6 },
+    saveBtnText:  { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+    // Form elements (shared with MedFormModal)
+    label:        { fontSize: 13, fontWeight: '700', color: t.textSub, marginBottom: 6 },
+    labelTop:     { marginTop: 20 },
+    input:        { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    inputDisabled:{ opacity: 0.4 },
+    qtyInput:     { width: 70, marginRight: 10 },
+    notesInput:   { height: 80, paddingTop: 12 },
+    row:          { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+    unit:         { fontSize: 14, color: t.textSub, marginRight: 4 },
+    otherChip:    { marginTop: 8 },
+    suggestions:  { backgroundColor: t.surface, borderWidth: 1, borderColor: t.borderSub, borderRadius: 12, marginTop: 4, overflow: 'hidden' },
+    suggestionRow:{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: t.surfaceAlt },
+    suggestionName:{ fontSize: 14, fontWeight: '600', color: t.text },
+    suggestionMeta:       { fontSize: 12, color: t.primary, marginTop: 1 },
+    suggestionIndication: { fontSize: 11, color: t.textMuted, marginTop: 1 },
+    error:        { color: t.coral, fontSize: 12, marginTop: 4 },
+  });
+}
+
+function modalStyles(t: Theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: t.bg },
+    header:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: t.surfaceAlt, backgroundColor: t.surface },
+    headerTitle:{ fontSize: 16, fontWeight: '700', color: t.text },
+    cancelText: { fontSize: 15, color: t.textMuted, fontWeight: '600' },
+    confirmText:{ fontSize: 15, color: t.primary, fontWeight: '700' },
+    content:   { padding: 16, paddingBottom: 48 },
+  });
+}

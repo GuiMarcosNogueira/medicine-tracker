@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { inventoryStore, addInventoryItem, refreshInventory } from '../../../src
 import { supabase } from '../../../src/lib/supabase';
 import { inventoryItemSchema } from '@medstock/shared';
 import type { InventoryUnit } from '@medstock/shared';
-import { AnimatedPressable, useToast } from '@medstock/ui';
+import { AnimatedPressable, useToast, useTheme, fonts, type Theme } from '@medstock/ui';
 import { hapticError, hapticSuccess } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 import { TagInput } from '../../../src/components/TagInput';
@@ -22,6 +22,8 @@ import { TagInput } from '../../../src/components/TagInput';
 const UNITS: InventoryUnit[] = ['un', 'comprimidos', 'cápsulas', 'ml', 'mg', 'g'];
 
 export default function AddInventoryScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
   const toast = useToast();
   const params = useLocalSearchParams<{
     medicationId?: string;
@@ -50,8 +52,6 @@ export default function AddInventoryScreen() {
   const medicationId = params.medicationId ?? null;
   const fromCatalog = Boolean(medicationId);
 
-  // Initialize form fields from params — useEffect garante que os params
-  // do Expo Router já foram populados (useState initializer pode rodar antes)
   const paramInitialized = useRef(false);
   useEffect(() => {
     if (paramInitialized.current) return;
@@ -71,7 +71,6 @@ export default function AddInventoryScreen() {
     }
   }, [params.productName, params.quantityCount, params.quantityVolume, params.pharmaFormFriendly]);
 
-  // Auto-fetch indications when a catalog item is selected (has activeIngredient or productName)
   useEffect(() => {
     const ai = params.activeIngredient;
     const pn = params.productName;
@@ -83,10 +82,7 @@ export default function AddInventoryScreen() {
         body: { productName: pn ?? '', activeIngredient: ai ?? '' },
       })
       .then(({ data, error }) => {
-        if (error) {
-          console.warn('[get-indications] invoke error:', error);
-          return;
-        }
+        if (error) { console.warn('[get-indications] invoke error:', error); return; }
         const result = data as { indications?: unknown } | null;
         if (Array.isArray(result?.indications)) {
           setIndications(result.indications as string[]);
@@ -164,52 +160,51 @@ export default function AddInventoryScreen() {
     } else {
       hapticSuccess();
       toast.show('success', 'Salvo!', 'Item adicionado ao estoque.');
-      // Refresh the store immediately so the list is up-to-date on back()
       void refreshInventory(familyId);
     }
     router.back();
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={s.container}>
+      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <AnimatedPressable
           onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/inventory'); }}
-          style={styles.backBtn}
+          style={s.backBtn}
         >
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={s.backText}>← Voltar</Text>
         </AnimatedPressable>
-        <Text style={styles.title}>Adicionar ao estoque</Text>
+        <Text style={s.title}>Adicionar ao estoque</Text>
 
-        <View style={styles.scanRow}>
-          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/scanner/barcode'); }}>
-            <Text style={styles.scanChipText}>Código de barras</Text>
+        <View style={s.scanRow}>
+          <AnimatedPressable style={s.scanChip} onPress={() => { router.push('/(app)/scanner/barcode'); }}>
+            <Text style={s.scanChipText}>Código de barras</Text>
           </AnimatedPressable>
-          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/scanner/ocr'); }}>
-            <Text style={styles.scanChipText}>Ler rótulo (OCR)</Text>
+          <AnimatedPressable style={s.scanChip} onPress={() => { router.push('/(app)/scanner/ocr'); }}>
+            <Text style={s.scanChipText}>Ler rótulo (OCR)</Text>
           </AnimatedPressable>
-          <AnimatedPressable style={styles.scanChip} onPress={() => { router.push('/(app)/catalog'); }}>
-            <Text style={styles.scanChipText}>Buscar catálogo</Text>
+          <AnimatedPressable style={s.scanChip} onPress={() => { router.push('/(app)/catalog'); }}>
+            <Text style={s.scanChipText}>Buscar catálogo</Text>
           </AnimatedPressable>
         </View>
 
-        <Text style={styles.label}>
+        <Text style={s.label}>
           {fromCatalog ? 'Medicamento (catálogo)' : 'Nome do medicamento *'}
         </Text>
         {fromCatalog ? (
-          <View style={styles.readOnly}>
-            <Text style={styles.readOnlyText}>{params.productName}</Text>
+          <View style={s.readOnly}>
+            <Text style={s.readOnlyText}>{params.productName}</Text>
           </View>
         ) : (
           <>
             <TextInput
-              style={[styles.input, errors['customName'] ? styles.inputError : null]}
+              style={[s.input, errors['customName'] ? s.inputError : null]}
               value={customName}
               onChangeText={v => { setCustomName(v); clearError('customName'); }}
               placeholder="Ex: Paracetamol 500mg"
-              placeholderTextColor="#9CA59C"
+              placeholderTextColor={theme.textMuted}
             />
-            {Boolean(errors['customName']) && <Text style={styles.fieldError}>{errors['customName']}</Text>}
+            {Boolean(errors['customName']) && <Text style={s.fieldError}>{errors['customName']}</Text>}
           </>
         )}
 
@@ -220,69 +215,69 @@ export default function AddInventoryScreen() {
           error={errors['expiryDate']}
         />
 
-        <View style={styles.row}>
-          <View style={styles.rowField}>
-            <Text style={styles.label}>Quantidade *</Text>
+        <View style={s.row}>
+          <View style={s.rowField}>
+            <Text style={s.label}>Quantidade *</Text>
             <TextInput
-              style={[styles.input, errors['quantity'] ? styles.inputError : null]}
+              style={[s.input, errors['quantity'] ? s.inputError : null]}
               value={quantity}
               onChangeText={v => { setQuantity(v); clearError('quantity'); }}
               keyboardType="decimal-pad"
             />
-            {Boolean(errors['quantity']) && <Text style={styles.fieldError}>{errors['quantity']}</Text>}
+            {Boolean(errors['quantity']) && <Text style={s.fieldError}>{errors['quantity']}</Text>}
           </View>
-          <View style={[styles.rowField, { marginLeft: 12 }]}>
-            <Text style={styles.label}>Unidade</Text>
+          <View style={[s.rowField, { marginLeft: 12 }]}>
+            <Text style={s.label}>Unidade</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {UNITS.map(u => (
                 <AnimatedPressable
                   key={u}
-                  style={[styles.unitChip, unit === u && styles.unitChipActive]}
+                  style={[s.unitChip, unit === u && s.unitChipActive]}
                   onPress={() => { setUnit(u); }}
                 >
-                  <Text style={[styles.unitText, unit === u && styles.unitTextActive]}>{u}</Text>
+                  <Text style={[s.unitText, unit === u && s.unitTextActive]}>{u}</Text>
                 </AnimatedPressable>
               ))}
             </ScrollView>
           </View>
         </View>
 
-        <Text style={styles.label}>Lote (opcional)</Text>
+        <Text style={s.label}>Lote (opcional)</Text>
         <TextInput
-          style={styles.inputSpaced}
+          style={s.inputSpaced}
           value={lotNumber}
           onChangeText={setLotNumber}
           placeholder="Ex: ABC123"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
           autoCapitalize="characters"
         />
 
-        <Text style={styles.label}>Local de armazenamento (opcional)</Text>
+        <Text style={s.label}>Local de armazenamento (opcional)</Text>
         <TextInput
-          style={styles.inputSpaced}
+          style={s.inputSpaced}
           value={location}
           onChangeText={setLocation}
           placeholder="Ex: Armário do banheiro"
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
         />
 
-        <Text style={styles.label}>Indicações (para que serve)</Text>
-        <Text style={styles.hint}>
+        <Text style={s.label}>Indicações (para que serve)</Text>
+        <Text style={s.hint}>
           {loadingIndications ? 'Buscando indicações automaticamente...' : 'Digite e pressione vírgula ou Enter para adicionar'}
         </Text>
         {loadingIndications
-          ? <ActivityIndicator color="#1A9E96" style={styles.indicationsLoader} />
+          ? <ActivityIndicator color={theme.primary} style={s.indicationsLoader} />
           : <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor de cabeça..." />
         }
 
         <AnimatedPressable
-          style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
+          style={[s.saveBtn, loading && s.saveBtnDisabled]}
           onPress={() => { void handleSave(); }}
           disabled={loading}
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.saveBtnText}>Salvar</Text>
+            : <Text style={s.saveBtnText}>Salvar</Text>
           }
         </AnimatedPressable>
       </ScrollView>
@@ -290,31 +285,33 @@ export default function AddInventoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: '#F6F8F5' },
-  content:            { padding: 16, paddingBottom: 40 },
-  backBtn:            { marginBottom: 12, alignSelf: 'flex-start' },
-  backText:           { color: '#1A9E96', fontSize: 15 },
-  title:              { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
-  scanRow:            { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  scanChip:           { flex: 1, borderWidth: 1, borderColor: '#1A9E96', borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
-  scanChipText:       { color: '#1A9E96', fontWeight: '600', fontSize: 13 },
-  label:              { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
-  hint:               { fontSize: 12, color: '#9CA59C', marginBottom: 8, marginTop: -2 },
-  input:              { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputSpaced:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  inputError:         { borderColor: '#F0735A' },
-  fieldError:         { color: '#F0735A', fontSize: 12, marginBottom: 12, marginLeft: 4 },
-  readOnly:           { backgroundColor: '#E8ECE5', borderRadius: 16, padding: 12, marginBottom: 16 },
-  readOnlyText:       { fontSize: 15, color: '#5A625A' },
-  row:                { flexDirection: 'row', alignItems: 'flex-start' },
-  rowField:           { flex: 1 },
-  unitChip:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive:     { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
-  unitText:           { fontSize: 13, color: '#5A625A' },
-  unitTextActive:     { color: '#FFFFFF' },
-  indicationsLoader:  { marginBottom: 16 },
-  saveBtn:            { backgroundColor: '#1A9E96', borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
-  saveBtnDisabled:    { opacity: 0.6 },
-  saveBtnText:        { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:          { flex: 1, backgroundColor: t.bg },
+    content:            { padding: 16, paddingBottom: 40 },
+    backBtn:            { marginBottom: 12, alignSelf: 'flex-start' },
+    backText:           { color: t.primary, fontSize: 15 },
+    title:              { fontSize: 22, fontWeight: '700', color: t.text, marginBottom: 12, fontFamily: fonts.heading },
+    scanRow:            { flexDirection: 'row', gap: 8, marginBottom: 20 },
+    scanChip:           { flex: 1, borderWidth: 1, borderColor: t.primary, borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
+    scanChipText:       { color: t.primary, fontWeight: '600', fontSize: 13 },
+    label:              { fontSize: 13, fontWeight: '600', color: t.text, marginBottom: 6 },
+    hint:               { fontSize: 12, color: t.textMuted, marginBottom: 8, marginTop: -2 },
+    input:              { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, marginBottom: 4, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    inputSpaced:        { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    inputError:         { borderColor: t.coral },
+    fieldError:         { color: t.coral, fontSize: 12, marginBottom: 12, marginLeft: 4 },
+    readOnly:           { backgroundColor: t.surfaceAlt, borderRadius: 16, padding: 12, marginBottom: 16 },
+    readOnlyText:       { fontSize: 15, color: t.textSub },
+    row:                { flexDirection: 'row', alignItems: 'flex-start' },
+    rowField:           { flex: 1 },
+    unitChip:           { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+    unitChipActive:     { backgroundColor: t.primary, borderColor: t.primary },
+    unitText:           { fontSize: 13, color: t.textSub },
+    unitTextActive:     { color: '#FFFFFF' },
+    indicationsLoader:  { marginBottom: 16 },
+    saveBtn:            { backgroundColor: t.primary, borderRadius: 16, padding: 15, alignItems: 'center', marginTop: 8 },
+    saveBtnDisabled:    { opacity: 0.6 },
+    saveBtnText:        { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  });
+}

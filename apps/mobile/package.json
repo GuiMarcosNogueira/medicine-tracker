@@ -14,6 +14,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/fraunces": "^0.4.1",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@legendapp/state": "^2.1.15",
     "@medstock/shared": "workspace:*",
     "@medstock/ui": "workspace:*",
@@ -28,6 +31,7 @@
     "expo-notifications": "^0.29.14",
     "expo-router": "~4.0.0",
     "expo-secure-store": "^14.0.1",
+    "expo-splash-screen": "^55.0.12",
     "expo-sqlite": "^15.1.4",
     "expo-status-bar": "~2.0.0",
     "expo-web-browser": "^14.0.2",
@@ -46,6 +50,7 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~18.3.0",
     "@vitest/coverage-v8": "^2.1.9",
+    "sharp": "^0.34.5",
     "typescript": "^5.5.4",
     "vitest": "^2.1.9"
   }

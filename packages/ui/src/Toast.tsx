@@ -17,6 +17,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme, type Theme } from './ThemeContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,12 +97,14 @@ function ToastContainer({
 
 // ─── Single toast ─────────────────────────────────────────────────────────────
 
-const TOAST_CONFIG: Record<ToastType, { bg: string; border: string; icon: string; iconColor: string }> = {
-  success: { bg: '#EEFCFB', border: '#22C9BF', icon: '✓', iconColor: '#1A9E96' },
-  error:   { bg: '#FEE9E4', border: '#F0735A', icon: '✕', iconColor: '#F0735A' },
-  warning: { bg: '#FFF3DC', border: '#F5A623', icon: '!', iconColor: '#F5A623' },
-  info:    { bg: '#F6F8F5', border: '#9CA59C', icon: 'i', iconColor: '#5A625A' },
-};
+function toastConfig(t: Theme): Record<ToastType, { bg: string; border: string; icon: string; iconColor: string }> {
+  return {
+    success: { bg: t.primaryLight, border: '#22C9BF', icon: '✓', iconColor: t.primary },
+    error:   { bg: t.coralBg,      border: t.coral,   icon: '✕', iconColor: t.coral },
+    warning: { bg: t.amberBg,      border: t.amber,   icon: '!', iconColor: t.amber },
+    info:    { bg: t.surfaceAlt,   border: t.textMuted, icon: 'i', iconColor: t.textSub },
+  };
+}
 
 function ToastBubble({
   toast,
@@ -110,7 +113,8 @@ function ToastBubble({
   toast: ToastItem;
   onDismiss: (id: string) => void;
 }) {
-  const cfg = TOAST_CONFIG[toast.type];
+  const theme = useTheme();
+  const cfg = toastConfig(theme)[toast.type];
 
   return (
     <Animated.View
@@ -123,13 +127,13 @@ function ToastBubble({
         <Text style={[styles.iconText, { color: cfg.iconColor }]}>{cfg.icon}</Text>
       </View>
       <View style={styles.textWrap}>
-        <Text style={styles.toastTitle} numberOfLines={1}>{toast.title}</Text>
+        <Text style={[styles.toastTitle, { color: theme.text }]} numberOfLines={1}>{toast.title}</Text>
         {Boolean(toast.message) && (
-          <Text style={styles.toastMsg} numberOfLines={2}>{toast.message}</Text>
+          <Text style={[styles.toastMsg, { color: theme.textSub }]} numberOfLines={2}>{toast.message}</Text>
         )}
       </View>
       <Pressable onPress={() => { onDismiss(toast.id); }} hitSlop={8} style={styles.closeBtn}>
-        <Text style={styles.closeText}>×</Text>
+        <Text style={[styles.closeText, { color: theme.textMuted }]}>×</Text>
       </Pressable>
     </Animated.View>
   );
@@ -170,8 +174,8 @@ const styles = StyleSheet.create({
   },
   iconText:  { fontSize: 13, fontWeight: '800' },
   textWrap:  { flex: 1 },
-  toastTitle:{ fontSize: 14, fontWeight: '700', color: '#1A1D1A' },
-  toastMsg:  { fontSize: 12, color: '#5A625A', marginTop: 2 },
+  toastTitle:{ fontSize: 14, fontWeight: '700' },
+  toastMsg:  { fontSize: 12, marginTop: 2 },
   closeBtn:  { paddingLeft: 4, flexShrink: 0 },
-  closeText: { fontSize: 18, color: '#9CA59C', lineHeight: 20 },
+  closeText: { fontSize: 18, lineHeight: 20 },
 });

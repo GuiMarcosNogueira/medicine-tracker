@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,9 +13,12 @@ import { router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import { cacheMedicationResults, localSearchMedications } from '../../../src/lib/local-db';
 import type { MedicationSearchResult } from '@medstock/shared';
-import { AnimatedPressable } from '@medstock/ui';
+import { AnimatedPressable, useTheme, type Theme } from '@medstock/ui';
 
 export default function CatalogSearchScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MedicationSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,22 +62,22 @@ export default function CatalogSearchScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Catálogo</Text>
+    <SafeAreaView style={s.container}>
+      <View style={s.header}>
+        <Text style={s.title}>Catálogo</Text>
         <TextInput
-          style={styles.input}
+          style={s.input}
           value={query}
           onChangeText={setQuery}
           placeholder="Buscar medicamento, princípio ativo..."
-          placeholderTextColor="#9CA59C"
+          placeholderTextColor={theme.textMuted}
           autoCapitalize="none"
           clearButtonMode="while-editing"
           returnKeyType="search"
         />
       </View>
 
-      {loading && <ActivityIndicator style={styles.loader} color="#1A9E96" />}
+      {loading && <ActivityIndicator style={s.loader} color={theme.primary} />}
 
       <FlatList
         data={results}
@@ -82,15 +85,15 @@ export default function CatalogSearchScreen() {
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 35).springify()}>
             <AnimatedPressable
-              style={styles.item}
+              style={s.item}
               onPress={() => { router.push(`/(app)/catalog/${item.id}`); }}
             >
-              <Text style={styles.itemName}>{item.product_name}</Text>
+              <Text style={s.itemName}>{item.product_name}</Text>
               {Boolean(item.active_ingredient) && (
-                <Text style={styles.itemSub}>{item.active_ingredient}</Text>
+                <Text style={s.itemSub}>{item.active_ingredient}</Text>
               )}
               {Boolean(item.pharma_form_friendly ?? item.pharmaceutical_form ?? item.presentation_dosage ?? item.concentration) && (
-                <Text style={styles.itemForm}>
+                <Text style={s.itemForm}>
                   {[
                     item.pharma_form_friendly ?? item.pharmaceutical_form,
                     item.presentation_dosage ?? item.concentration,
@@ -99,14 +102,14 @@ export default function CatalogSearchScreen() {
                 </Text>
               )}
               {Boolean(item.atc_description) && (
-                <Text style={styles.itemAtc} numberOfLines={1}>{item.atc_description}</Text>
+                <Text style={s.itemAtc} numberOfLines={1}>{item.atc_description}</Text>
               )}
-              <View style={styles.itemMeta}>
+              <View style={s.itemMeta}>
                 {Boolean(item.manufacturer) && (
-                  <Text style={styles.metaManuf} numberOfLines={1}>{item.manufacturer}</Text>
+                  <Text style={s.metaManuf} numberOfLines={1}>{item.manufacturer}</Text>
                 )}
                 {item.reference_price !== null && (
-                  <Text style={styles.metaPrice}>
+                  <Text style={s.metaPrice}>
                     R$ {item.reference_price.toFixed(2).replace('.', ',')}
                   </Text>
                 )}
@@ -114,39 +117,41 @@ export default function CatalogSearchScreen() {
             </AnimatedPressable>
           </Animated.View>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={s.separator} />}
         ListEmptyComponent={
           !loading && query.length >= 2 ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum resultado encontrado.</Text>
+            <View style={s.empty}>
+              <Text style={s.emptyText}>Nenhum resultado encontrado.</Text>
             </View>
           ) : null
         }
-        contentContainerStyle={results.length === 0 ? styles.listEmpty : undefined}
+        contentContainerStyle={results.length === 0 ? s.listEmpty : undefined}
       />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: '#F6F8F5' },
-  header:     { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  title:      { fontSize: 26, fontWeight: '700', color: '#1A1D1A', marginBottom: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16,
-    padding: 12, fontSize: 16, backgroundColor: '#FFFFFF', color: '#1A1D1A',
-  },
-  loader:     { marginTop: 16 },
-  item:       { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFFFFF' },
-  itemName:   { fontSize: 15, fontWeight: '600', color: '#1A1D1A' },
-  itemSub:    { fontSize: 13, color: '#5A625A', marginTop: 2 },
-  itemForm:   { fontSize: 12, color: '#1A9E96', fontWeight: '500', marginTop: 3 },
-  itemAtc:    { fontSize: 11, color: '#9CA59C', marginTop: 2 },
-  itemMeta:   { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  metaManuf:  { fontSize: 12, color: '#9CA59C', flex: 1 },
-  metaPrice:  { fontSize: 12, color: '#1A9E96', fontWeight: '600' },
-  separator:  { height: 1, backgroundColor: '#E8ECE5' },
-  empty:      { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 48 },
-  emptyText:  { fontSize: 14, color: '#9CA59C' },
-  listEmpty:  { flex: 1 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:  { flex: 1, backgroundColor: t.bg },
+    header:     { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+    title:      { fontSize: 26, fontWeight: '700', color: t.text, marginBottom: 8 },
+    input: {
+      borderWidth: 1, borderColor: t.borderSub, borderRadius: 16,
+      padding: 12, fontSize: 16, backgroundColor: t.surface, color: t.text,
+    },
+    loader:     { marginTop: 16 },
+    item:       { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: t.surface },
+    itemName:   { fontSize: 15, fontWeight: '600', color: t.text },
+    itemSub:    { fontSize: 13, color: t.textSub, marginTop: 2 },
+    itemForm:   { fontSize: 12, color: t.primary, fontWeight: '500', marginTop: 3 },
+    itemAtc:    { fontSize: 11, color: t.textMuted, marginTop: 2 },
+    itemMeta:   { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+    metaManuf:  { fontSize: 12, color: t.textMuted, flex: 1 },
+    metaPrice:  { fontSize: 12, color: t.primary, fontWeight: '600' },
+    separator:  { height: 1, backgroundColor: t.surfaceAlt },
+    empty:      { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 48 },
+    emptyText:  { fontSize: 14, color: t.textMuted },
+    listEmpty:  { flex: 1 },
+  });
+}

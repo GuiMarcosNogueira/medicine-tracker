@@ -29,7 +29,7 @@ import {
   EXPIRY_COLORS,
   EXPIRY_LABELS,
 } from '../../../src/utils/expiry';
-import { AnimatedPressable, ConfirmDialog, useToast } from '@medstock/ui';
+import { AnimatedPressable, ConfirmDialog, useToast, useTheme, fonts, type Theme } from '@medstock/ui';
 import { hapticSuccess, hapticError, hapticMedium } from '../../../src/lib/haptics';
 import { DatePickerField } from '../../../src/components/DatePickerField';
 import { TagInput } from '../../../src/components/TagInput';
@@ -56,6 +56,9 @@ function formatConsumedAt(iso: string): string {
 }
 
 export default function InventoryItemDetailScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const rawItems = useSelector(inventoryStore.items);
@@ -263,8 +266,8 @@ export default function InventoryItemDetailScreen() {
 
   if (!item) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
+      <SafeAreaView style={s.container}>
+        <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -273,56 +276,56 @@ export default function InventoryItemDetailScreen() {
   const days   = daysUntilExpiry(item.expiry_date);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={s.container}>
+      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
 
         {/* ── Top bar ──────────────────────────────────────────────────────── */}
-        <View style={styles.topBar}>
+        <View style={s.topBar}>
           <AnimatedPressable onPress={() => {
             if (router.canGoBack()) router.back();
             else router.replace('/(app)/inventory');
           }}>
-            <Text style={styles.backText}>← Voltar</Text>
+            <Text style={s.backText}>← Voltar</Text>
           </AnimatedPressable>
           {!editing && !consuming && (
-            <View style={styles.topActions}>
+            <View style={s.topActions}>
               <AnimatedPressable
                 onPress={() => { setConsuming(true); }}
-                style={styles.consumeBtn}
+                style={s.consumeBtn}
               >
-                <Text style={styles.consumeBtnText}>Registrar uso</Text>
+                <Text style={s.consumeBtnText}>Registrar uso</Text>
               </AnimatedPressable>
-              <AnimatedPressable onPress={startEdit} style={styles.editBtn}>
-                <Text style={styles.editBtnText}>Editar</Text>
+              <AnimatedPressable onPress={startEdit} style={s.editBtn}>
+                <Text style={s.editBtnText}>Editar</Text>
               </AnimatedPressable>
-              <AnimatedPressable onPress={() => { setDeleteVisible(true); }} style={styles.deleteBtn}>
-                <Text style={styles.deleteBtnText}>Remover</Text>
+              <AnimatedPressable onPress={() => { setDeleteVisible(true); }} style={s.deleteBtn}>
+                <Text style={s.deleteBtnText}>Remover</Text>
               </AnimatedPressable>
             </View>
           )}
         </View>
 
         {/* ── Item header ──────────────────────────────────────────────────── */}
-        <Text style={styles.itemName}>{getItemDisplayName(item)}</Text>
+        <Text style={s.itemName}>{getItemDisplayName(item)}</Text>
         {Boolean(item.active_ingredient) && (
-          <Text style={styles.itemSub}>{item.active_ingredient}</Text>
+          <Text style={s.itemSub}>{item.active_ingredient}</Text>
         )}
-        <View style={[styles.statusBadge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
-          <Text style={[styles.statusText, { color: EXPIRY_COLORS[status] }]}>
+        <View style={[s.statusBadge, { backgroundColor: EXPIRY_COLORS[status] + '20' }]}>
+          <Text style={[s.statusText, { color: EXPIRY_COLORS[status] }]}>
             {EXPIRY_LABELS[status]}{days >= 0 ? ` (${days} dias)` : ''}
           </Text>
         </View>
 
         {/* ── Consume form (inline) ────────────────────────────────────────── */}
         {consuming && (
-          <Animated.View entering={FadeInDown.springify()} style={styles.consumeForm}>
-            <Text style={styles.consumeFormTitle}>Registrar uso</Text>
-            <View style={styles.consumeRow}>
-              <View style={styles.consumeQtyField}>
-                <Text style={styles.label}>Quantidade</Text>
-                <View style={styles.consumeQtyRow}>
+          <Animated.View entering={FadeInDown.springify()} style={s.consumeForm}>
+            <Text style={s.consumeFormTitle}>Registrar uso</Text>
+            <View style={s.consumeRow}>
+              <View style={s.consumeQtyField}>
+                <Text style={s.label}>Quantidade</Text>
+                <View style={s.consumeQtyRow}>
                   <TextInput
-                    style={styles.consumeQtyInput}
+                    style={s.consumeQtyInput}
                     value={consumeQty}
                     onChangeText={setConsumeQty}
                     keyboardType="decimal-pad"
@@ -330,26 +333,26 @@ export default function InventoryItemDetailScreen() {
                     autoFocus
                   />
                   {item.unit === 'ml' ? (
-                    <View style={styles.unitToggle}>
+                    <View style={s.unitToggle}>
                       <Pressable
-                        style={[styles.unitToggleBtn, consumeUnit === 'item' && styles.unitToggleBtnActive]}
+                        style={[s.unitToggleBtn, consumeUnit === 'item' && s.unitToggleBtnActive]}
                         onPress={() => { setConsumeUnit('item'); }}
                       >
-                        <Text style={[styles.unitToggleTxt, consumeUnit === 'item' && styles.unitToggleTxtActive]}>mL</Text>
+                        <Text style={[s.unitToggleTxt, consumeUnit === 'item' && s.unitToggleTxtActive]}>mL</Text>
                       </Pressable>
                       <Pressable
-                        style={[styles.unitToggleBtn, consumeUnit === 'gotas' && styles.unitToggleBtnActive]}
+                        style={[s.unitToggleBtn, consumeUnit === 'gotas' && s.unitToggleBtnActive]}
                         onPress={() => { setConsumeUnit('gotas'); }}
                       >
-                        <Text style={[styles.unitToggleTxt, consumeUnit === 'gotas' && styles.unitToggleTxtActive]}>gotas</Text>
+                        <Text style={[s.unitToggleTxt, consumeUnit === 'gotas' && s.unitToggleTxtActive]}>gotas</Text>
                       </Pressable>
                     </View>
                   ) : (
-                    <Text style={styles.consumeUnitLabel}>{item.unit}</Text>
+                    <Text style={s.consumeUnitLabel}>{item.unit}</Text>
                   )}
                 </View>
                 {consumeUnit === 'gotas' && (
-                  <Text style={styles.consumeHint}>
+                  <Text style={s.consumeHint}>
                     {(() => {
                       const n = parseFloat(consumeQty.replace(',', '.'));
                       return isNaN(n) ? '20 gotas = 1 mL' : `≈ ${(n * 0.05).toFixed(2).replace('.', ',')} mL`;
@@ -357,32 +360,32 @@ export default function InventoryItemDetailScreen() {
                   </Text>
                 )}
               </View>
-              <View style={[styles.consumeQtyField, { marginLeft: 12 }]}>
-                <Text style={styles.label}>Para quem</Text>
+              <View style={[s.consumeQtyField, { marginLeft: 12 }]}>
+                <Text style={s.label}>Para quem</Text>
                 <TextInput
-                  style={styles.input}
+                  style={s.input}
                   value={consumePerson}
                   onChangeText={setConsumePerson}
                   placeholder="Opcional"
-                  placeholderTextColor="#9CA59C"
+                  placeholderTextColor={theme.textMuted}
                 />
               </View>
             </View>
-            <View style={styles.editActions}>
+            <View style={s.editActions}>
               <AnimatedPressable
-                style={styles.cancelBtn}
+                style={s.cancelBtn}
                 onPress={() => { setConsuming(false); setConsumeQty('1'); setConsumeUnit('item'); setConsumePerson(''); }}
               >
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
+                <Text style={s.cancelBtnText}>Cancelar</Text>
               </AnimatedPressable>
               <AnimatedPressable
-                style={[styles.saveBtn, consumeLoading && styles.saveBtnDisabled]}
+                style={[s.saveBtn, consumeLoading && s.saveBtnDisabled]}
                 onPress={() => { void handleConsume(); }}
                 disabled={consumeLoading}
               >
                 {consumeLoading
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.saveBtnText}>Confirmar</Text>
+                  : <Text style={s.saveBtnText}>Confirmar</Text>
                 }
               </AnimatedPressable>
             </View>
@@ -398,79 +401,79 @@ export default function InventoryItemDetailScreen() {
               onChange={setExpiryDate}
             />
 
-            <View style={styles.row}>
-              <View style={styles.rowField}>
-                <Text style={styles.label}>Quantidade</Text>
+            <View style={s.row}>
+              <View style={s.rowField}>
+                <Text style={s.label}>Quantidade</Text>
                 <TextInput
-                  style={styles.input}
+                  style={s.input}
                   value={quantity}
                   onChangeText={setQuantity}
                   keyboardType="decimal-pad"
                 />
               </View>
-              <View style={[styles.rowField, { marginLeft: 12 }]}>
-                <Text style={styles.label}>Unidade</Text>
+              <View style={[s.rowField, { marginLeft: 12 }]}>
+                <Text style={s.label}>Unidade</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {UNITS.map(u => (
                     <AnimatedPressable
                       key={u}
-                      style={[styles.unitChip, unit === u && styles.unitChipActive]}
+                      style={[s.unitChip, unit === u && s.unitChipActive]}
                       onPress={() => { setUnit(u); }}
                     >
-                      <Text style={[styles.unitText, unit === u && styles.unitTextActive]}>{u}</Text>
+                      <Text style={[s.unitText, unit === u && s.unitTextActive]}>{u}</Text>
                     </AnimatedPressable>
                   ))}
                 </ScrollView>
               </View>
             </View>
 
-            <Text style={styles.label}>Lote</Text>
-            <TextInput style={styles.input} value={lotNumber} onChangeText={setLotNumber} autoCapitalize="characters" />
+            <Text style={s.label}>Lote</Text>
+            <TextInput style={s.input} value={lotNumber} onChangeText={setLotNumber} autoCapitalize="characters" />
 
-            <Text style={styles.label}>Local</Text>
-            <TextInput style={styles.input} value={location} onChangeText={setLocation} />
+            <Text style={s.label}>Local</Text>
+            <TextInput style={s.input} value={location} onChangeText={setLocation} />
 
-            <Text style={styles.label}>Indicações (para que serve)</Text>
+            <Text style={s.label}>Indicações (para que serve)</Text>
             {loadingIndications
-              ? <ActivityIndicator color="#1A9E96" style={styles.indicationsLoader} />
+              ? <ActivityIndicator color={theme.primary} style={s.indicationsLoader} />
               : <TagInput tags={indications} onChange={setIndications} placeholder="Ex: Febre, Dor..." />
             }
 
-            <View style={styles.editActions}>
-              <AnimatedPressable style={styles.cancelBtn} onPress={() => { setEditing(false); }}>
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
+            <View style={s.editActions}>
+              <AnimatedPressable style={s.cancelBtn} onPress={() => { setEditing(false); }}>
+                <Text style={s.cancelBtnText}>Cancelar</Text>
               </AnimatedPressable>
               <AnimatedPressable
-                style={[styles.saveBtn, loading && styles.saveBtnDisabled]}
+                style={[s.saveBtn, loading && s.saveBtnDisabled]}
                 onPress={() => { void handleSave(); }}
                 disabled={loading}
               >
                 {loading
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.saveBtnText}>Salvar</Text>
+                  : <Text style={s.saveBtnText}>Salvar</Text>
                 }
               </AnimatedPressable>
             </View>
           </View>
         ) : (
           <>
-            <View style={styles.card}>
-              <Row label="Vencimento"      value={formatExpiryDate(item.expiry_date)} />
-              <Row label="Quantidade"      value={`${item.quantity} ${item.unit}`} />
-              <Row label="Fabricante"      value={item.manufacturer} />
-              <Row label="Dosagem"         value={item.presentation_dosage} />
-              <Row label="Forma"           value={item.pharma_form_friendly ?? item.pharmaceutical_form} />
-              <Row label="Princípio ativo" value={item.active_ingredient} />
-              <Row label="Lote"            value={item.lot_number} />
-              <Row label="Local"           value={item.location} />
+            <View style={s.card}>
+              <Row label="Vencimento"      value={formatExpiryDate(item.expiry_date)} s={s} />
+              <Row label="Quantidade"      value={`${item.quantity} ${item.unit}`} s={s} />
+              <Row label="Fabricante"      value={item.manufacturer} s={s} />
+              <Row label="Dosagem"         value={item.presentation_dosage} s={s} />
+              <Row label="Forma"           value={item.pharma_form_friendly ?? item.pharmaceutical_form} s={s} />
+              <Row label="Princípio ativo" value={item.active_ingredient} s={s} />
+              <Row label="Lote"            value={item.lot_number} s={s} />
+              <Row label="Local"           value={item.location} s={s} />
             </View>
             {(item.indications ?? []).length > 0 && (
-              <View style={styles.indicationsSection}>
-                <Text style={styles.indicationsTitle}>PARA QUE SERVE</Text>
-                <View style={styles.indicationsTags}>
+              <View style={s.indicationsSection}>
+                <Text style={s.indicationsTitle}>PARA QUE SERVE</Text>
+                <View style={s.indicationsTags}>
                   {(item.indications ?? []).map((ind, i) => (
-                    <View key={`${ind}-${i}`} style={styles.indicationChip}>
-                      <Text style={styles.indicationChipText}>{ind}</Text>
+                    <View key={`${ind}-${i}`} style={s.indicationChip}>
+                      <Text style={s.indicationChipText}>{ind}</Text>
                     </View>
                   ))}
                 </View>
@@ -481,22 +484,22 @@ export default function InventoryItemDetailScreen() {
 
         {/* ── Histórico de uso ─────────────────────────────────────────────── */}
         {consumptions.length > 0 && (
-          <View style={styles.historySection}>
-            <Text style={styles.historyTitle}>HISTÓRICO DE USO</Text>
-            <View style={styles.card}>
+          <View style={s.historySection}>
+            <Text style={s.historyTitle}>HISTÓRICO DE USO</Text>
+            <View style={s.card}>
               {consumptions.map((c, index) => (
                 <View key={c.id}>
-                  {index > 0 && <View style={styles.histSeparator} />}
-                  <View style={styles.histRow}>
-                    <View style={styles.histDot} />
-                    <Text style={styles.histDate}>{formatConsumedAt(c.consumed_at)}</Text>
-                    <Text style={styles.histQty}>
+                  {index > 0 && <View style={s.histSeparator} />}
+                  <View style={s.histRow}>
+                    <View style={s.histDot} />
+                    <Text style={s.histDate}>{formatConsumedAt(c.consumed_at)}</Text>
+                    <Text style={s.histQty}>
                       {c.consumed_qty % 1 === 0
                         ? String(c.consumed_qty)
                         : c.consumed_qty.toFixed(2).replace('.', ',')} {item.unit}
                     </Text>
                     {Boolean(c.person_name) && (
-                      <Text style={styles.histPerson}> · {c.person_name}</Text>
+                      <Text style={s.histPerson}> · {c.person_name}</Text>
                     )}
                   </View>
                 </View>
@@ -507,12 +510,12 @@ export default function InventoryItemDetailScreen() {
 
         {/* ── Tratamentos vinculados ───────────────────────────────────────── */}
         {linkedTreatments.length > 0 && (
-          <View style={styles.treatmentsSection}>
-            <Text style={styles.treatmentsSectionTitle}>TRATAMENTOS COM ESTE MEDICAMENTO</Text>
-            <View style={styles.card}>
+          <View style={s.treatmentsSection}>
+            <Text style={s.treatmentsSectionTitle}>TRATAMENTOS COM ESTE MEDICAMENTO</Text>
+            <View style={s.card}>
               {linkedTreatments.map((t: TreatmentRow, index: number) => {
-                const badgeColor = t.status === 'active' ? '#1A9E96' : t.status === 'paused' ? '#F5A623' : '#7A827A';
-                const badgeBg    = t.status === 'active' ? '#EEFCFB' : t.status === 'paused' ? '#FFF8EC' : '#F0F0EE';
+                const badgeColor = t.status === 'active' ? theme.primary : t.status === 'paused' ? theme.amber : theme.textMuted;
+                const badgeBg    = t.status === 'active' ? theme.primaryLight : t.status === 'paused' ? theme.amberBg : theme.surfaceAlt;
                 const badgeLabel = t.status === 'active' ? 'Ativo' : t.status === 'paused' ? 'Pausado' : 'Concluído';
                 const [sy, sm, sd] = t.start_date.split('-');
                 const startFmt = `${sd}/${sm}/${sy}`;
@@ -522,22 +525,22 @@ export default function InventoryItemDetailScreen() {
                 return (
                   <Pressable
                     key={t.id}
-                    style={[styles.treatmentLinkRow, index === 0 && { borderTopWidth: 0 }]}
+                    style={[s.treatmentLinkRow, index === 0 && { borderTopWidth: 0 }]}
                     onPress={() => { router.push(`/(app)/treatments/${t.id}`); }}
                   >
-                    <View style={styles.treatmentLinkContent}>
-                      <View style={styles.treatmentLinkHeader}>
-                        <Text style={styles.treatmentLinkName}>{t.person_name}</Text>
-                        <View style={[styles.treatmentLinkBadge, { backgroundColor: badgeBg }]}>
-                          <Text style={[styles.treatmentLinkBadgeText, { color: badgeColor }]}>{badgeLabel}</Text>
+                    <View style={s.treatmentLinkContent}>
+                      <View style={s.treatmentLinkHeader}>
+                        <Text style={s.treatmentLinkName}>{t.person_name}</Text>
+                        <View style={[s.treatmentLinkBadge, { backgroundColor: badgeBg }]}>
+                          <Text style={[s.treatmentLinkBadgeText, { color: badgeColor }]}>{badgeLabel}</Text>
                         </View>
                       </View>
-                      <Text style={styles.treatmentLinkMeta}>
+                      <Text style={s.treatmentLinkMeta}>
                         {formatFrequency(t.frequency_hours)} · {t.dose_quantity} {t.dose_unit}
                       </Text>
-                      <Text style={styles.treatmentLinkPeriod}>{period}</Text>
+                      <Text style={s.treatmentLinkPeriod}>{period}</Text>
                     </View>
-                    <Text style={styles.chevron}>›</Text>
+                    <Text style={s.chevron}>›</Text>
                   </Pressable>
                 );
               })}
@@ -561,102 +564,106 @@ export default function InventoryItemDetailScreen() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
+type RowStyles = ReturnType<typeof styles>;
+
+function Row({ label, value, s }: { label: string; value: string | null | undefined; s: RowStyles }) {
   if (!value) return null;
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value}</Text>
+    <View style={s.detailRow}>
+      <Text style={s.detailLabel}>{label}</Text>
+      <Text style={s.detailValue}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: '#F6F8F5' },
-  content:         { padding: 16, paddingBottom: 40 },
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:       { flex: 1, backgroundColor: t.bg },
+    content:         { padding: 16, paddingBottom: 40 },
 
-  // Top bar
-  topBar:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  backText:        { color: '#1A9E96', fontSize: 15 },
-  topActions:      { flexDirection: 'row', gap: 6 },
-  consumeBtn:      { backgroundColor: '#FEE9E4', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
-  consumeBtnText:  { color: '#F0735A', fontWeight: '600', fontSize: 12 },
-  editBtn:         { backgroundColor: '#D0F7F5', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
-  editBtnText:     { color: '#147570', fontWeight: '600', fontSize: 12 },
-  deleteBtn:       { backgroundColor: '#F6F8F5', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: '#D1D9CC' },
-  deleteBtnText:   { color: '#9CA59C', fontWeight: '600', fontSize: 12 },
+    // Top bar
+    topBar:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    backText:        { color: t.primary, fontSize: 15 },
+    topActions:      { flexDirection: 'row', gap: 6 },
+    consumeBtn:      { backgroundColor: t.coralBg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
+    consumeBtnText:  { color: t.coral, fontWeight: '600', fontSize: 12 },
+    editBtn:         { backgroundColor: t.primaryBg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6 },
+    editBtnText:     { color: t.primary, fontWeight: '600', fontSize: 12 },
+    deleteBtn:       { backgroundColor: t.bg, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: t.borderSub },
+    deleteBtnText:   { color: t.textMuted, fontWeight: '600', fontSize: 12 },
 
-  // Item header
-  itemName:        { fontSize: 20, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
-  itemSub:         { fontSize: 13, color: '#5A625A', marginBottom: 12 },
-  statusBadge:     { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
-  statusText:      { fontSize: 13, fontWeight: '700' },
+    // Item header
+    itemName:        { fontSize: 20, fontWeight: '700', color: t.text, marginBottom: 4, fontFamily: fonts.heading },
+    itemSub:         { fontSize: 13, color: t.textSub, marginBottom: 12 },
+    statusBadge:     { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 20 },
+    statusText:      { fontSize: 13, fontWeight: '700' },
 
-  // Consume form
-  consumeForm:     { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E8ECE5', padding: 16, marginBottom: 20 },
-  consumeFormTitle:{ fontSize: 15, fontWeight: '700', color: '#1A1D1A', marginBottom: 12 },
-  consumeRow:      { flexDirection: 'row' },
-  consumeQtyField: { flex: 1 },
-  consumeQtyRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  consumeQtyInput: { flex: 1, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  consumeUnitLabel:{ fontSize: 14, color: '#5A625A', fontWeight: '500', marginBottom: 16 },
-  unitToggle:      { flexDirection: 'row', marginBottom: 16, borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 10, overflow: 'hidden' },
-  unitToggleBtn:   { paddingHorizontal: 10, paddingVertical: 6 },
-  unitToggleBtnActive: { backgroundColor: '#1A9E96' },
-  unitToggleTxt:   { fontSize: 12, color: '#5A625A', fontWeight: '600' },
-  unitToggleTxtActive: { color: '#FFFFFF' },
-  consumeHint:     { fontSize: 11, color: '#9CA59C', marginTop: -12, marginBottom: 8 },
+    // Consume form
+    consumeForm:     { backgroundColor: t.surface, borderRadius: 16, borderWidth: 1, borderColor: t.surfaceAlt, padding: 16, marginBottom: 20 },
+    consumeFormTitle:{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 12 },
+    consumeRow:      { flexDirection: 'row' },
+    consumeQtyField: { flex: 1 },
+    consumeQtyRow:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    consumeQtyInput: { flex: 1, borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    consumeUnitLabel:{ fontSize: 14, color: t.textSub, fontWeight: '500', marginBottom: 16 },
+    unitToggle:      { flexDirection: 'row', marginBottom: 16, borderWidth: 1, borderColor: t.borderSub, borderRadius: 10, overflow: 'hidden' },
+    unitToggleBtn:   { paddingHorizontal: 10, paddingVertical: 6 },
+    unitToggleBtnActive: { backgroundColor: t.primary },
+    unitToggleTxt:   { fontSize: 12, color: t.textSub, fontWeight: '600' },
+    unitToggleTxtActive: { color: '#FFFFFF' },
+    consumeHint:     { fontSize: 11, color: t.textMuted, marginTop: -12, marginBottom: 8 },
 
-  // Detail card
-  card:            { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E0E4E0' },
-  detailRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E8ECE5' },
-  detailLabel:     { fontSize: 13, color: '#5A625A' },
-  detailValue:     { fontSize: 13, color: '#1A1D1A', fontWeight: '500' },
+    // Detail card
+    card:            { backgroundColor: t.surface, borderRadius: 16, borderWidth: 1, borderColor: t.border },
+    detailRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: t.surfaceAlt },
+    detailLabel:     { fontSize: 13, color: t.textSub },
+    detailValue:     { fontSize: 13, color: t.text, fontWeight: '500' },
 
-  // Edit form
-  label:           { fontSize: 13, fontWeight: '600', color: '#2E332E', marginBottom: 6 },
-  input:           { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: '#FFFFFF', color: '#1A1D1A' },
-  row:             { flexDirection: 'row', alignItems: 'flex-start' },
-  rowField:        { flex: 1 },
-  unitChip:        { borderWidth: 1, borderColor: '#D1D9CC', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
-  unitChipActive:  { backgroundColor: '#1A9E96', borderColor: '#1A9E96' },
-  unitText:        { fontSize: 13, color: '#5A625A' },
-  unitTextActive:  { color: '#FFFFFF' },
-  editActions:     { flexDirection: 'row', gap: 12, marginTop: 4 },
-  cancelBtn:       { flex: 1, borderRadius: 16, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: '#D1D9CC' },
-  cancelBtnText:   { color: '#5A625A', fontWeight: '600' },
-  saveBtn:         { flex: 1, backgroundColor: '#1A9E96', borderRadius: 16, padding: 13, alignItems: 'center' },
-  saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText:     { color: '#FFFFFF', fontWeight: '700' },
-  indicationsLoader: { marginBottom: 16 },
+    // Edit form
+    label:           { fontSize: 13, fontWeight: '600', color: t.text, marginBottom: 6 },
+    input:           { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, padding: 12, marginBottom: 16, fontSize: 15, backgroundColor: t.surface, color: t.text },
+    row:             { flexDirection: 'row', alignItems: 'flex-start' },
+    rowField:        { flex: 1 },
+    unitChip:        { borderWidth: 1, borderColor: t.borderSub, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6, marginBottom: 16 },
+    unitChipActive:  { backgroundColor: t.primary, borderColor: t.primary },
+    unitText:        { fontSize: 13, color: t.textSub },
+    unitTextActive:  { color: '#FFFFFF' },
+    editActions:     { flexDirection: 'row', gap: 12, marginTop: 4 },
+    cancelBtn:       { flex: 1, borderRadius: 16, padding: 13, alignItems: 'center', borderWidth: 1, borderColor: t.borderSub },
+    cancelBtnText:   { color: t.textSub, fontWeight: '600' },
+    saveBtn:         { flex: 1, backgroundColor: t.primary, borderRadius: 16, padding: 13, alignItems: 'center' },
+    saveBtnDisabled: { opacity: 0.6 },
+    saveBtnText:     { color: '#FFFFFF', fontWeight: '700' },
+    indicationsLoader: { marginBottom: 16 },
 
-  // Indications (view mode)
-  indicationsSection:   { marginTop: 16 },
-  indicationsTitle:     { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 10 },
-  indicationsTags:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  indicationChip:       { backgroundColor: '#E6F5F4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 },
-  indicationChipText:   { fontSize: 13, color: '#1A9E96', fontWeight: '600' },
+    // Indications (view mode)
+    indicationsSection:   { marginTop: 16 },
+    indicationsTitle:     { fontSize: 11, fontWeight: '700', color: t.textMuted, letterSpacing: 0.5, marginBottom: 10 },
+    indicationsTags:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    indicationChip:       { backgroundColor: t.primaryBg, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 },
+    indicationChipText:   { fontSize: 13, color: t.primary, fontWeight: '600' },
 
-  // Linked treatments
-  treatmentsSection:       { marginTop: 24 },
-  treatmentsSectionTitle:  { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 8 },
-  treatmentLinkRow:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#E8ECE5' },
-  treatmentLinkContent:    { flex: 1 },
-  treatmentLinkHeader:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  treatmentLinkName:       { fontSize: 14, fontWeight: '600', color: '#1A1D1A' },
-  treatmentLinkBadge:      { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  treatmentLinkBadgeText:  { fontSize: 11, fontWeight: '700' },
-  treatmentLinkMeta:       { fontSize: 12, color: '#5A625A', marginBottom: 1 },
-  treatmentLinkPeriod:     { fontSize: 11, color: '#9CA59C' },
-  chevron:                 { fontSize: 20, color: '#9CA59C', marginLeft: 8 },
+    // Linked treatments
+    treatmentsSection:       { marginTop: 24 },
+    treatmentsSectionTitle:  { fontSize: 11, fontWeight: '700', color: t.textMuted, letterSpacing: 0.5, marginBottom: 8 },
+    treatmentLinkRow:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: t.surfaceAlt },
+    treatmentLinkContent:    { flex: 1 },
+    treatmentLinkHeader:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+    treatmentLinkName:       { fontSize: 14, fontWeight: '600', color: t.text },
+    treatmentLinkBadge:      { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+    treatmentLinkBadgeText:  { fontSize: 11, fontWeight: '700' },
+    treatmentLinkMeta:       { fontSize: 12, color: t.textSub, marginBottom: 1 },
+    treatmentLinkPeriod:     { fontSize: 11, color: t.textMuted },
+    chevron:                 { fontSize: 20, color: t.textMuted, marginLeft: 8 },
 
-  // History
-  historySection:  { marginTop: 24 },
-  historyTitle:    { fontSize: 11, fontWeight: '700', color: '#9CA59C', letterSpacing: 0.5, marginBottom: 8 },
-  histSeparator:   { height: 1, backgroundColor: '#E8ECE5', marginHorizontal: 14 },
-  histRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11 },
-  histDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1A9E96', marginRight: 10 },
-  histDate:        { fontSize: 12, color: '#5A625A', marginRight: 8, width: 68 },
-  histQty:         { fontSize: 13, fontWeight: '600', color: '#1A1D1A' },
-  histPerson:      { fontSize: 12, color: '#5A625A', flex: 1 },
-});
+    // History
+    historySection:  { marginTop: 24 },
+    historyTitle:    { fontSize: 11, fontWeight: '700', color: t.textMuted, letterSpacing: 0.5, marginBottom: 8 },
+    histSeparator:   { height: 1, backgroundColor: t.surfaceAlt, marginHorizontal: 14 },
+    histRow:         { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11 },
+    histDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: t.primary, marginRight: 10 },
+    histDate:        { fontSize: 12, color: t.textSub, marginRight: 8, width: 68, fontFamily: fonts.mono },
+    histQty:         { fontSize: 13, fontWeight: '600', color: t.text },
+    histPerson:      { fontSize: 12, color: t.textSub, flex: 1 },
+  });
+}

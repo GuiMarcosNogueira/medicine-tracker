@@ -48,6 +48,14 @@ export const radius = {
   pill: 100,
 } as const;
 
+export const fonts = {
+  heading:  'Fraunces-Bold',
+  body:     'DMSans-Regular',
+  bodyMed:  'DMSans-Medium',
+  bodySemi: 'DMSans-SemiBold',
+  mono:     'JetBrainsMono-Regular',
+} as const;
+
 export const shadows = {
   sm: {
     shadowColor: '#000',

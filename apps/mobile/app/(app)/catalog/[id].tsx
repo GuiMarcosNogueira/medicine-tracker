@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '../../../src/lib/supabase';
 import type { Medication } from '@medstock/shared';
-import { AnimatedPressable, useToast } from '@medstock/ui';
+import { AnimatedPressable, useToast, useTheme, type Theme } from '@medstock/ui';
 
 export default function MedicationDetailScreen() {
+  const theme = useTheme();
+  const s = useMemo(() => styles(theme), [theme]);
+
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [med, setMed] = useState<Medication | null>(null);
@@ -40,8 +43,8 @@ export default function MedicationDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#1A9E96" style={{ marginTop: 40 }} />
+      <SafeAreaView style={s.container}>
+        <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -55,44 +58,45 @@ export default function MedicationDetailScreen() {
     : 'Sem tarja';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <SafeAreaView style={s.container}>
+      <ScrollView contentContainerStyle={s.content}>
         <AnimatedPressable
           onPress={() => { if (router.canGoBack()) router.back(); else router.replace('/(app)/catalog'); }}
-          style={styles.backBtn}
+          style={s.backBtn}
         >
-          <Text style={styles.backText}>← Voltar</Text>
+          <Text style={s.backText}>← Voltar</Text>
         </AnimatedPressable>
 
-        <Text style={styles.productName}>{med.product_name}</Text>
+        <Text style={s.productName}>{med.product_name}</Text>
         {Boolean(med.active_ingredient) && (
-          <Text style={styles.activeIngredient}>{med.active_ingredient}</Text>
+          <Text style={s.activeIngredient}>{med.active_ingredient}</Text>
         )}
 
-        <View style={styles.card}>
-          <Row label="Fabricante"           value={med.manufacturer} />
-          <Row label="Dosagem"              value={med.presentation_dosage ?? med.concentration} />
-          <Row label="Forma"                value={med.pharma_form_friendly ?? med.pharmaceutical_form} />
+        <View style={s.card}>
+          <Row label="Fabricante"           value={med.manufacturer} s={s} />
+          <Row label="Dosagem"              value={med.presentation_dosage ?? med.concentration} s={s} />
+          <Row label="Forma"                value={med.pharma_form_friendly ?? med.pharmaceutical_form} s={s} />
           {med.quantity_count !== null && (
-            <Row label="Quantidade"         value={`${med.quantity_count} unidades`} />
+            <Row label="Quantidade"         value={`${med.quantity_count} unidades`} s={s} />
           )}
-          <Row label="Volume"               value={med.quantity_volume} />
-          <Row label="Via de administração" value={med.route_of_admin} />
-          <Row label="Classe terapêutica"   value={med.atc_description} />
-          <Row label="Código ATC"           value={med.atc_code} />
-          <Row label="EAN"                  value={med.ean} />
-          <Row label="Registro ANVISA"      value={med.anvisa_code} />
+          <Row label="Volume"               value={med.quantity_volume} s={s} />
+          <Row label="Via de administração" value={med.route_of_admin} s={s} />
+          <Row label="Classe terapêutica"   value={med.atc_description} s={s} />
+          <Row label="Código ATC"           value={med.atc_code} s={s} />
+          <Row label="EAN"                  value={med.ean} s={s} />
+          <Row label="Registro ANVISA"      value={med.anvisa_code} s={s} />
           {med.reference_price !== null && (
             <Row
               label="Preço ref. CMED"
               value={`R$ ${med.reference_price.toFixed(2).replace('.', ',')}`}
+              s={s}
             />
           )}
-          <Row label="Tarja" value={tarjaLabel} />
+          <Row label="Tarja" value={tarjaLabel} s={s} />
         </View>
 
         <AnimatedPressable
-          style={styles.addBtn}
+          style={s.addBtn}
           onPress={() =>
             router.push({
               pathname: '/(app)/inventory/add',
@@ -110,44 +114,48 @@ export default function MedicationDetailScreen() {
             })
           }
         >
-          <Text style={styles.addBtnText}>Adicionar ao estoque</Text>
+          <Text style={s.addBtnText}>Adicionar ao estoque</Text>
         </AnimatedPressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
+type RowStyles = ReturnType<typeof styles>;
+
+function Row({ label, value, s }: { label: string; value: string | null | undefined; s: RowStyles }) {
   if (!value) return null;
   return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+    <View style={s.row}>
+      <Text style={s.rowLabel}>{label}</Text>
+      <Text style={s.rowValue}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#F6F8F5' },
-  content:          { padding: 16, paddingBottom: 40 },
-  backBtn:          { marginBottom: 12, alignSelf: 'flex-start' },
-  backText:         { color: '#1A9E96', fontSize: 15 },
-  productName:      { fontSize: 22, fontWeight: '700', color: '#1A1D1A', marginBottom: 4 },
-  activeIngredient: { fontSize: 14, color: '#5A625A', marginBottom: 20 },
-  card: {
-    backgroundColor: '#FFFFFF', borderRadius: 16,
-    borderWidth: 1, borderColor: '#E0E4E0', marginBottom: 20,
-  },
-  row: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingHorizontal: 14, paddingVertical: 11,
-    borderBottomWidth: 1, borderBottomColor: '#E8ECE5',
-  },
-  rowLabel:  { fontSize: 13, color: '#5A625A', flex: 1 },
-  rowValue:  { fontSize: 13, color: '#1A1D1A', fontWeight: '500', flex: 2, textAlign: 'right' },
-  addBtn: {
-    backgroundColor: '#1A9E96', borderRadius: 16,
-    padding: 15, alignItems: 'center',
-  },
-  addBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
-});
+function styles(t: Theme) {
+  return StyleSheet.create({
+    container:        { flex: 1, backgroundColor: t.bg },
+    content:          { padding: 16, paddingBottom: 40 },
+    backBtn:          { marginBottom: 12, alignSelf: 'flex-start' },
+    backText:         { color: t.primary, fontSize: 15 },
+    productName:      { fontSize: 22, fontWeight: '700', color: t.text, marginBottom: 4 },
+    activeIngredient: { fontSize: 14, color: t.textSub, marginBottom: 20 },
+    card: {
+      backgroundColor: t.surface, borderRadius: 16,
+      borderWidth: 1, borderColor: t.border, marginBottom: 20,
+    },
+    row: {
+      flexDirection: 'row', justifyContent: 'space-between',
+      paddingHorizontal: 14, paddingVertical: 11,
+      borderBottomWidth: 1, borderBottomColor: t.surfaceAlt,
+    },
+    rowLabel:  { fontSize: 13, color: t.textSub, flex: 1 },
+    rowValue:  { fontSize: 13, color: t.text, fontWeight: '500', flex: 2, textAlign: 'right' },
+    addBtn: {
+      backgroundColor: t.primary, borderRadius: 16,
+      padding: 15, alignItems: 'center',
+    },
+    addBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
+  });
+}

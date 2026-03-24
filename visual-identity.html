@@ -815,9 +815,95 @@
     .ui-card-mock { width: 100%; }
     .icon-showcase { gap: 24px; }
   }
+
+  /* ── THEME TOGGLE BUTTON ── */
+  #theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 100px;
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,.9);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    transition: background .2s, transform .15s;
+    letter-spacing: .3px;
+  }
+  #theme-toggle:hover { background: rgba(255,255,255,.22); transform: scale(1.05); }
+
+  /* ── DARK MODE OVERRIDES ── */
+  body.dark { background: #0D1613; color: #9CA59C; }
+  body.dark .section-title { color: #E8ECE5; }
+  body.dark .section-desc { color: #9CA59C; }
+  body.dark .section-label { color: #22C9BF; }
+  body.dark .palette-section-title { color: #E8ECE5; }
+  body.dark .color-name { color: #E8ECE5; }
+  body.dark .color-hex { color: #5A625A; }
+  body.dark .logo-card.light { background: #0F1F1C; border-color: #1C3530; }
+  body.dark .logo-card.sage { background: #152825; }
+  body.dark .type-specimen { background: #0F1F1C; border-color: #1C3530; }
+  body.dark .type-sample-hero { color: #E8ECE5; }
+  body.dark .type-sample-body { color: #9CA59C; }
+  body.dark .type-weight-demo { color: #E8ECE5; }
+  body.dark .type-weights { border-color: #1C3530; }
+  body.dark .footer { color: #5A625A; border-color: #1C3530; }
+  body.dark .footer strong { color: #9CA59C; }
+
+  /* ── DARK PALETTE DOC SECTION ── */
+  .dark-section-bg {
+    background: #0D1613;
+    border-radius: var(--radius-xl);
+    padding: clamp(32px, 5vw, 60px);
+    margin-top: 24px;
+    border: 1px solid #1C3530;
+  }
+  .dark-token-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .dark-token-card {
+    background: #0F1F1C;
+    border: 1px solid #1C3530;
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .dark-token-swatch {
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .dark-token-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #22C9BF;
+    letter-spacing: .5px;
+    margin-bottom: 3px;
+  }
+  .dark-token-hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #9CA59C;
+    margin-bottom: 3px;
+  }
+  .dark-token-desc {
+    font-size: 11px;
+    color: #5A625A;
+  }
 </style>
 </head>
 <body>
+
+<button id="theme-toggle">☾ Escuro</button>
 
 <!-- ═══════════════════ HERO ═══════════════════ -->
 <div class="hero">
@@ -1259,10 +1345,142 @@
   </div>
 </section>
 
+<!-- ═══════════════════ DARK MODE ═══════════════════ -->
+<section>
+  <div class="section-label">07 — Modo Escuro</div>
+  <h2 class="section-title">Tema Escuro</h2>
+  <p class="section-desc">Paleta de tokens para o modo escuro, mapeada 1-para-1 com o tema claro. As cores seguem a mesma hierarquia semântica com alto contraste sobre fundo verde-escuro profundo.</p>
+
+  <div class="dark-section-bg">
+    <div class="dark-token-grid">
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#0D1613;"></div>
+        <div class="dark-token-name">bg</div>
+        <div class="dark-token-hex">#0D1613</div>
+        <div class="dark-token-desc">Fundo de tela</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#0F1F1C;"></div>
+        <div class="dark-token-name">surface</div>
+        <div class="dark-token-hex">#0F1F1C</div>
+        <div class="dark-token-desc">Cards / modais</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#152825;"></div>
+        <div class="dark-token-name">surfaceAlt</div>
+        <div class="dark-token-hex">#152825</div>
+        <div class="dark-token-desc">Seções, separadores</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#1C3530;"></div>
+        <div class="dark-token-name">border</div>
+        <div class="dark-token-hex">#1C3530</div>
+        <div class="dark-token-desc">Bordas padrão</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#253D39;"></div>
+        <div class="dark-token-name">borderSub</div>
+        <div class="dark-token-hex">#253D39</div>
+        <div class="dark-token-desc">Bordas de inputs</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#E8ECE5;"></div>
+        <div class="dark-token-name">text</div>
+        <div class="dark-token-hex">#E8ECE5</div>
+        <div class="dark-token-desc">Texto primário</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#9CA59C;"></div>
+        <div class="dark-token-name">textSub</div>
+        <div class="dark-token-hex">#9CA59C</div>
+        <div class="dark-token-desc">Texto secundário</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#5A625A;"></div>
+        <div class="dark-token-name">textMuted</div>
+        <div class="dark-token-hex">#5A625A</div>
+        <div class="dark-token-desc">Texto terciário</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#22C9BF;"></div>
+        <div class="dark-token-name">primary</div>
+        <div class="dark-token-hex">#22C9BF</div>
+        <div class="dark-token-desc">Teal ativo</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#5EDDD5;"></div>
+        <div class="dark-token-name">primaryBright</div>
+        <div class="dark-token-hex">#5EDDD5</div>
+        <div class="dark-token-desc">Teal vibrante</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#0F2420;border:1px solid #1C3530;"></div>
+        <div class="dark-token-name">primaryBg</div>
+        <div class="dark-token-hex">#0F2420</div>
+        <div class="dark-token-desc">Fundo de tags teal</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#F4937F;"></div>
+        <div class="dark-token-name">coral</div>
+        <div class="dark-token-hex">#F4937F</div>
+        <div class="dark-token-desc">Erros / urgente</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#2A1510;border:1px solid #1C3530;"></div>
+        <div class="dark-token-name">coralBg</div>
+        <div class="dark-token-hex">#2A1510</div>
+        <div class="dark-token-desc">Fundo coral</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#F7BE5A;"></div>
+        <div class="dark-token-name">amber</div>
+        <div class="dark-token-hex">#F7BE5A</div>
+        <div class="dark-token-desc">Alertas</div>
+      </div>
+      <div class="dark-token-card">
+        <div class="dark-token-swatch" style="background:#261A07;border:1px solid #1C3530;"></div>
+        <div class="dark-token-name">amberBg</div>
+        <div class="dark-token-hex">#261A07</div>
+        <div class="dark-token-desc">Fundo amber</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════ FOOTER ═══════════════════ -->
 <div class="footer">
   <strong>MedStock</strong> — Brand Identity Portfolio &nbsp;·&nbsp; Todos os ativos em SVG vetorial, prontos para exportação
 </div>
+
+<script>
+  var btn = document.getElementById('theme-toggle');
+  var STORAGE_KEY = 'medstock-vi-theme';
+
+  function applyTheme(dark) {
+    if (dark) {
+      document.body.classList.add('dark');
+      btn.textContent = '\u2600 Claro';
+    } else {
+      document.body.classList.remove('dark');
+      btn.textContent = '\u263E Escuro';
+    }
+  }
+
+  function toggleTheme() {
+    var dark = !document.body.classList.contains('dark');
+    localStorage.setItem(STORAGE_KEY, dark ? 'dark' : 'light');
+    applyTheme(dark);
+  }
+
+  btn.addEventListener('click', toggleTheme);
+
+  // Init: respect saved preference or system preference
+  (function () {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved === 'dark' || (saved !== 'light' && prefersDark));
+  })();
+</script>
 
 </body>
 </html>
